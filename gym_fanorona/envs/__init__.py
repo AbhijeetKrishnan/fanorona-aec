@@ -1,0 +1,1 @@
+from gym_fanorona.envs.fanorona_env import FanoronaEnv
