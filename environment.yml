@@ -1,0 +1,5 @@
+name: gym-fanorona
+channels:
+  - conda-forge
+dependencies:
+  - gym
