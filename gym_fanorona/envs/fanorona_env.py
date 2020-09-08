@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import IntEnum
 
 import numpy as np
 
@@ -12,14 +12,14 @@ MOVE_LIMIT = 50
 
 NUM_SQUARES  = BOARD_ROWS * BOARD_COLS
 
-class Piece(Enum):
+class Piece(IntEnum):
     WHITE = 0
     BLACK = 1
     EMPTY = 2
 
 PIECE_STRINGS = ['W', 'B', 'E']
 
-class Direction(Enum):
+class Direction(IntEnum):
     SW = 0
     S  = 1
     SE = 2
@@ -103,26 +103,27 @@ class FanoronaEnv(gym.Env):
         error_msg = f"{action} ({type(action)}) invalid"
         assert self.action_space.contains(action), error_msg
         # TODO: compute return values based on action taken
+
         done = True
         info = {}
         return obs, reward, done, info
 
     def reset(self):
-        self.state = tuple(
+        self.state = tuple((
             np.array(
                 [
-                    [Piece.WHITE] * BOARD_COLS,
-                    [Piece.WHITE] * BOARD_COLS,
-                    [Piece.BLACK, Piece.WHITE, Piece.BLACK, Piece.WHITE, Piece.EMPTY, Piece.BLACK, Piece.WHITE, Piece.BLACK, Piece.WHITE],
-                    [Piece.BLACK] * BOARD_COLS,
-                    [Piece.BLACK] * BOARD_COLS,
+                    [int(Piece.WHITE)] * BOARD_COLS,
+                    [int(Piece.WHITE)] * BOARD_COLS,
+                    [int(Piece.BLACK), int(Piece.WHITE), int(Piece.BLACK), int(Piece.WHITE), int(Piece.EMPTY), int(Piece.BLACK), int(Piece.WHITE), int(Piece.BLACK), int(Piece.WHITE)],
+                    [int(Piece.BLACK)] * BOARD_COLS,
+                    [int(Piece.BLACK)] * BOARD_COLS,
                     
                 ],
                 dtype=np.int8,
 
             ),
-            Piece.WHITE,
-            Direction.X,
+            int(Piece.WHITE),
+            int(Direction.X),
             np.array(
                 [
                     [0] * BOARD_COLS,
@@ -134,9 +135,9 @@ class FanoronaEnv(gym.Env):
                 dtype=np.int8,
 
             ),
-        )
+        ))
 
-        return state
+        return self.state
 
     def render(self, mode='human', close=False):
         """     
@@ -165,7 +166,7 @@ class FanoronaEnv(gym.Env):
                     board_string += PIECE_STRINGS[col]
             if count > 0:
                 board_string += str(count)
-                board_string += '/'
+            board_string += '/'
         if count > 0:
                 board_string += str(count)
 
