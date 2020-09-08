@@ -139,7 +139,7 @@ class FanoronaEnv(gym.Env):
 
         return self.state
 
-    def render(self, mode='human', close=False):
+    def get_board_string(self):
         """     
         ●─●─●─●─●─●─●─●─●
         │╲│╱│╲│╱│╲│╱│╲│╱│
@@ -167,6 +167,7 @@ class FanoronaEnv(gym.Env):
             if count > 0:
                 board_string += str(count)
             board_string += '/'
+        board_string = board_string.rstrip('/')
         if count > 0:
                 board_string += str(count)
 
@@ -182,4 +183,7 @@ class FanoronaEnv(gym.Env):
         if visited_pos == '':
             visited_pos = '-'
 
-        print(board_string, who_to_play, last_dir, visited_pos)
+        return ' '.join([board_string, who_to_play, last_dir, visited_pos])
+
+    def render(self, mode='human', close=False):
+        print(self.get_board_string())

@@ -24,7 +24,7 @@ env = gym.make('fanorona-v0')
 
 ## Testing
 
-TODO: We use [pytest](http://doc.pytest.org/) for tests. You can run them via:
+We use [pytest](http://doc.pytest.org/) for tests. You can run them via:
 ```
 pytest
 ```
