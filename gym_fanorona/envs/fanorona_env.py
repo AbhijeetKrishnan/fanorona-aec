@@ -6,15 +6,18 @@ import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
 
-BOARD_WIDTH  = 5 # number of rows
-BOARD_HEIGHT = 9 # number of columns
+BOARD_ROWS  = 5
+BOARD_COLS = 9
+MOVE_LIMIT = 50
 
-NUM_SQUARES  = BOARD_WIDTH * BOARD_HEIGHT
+NUM_SQUARES  = BOARD_ROWS * BOARD_COLS
 
 class Piece(Enum):
     WHITE = 0
     BLACK = 1
     EMPTY = 2
+
+PIECE_STRINGS = ['W', 'B', 'E']
 
 class Direction(Enum):
     SW = 0
@@ -27,12 +30,14 @@ class Direction(Enum):
     N  = 7
     NE = 8 
 
+DIR_STRINGS = ['SW', 'S', 'SW', 'W', '-', 'E', 'NW', 'N', 'NE']
+
 class FanoronaEnv(gym.Env):
     """
     Description:
         Implements the Fanorona board game following the 5x9 Fanoron Tsivy
         variation. A draw is declared if 50 half-moves have been exceeded 
-        since the start of the game. Consecutive captures count as one move
+        since the start of the game. Consecutive captures count as one move.
 
     References: 
         https://www.mindsports.nl/index.php/the-pit/528-fanorona
@@ -44,7 +49,7 @@ class FanoronaEnv(gym.Env):
             Discrete(2): turn to play (White/Black)
             Discrete(9): last direction moved (Direction)
             Box(low=0, high=1, (5, 9)): positions used (board state x Boolean)
-            Box(low=0, high=50): number of half-moves since start of game
+            Discrete(MOVE_LIMIT + 1): number of half-moves since start of game
         )
 
     Action:
@@ -56,7 +61,7 @@ class FanoronaEnv(gym.Env):
     
     Reward:
         +1: win
-        0 : draw
+         0: draw
         -1: loss
 
     Starting State:
@@ -69,6 +74,9 @@ class FanoronaEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, side=Piece.WHITE):
+        """
+        side: Which side to play as (White/Black)
+        """
         super(FanoronaEnv, self).__init__()
         self.action_space = spaces.Tuple((
             spaces.Discrete(NUM_SQUARES),    # from: Position
@@ -76,13 +84,15 @@ class FanoronaEnv(gym.Env):
             spaces.Discrete(NUM_SQUARES + 1) # start of capturing line (+ 1 for paika move): Position
         ))
         self.observation_space = spaces.Tuple((
-            spaces.Box(low=0, high=2, shape=(BOARD_WIDTH, BOARD_HEIGHT), dtype=np.int8), # board state: (9 x 5) x Piece
-            spaces.Discrete(2),                                                          # turn to play: (WHITE, BLACK)
-            spaces.Discrete(len(Direction)),                                             # last direction used: Direction 
-            spaces.Box(low=0, high=1, shape=(BOARD_WIDTH, BOARD_HEIGHT), dtype=np.int8), # positions used: (9 x 5) x (True, False)
-            spaces.Box(low=0, high=50 dtype=np.int8)                                     # number of half-moves
+            spaces.Box(low=0, high=2, shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8), # board state: (9 x 5) x Piece
+            spaces.Discrete(2),                                                       # turn to play: (WHITE, BLACK)
+            spaces.Discrete(len(Direction)),                                          # last direction used: Direction 
+            spaces.Box(low=0, high=1, shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8), # positions used: (9 x 5) x (True, False)
+            spaces.Discrete(MOVE_LIMIT + 1)                                           # number of half-moves
         ))
 
+        self.seed()
+        self.state = None
         self.side = side
 
     def seed(self, seed=None):
@@ -92,13 +102,83 @@ class FanoronaEnv(gym.Env):
     def step(self, action):
         error_msg = f"{action} ({type(action)}) invalid"
         assert self.action_space.contains(action), error_msg
-        # compute return values based on action taken
+        # TODO: compute return values based on action taken
         done = True
         info = {}
-        return observation, reward, done, info
+        return obs, reward, done, info
 
     def reset(self):
-        pass
+        self.state = tuple(
+            np.array(
+                [
+                    [Piece.WHITE] * BOARD_COLS,
+                    [Piece.WHITE] * BOARD_COLS,
+                    [Piece.BLACK, Piece.WHITE, Piece.BLACK, Piece.WHITE, Piece.EMPTY, Piece.BLACK, Piece.WHITE, Piece.BLACK, Piece.WHITE],
+                    [Piece.BLACK] * BOARD_COLS,
+                    [Piece.BLACK] * BOARD_COLS,
+                    
+                ],
+                dtype=np.int8,
+
+            ),
+            Piece.WHITE,
+            Direction.X,
+            np.array(
+                [
+                    [0] * BOARD_COLS,
+                    [0] * BOARD_COLS,
+                    [0] * BOARD_COLS,
+                    [0] * BOARD_COLS,
+                    [0] * BOARD_COLS,
+                ],
+                dtype=np.int8,
+
+            ),
+        )
+
+        return state
 
     def render(self, mode='human', close=False):
-        pass
+        """     
+        ●─●─●─●─●─●─●─●─●
+        │╲│╱│╲│╱│╲│╱│╲│╱│
+        ●─●─●─●─●─●─●─●─●
+        │╱│╲│╱│╲│╱│╲│╱│╲│
+        ●─○─●─○─┼─●─○─●─○  
+        │╲│╱│╲│╱│╲│╱│╲│╱│
+        ○─○─○─○─○─○─○─○─○
+        │╱│╲│╱│╲│╱│╲│╱│╲│
+        ○─○─○─○─○─○─○─○─○
+        """
+        _board_state, _who_to_play, _last_dir, _visited_pos = self.state
+
+        board_string = ''
+        count = 0
+        for row in _board_state:
+            for col in row:
+                if col == Piece.EMPTY:
+                    count += 1
+                else:
+                    if count > 0:
+                        board_string += str(count)
+                        count = 0
+                    board_string += PIECE_STRINGS[col]
+            if count > 0:
+                board_string += str(count)
+                board_string += '/'
+        if count > 0:
+                board_string += str(count)
+
+        who_to_play = PIECE_STRINGS[_who_to_play]
+        last_dir = DIR_STRINGS[_last_dir]
+        
+        visited_pos = []
+        for row_idx, row in enumerate(_visited_pos):
+            for col_idx, col in enumerate(row):
+                if col:
+                    visited_pos.append(f'{chr(65 + col_idx)}{row_idx}')
+        visited_pos = ','.join(visited_pos)
+        if visited_pos == '':
+            visited_pos = '-'
+
+        print(board_string, who_to_play, last_dir, visited_pos)
