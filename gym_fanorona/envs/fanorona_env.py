@@ -1,4 +1,5 @@
 from enum import IntEnum
+from typing import List, Dict
 
 import numpy as np
 
@@ -30,7 +31,7 @@ class Direction(IntEnum):
     N  = 7
     NE = 8 
 
-DIR_STRINGS = ['SW', 'S', 'SW', 'W', '-', 'E', 'NW', 'N', 'NE']
+DIR_STRINGS = ['SW', 'S', 'SE', 'W', '-', 'E', 'NW', 'N', 'NE']
 
 class FanoronaEnv(gym.Env):
     """
@@ -55,8 +56,9 @@ class FanoronaEnv(gym.Env):
     Action:
         Type: Tuple(
             Discrete(45): from
-            Discrete(45): to
-            Discrete(45 + 1): start of capturing line (+ 1 in case of paika)
+            Discrete(9): direction
+            Discrete(3): capture type (none, approach, withdrawal)
+            Discrete(2): end turn
         )
     
     Reward:
@@ -65,7 +67,7 @@ class FanoronaEnv(gym.Env):
         -1: loss
 
     Starting State:
-        Starting board position for Fanorona (see https://en.wikipedia.org/wiki/Fanorona#/media/File:Fanorona-1.svg)
+        Starting board setup for Fanorona (see https://en.wikipedia.org/wiki/Fanorona#/media/File:Fanorona-1.svg)
 
     Episode Termination:
         Game ends in a win, draw or loss
@@ -73,15 +75,15 @@ class FanoronaEnv(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, side=Piece.WHITE):
-        """
-        side: Which side to play as (White/Black)
-        """
+    def __init__(self: FanoronaEnv) -> None:
+
         super(FanoronaEnv, self).__init__()
+        # would dynamically changing action space be better than current implementation?
         self.action_space = spaces.Tuple((
-            spaces.Discrete(NUM_SQUARES),    # from: Position
-            spaces.Discrete(NUM_SQUARES),    # to: Position
-            spaces.Discrete(NUM_SQUARES + 1) # start of capturing line (+ 1 for paika move): Position
+            spaces.Discrete(NUM_SQUARES),    # from
+            spaces.Discrete(len(Direction)), # direction 
+            spaces.Discrete(3)               # capture type (none, approach, withdrawal)
+            spaces.Discrete(2)               # end turn (0 for no, 1 for yes)
         ))
         self.observation_space = spaces.Tuple((
             spaces.Box(low=0, high=2, shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8), # board state: (9 x 5) x Piece
@@ -91,18 +93,99 @@ class FanoronaEnv(gym.Env):
             spaces.Discrete(MOVE_LIMIT + 1)                                           # number of half-moves
         ))
 
-        self.seed()
+        # self.seed()
         self.state = None
-        self.side = side
 
-    def seed(self, seed=None):
+    @staticmethod
+    def pos_to_coords(position: int) -> Tuple[int, int]:
+        """Converts an integer board coordinate into (row, col) format."""
+        return (position // BOARD_COLS, position % BOARD_COLS)
+
+    @staticmethod
+    def coords_to_pos(coords: Tuple[int, int]) -> int:
+        """Converts (row, col) tuple to integer board coordinate."""
+        row, col = coords
+        return row * (BOARD_COLS) + col
+
+    @staticmethod
+    def displace_coords(coords: Tuple[int, int], dir: int) -> Tuple[int, int]:
+        """Adds unit direction vector (given by dir) to coords."""
+        DIR_VALS = {
+            0: (-1, -1), # SW
+            1: (-1,  0), # S
+            2: (-1,  1), # SE
+            3: (0,  -1), # W
+            4: (0,   0), # -
+            5: (0,   1), # E
+            6: (1,  -1), # NW
+            7: (1,   0), # N
+            8: (1,   1)  # NE
+        }
+        res_row, res_col = coords
+        mod_row, mod_col = DIR_VALS[_dir]
+        res = (res_row + mod_row, res_col + mod_col)
+        return res
+
+    def seed(self, seed=None) -> List[float]:
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
+    def get_piece(self: FanoronaEnv, position: int) -> Piece:
+        """Return type of piece at given position (specified in integer coordinates)."""
+        _board_state, _, _, _ = self.state
+        row, col = pos_to_coords(position)
+        return Piece(_board_state[row][col])
+
+    def other_side(self: FanoronaEnv) -> Piece:
+        """Return the color of the opponent's pieces."""
+        _, _who_to_play, _, _ = self.state
+        if _who_to_play == Piece.WHITE:
+            return Piece.BLACK
+        else:
+            return Piece.WHITE
+
+    def is_valid(self: FanoronaEnv, action) -> bool:
+        _from, _dir, _capture_type, _end_turn = action
+        _board_state, _who_to_play, _last_dir, _visited_pos = self.state
+
+        _to = FanoronaEnv.coords_to_pos(FanoronaEnv.displace_coords(FanoronaEnv.pos_to_coords(_from), _dir))
+        if _capture_type == 0: # none
+            _capture = NUM_SQUARES
+        elif _capture_type == 1: # approach
+            _capture = FanoronaEnv.coords_to_pos(FanoronaEnv.displace_coords(FanoronaEnv.pos_to_coords(_to), _dir))
+        else: # withdraw
+            _capture = FanoronaEnv.coords_to_pos(FanoronaEnv.displace_coords(FanoronaEnv.pos_to_coords(_from), 8 - _dir))
+
+        # End turn must be done during a capturing sequence, indicated by last_dir not being Direction.X
+        if _end_turn and _last_dir == Direction.X:
+            return False
+
+        # Bounds checking
+        for pos in (_from, _to):
+            if not 0 <= pos < NUM_SQUARES: # pos is within board bounds
+                return False
+        if not 0 <= _capture <= NUM_SQUARES: # capture may be NUM_SQUARES in case of paika move
+            return False 
+
+        # Checking validity of pieces at action positions
+        if self.get_piece(_from) != _who_to_play: # from position must contain a piece 
+            return False
+        if self.get_piece(_to) != Piece.EMPTY: # piece must be played to an empty location
+            return False
+        if _capture != NUM_SQUARES and self.get_piece(_capture) != self.other_side(): # capturing line must start with opponent color stone
+            return False
+
+        # TODO: Check if dir is valid at chosen _from position based on board layout
+
+        # TODO: Check if dir is valid at chosen _from position based on adjacent pieces
+
+        # TODO: Check if paika is being played when capturing move exists (invalid)
+
     def step(self, action):
-        error_msg = f"{action} ({type(action)}) invalid"
-        assert self.action_space.contains(action), error_msg
         # TODO: compute return values based on action taken
+
+        if self.is_valid(action):
+            pass
 
         done = True
         info = {}
