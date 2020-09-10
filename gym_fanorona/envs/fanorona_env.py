@@ -108,8 +108,8 @@ class FanoronaEnv(gym.Env):
         return row * (BOARD_COLS) + col
 
     @staticmethod
-    def displace_coords(coords: Tuple[int, int], dir: int) -> Tuple[int, int]:
-        """Adds unit direction vector (given by dir) to coords."""
+    def displace_pos(pos: int, dir: Direction) -> int:
+        """Adds unit direction vector (given by dir) to pos."""
         DIR_VALS = {
             0: (-1, -1), # SW
             1: (-1,  0), # S
@@ -121,10 +121,10 @@ class FanoronaEnv(gym.Env):
             7: (1,   0), # N
             8: (1,   1)  # NE
         }
-        res_row, res_col = coords
+        res_row, res_col = FanoronaEnv.pos_to_coords(pos)
         mod_row, mod_col = DIR_VALS[_dir]
         res = (res_row + mod_row, res_col + mod_col)
-        return res
+        return FanoronaEnv.coords_to_pos(res)
 
     def seed(self, seed=None) -> List[float]:
         self.np_random, seed = seeding.np_random(seed)
@@ -177,23 +177,45 @@ class FanoronaEnv(gym.Env):
         elif (row + col) % 2 == 1: # 4-point
             return [Direction.S, Direction.W, Direction.N, Direction.E]
 
+    def in_capturing_seq(self):
+        """Returns True if current state is part of a capturing sequence i.e. at least one capture has already been made."""
+        _, _, last_dir_used, _, _ = self.state
+        return last_dir_used != Direction.X:
+
+    def capture_exists(self):
+        """Returns True if capturing move exists in the current state."""
+        _board_state, _who_to_play, _last_dir, _visited_pos = self.state
+
+        # Capturing move exists if -
+        # a) a piece belonging to the side to play exists
+        # b) it has an adjacent empty space
+        # c) the opposite color piece exists on approach or withdrawal.
+        for pos in range(NUM_SQUARES):
+            if self.get_piece(pos) == Piece(_who_to_play):
+                for dir in FanoronaEnv.get_valid_dirs(pos):
+                    if self.get_piece(FanoronaEnv.displace_pos(_to, dir)) == self.other_side() # approach
+                        return True
+                    elif self.get_piece(FanoronaEnv.displace_pos(_from, 8 - dir)) == self.other_side # withdrawal
+                        return True
+        return False
+
     def is_valid(self: FanoronaEnv, action) -> bool:
         _from, _dir, _capture_type, _end_turn = action
         _board_state, _who_to_play, _last_dir, _visited_pos = self.state
 
-        _to = FanoronaEnv.coords_to_pos(FanoronaEnv.displace_coords(FanoronaEnv.pos_to_coords(_from), _dir))
+        _to = FanoronaEnv.displace_pos(_from, _dir)
         if _capture_type == 0: # none
             _capture = NUM_SQUARES
         elif _capture_type == 1: # approach
-            _capture = FanoronaEnv.coords_to_pos(FanoronaEnv.displace_coords(FanoronaEnv.pos_to_coords(_to), _dir))
+            _capture = FanoronaEnv.displace_pos(_to, _dir)
         else: # withdraw
-            _capture = FanoronaEnv.coords_to_pos(FanoronaEnv.displace_coords(FanoronaEnv.pos_to_coords(_from), 8 - _dir))
+            _capture = FanoronaEnv.displace_pos(_from, 8 - _dir)
 
         # End turn must be done during a capturing sequence, indicated by last_dir not being Direction.X
-        if _end_turn and _last_dir == Direction.X:
+        if _end_turn and not self.in_capturing_seq():
             return False
 
-        # Bounds checking
+        # Bounds checking on positions
         for pos in (_from, _to):
             if not 0 <= pos < NUM_SQUARES: # pos is within board bounds
                 return False
@@ -208,12 +230,13 @@ class FanoronaEnv(gym.Env):
         if _capture != NUM_SQUARES and self.get_piece(_capture) != self.other_side(): # capturing line must start with opponent color stone
             return False
 
+        # Checking that dir is permitted from given board position
         if dir not in FanoronaEnv.get_valid_dirs(_from):
             return False
 
-        # TODO: Check if dir is valid at chosen _from position based on adjacent pieces
-
-        # TODO: Check if paika is being played when capturing move exists (invalid)
+        # Check if paika is being played when capturing move exists, which is illegal
+        if not self.in_capturing_seq() and self.capture_exists():
+            return False
 
     def step(self, action):
         # TODO: compute return values based on action taken
