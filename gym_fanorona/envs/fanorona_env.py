@@ -144,6 +144,39 @@ class FanoronaEnv(gym.Env):
         else:
             return Piece.WHITE
 
+    @staticmethod
+    def get_valid_dirs(pos: int) -> List[Direction]:
+        """Get list of valid directions available from a given board position."""
+        row, col = FanoronaEnv.pos_to_coords(pos)
+        if row == 0 and col == 0: # bottom-left corner
+            return [Direction.N, Direction.NE, Direction.E]
+        elif row == 2 and col == 0: # middle-left
+            return [Direction.S, Direction.SE, Direction.E, Direction.NE, Direction.N]
+        elif row == 4 and col == 0: # top-left corner
+            return [Direction.S, Direction.SE, Direction.E]
+        elif col = 0: # left edge
+            return [Direction.S, Direction.E, Direction.N]
+        elif row == 0 and col % 2 == 1: # bottom edge 1
+            return [Direction.W, Direction.N, Direction.E]
+        elif row == 0 and col % 2 == 0: # bottom edge 2
+            return [Direction.W, Direction.NW, Direction.N, Direction.NE, Direction.E]
+        elif row == 4 and col % 2 == 1: # top edge 1
+            return [Direction.W, Direction.S, Direction.E]
+        elif row == 4 and col % 2 == 0: # top edge 2
+            return [Direction.W, Direction.SW, Direction.S, Direction.SE, Direction.E]
+        elif row == 0 and col == 8: # bottom-right corner
+            return [Direction.W, Direction.NW, Direction.N]
+        elif row == 2 and col == 8: # middle-right
+            return [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N]
+        elif row == 4 and col == 8: # top-right corner
+            return [Direction.S, Direction.SW, Direction.W]
+        elif col == 8: # right edge
+            return [Direction.S, Direction.W Direction.N]
+        elif (row + col) % 2 == 0: # 8-point
+            return [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N, Direction.NE, Direction.E, Direction.SE]
+        elif (row + col) % 2 == 1: # 4-point
+            return [Direction.S, Direction.W, Direction.N, Direction.E]
+
     def is_valid(self: FanoronaEnv, action) -> bool:
         _from, _dir, _capture_type, _end_turn = action
         _board_state, _who_to_play, _last_dir, _visited_pos = self.state
@@ -175,7 +208,8 @@ class FanoronaEnv(gym.Env):
         if _capture != NUM_SQUARES and self.get_piece(_capture) != self.other_side(): # capturing line must start with opponent color stone
             return False
 
-        # TODO: Check if dir is valid at chosen _from position based on board layout
+        if dir not in FanoronaEnv.get_valid_dirs(_from):
+            return False
 
         # TODO: Check if dir is valid at chosen _from position based on adjacent pieces
 
