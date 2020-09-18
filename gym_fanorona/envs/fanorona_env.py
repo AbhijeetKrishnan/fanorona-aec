@@ -251,9 +251,16 @@ class FanoronaEnv(gym.Env):
         if not self.in_capturing_seq() and self.capture_exists():
             return False
         
-        # TODO: Check that capturing piece is not visiting previously visited pos in capturing path
+        # Check that capturing piece is not visiting previously visited pos in capturing path
+        _to_row, _to_col = FanoronaEnv.pos_to_coords(_to)
+        if _visited_pos[_to_row][_to_col] == 1:
+            return False
 
-        # TODO: Check that capturing piece is not moving twice in the same direction
+        # Check that capturing piece is not moving twice in the same direction
+        if _dir == _last_dir:
+            return False
+
+        return True
 
     def piece_exists(self, piece):
         """Checks whether a instance of a piece exists on the game board."""
