@@ -14,13 +14,19 @@ MOVE_LIMIT = 50
 NUM_SQUARES  = BOARD_ROWS * BOARD_COLS
 
 class Piece(IntEnum):
+    def __str__(self):
+        return self.name[0] # just the first letter
+
     WHITE = 0
     BLACK = 1
     EMPTY = 2
 
-PIECE_STRINGS = ['W', 'B', 'E']
-
 class Direction(IntEnum):
+    def __str__(self):
+        if self.value == 4:
+            return '-'
+        else:
+            return self.name
     SW = 0
     S  = 1
     SE = 2
@@ -30,8 +36,6 @@ class Direction(IntEnum):
     NW = 6
     N  = 7
     NE = 8 
-
-DIR_STRINGS = ['SW', 'S', 'SE', 'W', '-', 'E', 'NW', 'N', 'NE']
 
 class Reward(IntEnum):
     PAIKA = 0
@@ -408,13 +412,14 @@ class FanoronaEnv(gym.Env):
         count = 0
         for row in _board_state:
             for col in row:
+                col_str = str(Piece(col))
                 if col == Piece.EMPTY:
                     count += 1
                 else:
                     if count > 0:
                         board_string += str(count)
                         count = 0
-                    board_string += PIECE_STRINGS[col]
+                    board_string += col_str
             if count > 0:
                 board_string += str(count)
             board_string += '/'
@@ -422,8 +427,8 @@ class FanoronaEnv(gym.Env):
         if count > 0:
                 board_string += str(count)
 
-        who_to_play = PIECE_STRINGS[_who_to_play]
-        last_dir = DIR_STRINGS[_last_dir]
+        _who_to_play_str = str(Piece(_who_to_play))
+        _last_dir_str = str(Direction(_last_dir))
         
         visited_pos = []
         for row_idx, row in enumerate(_visited_pos):
@@ -434,7 +439,7 @@ class FanoronaEnv(gym.Env):
         if visited_pos == '':
             visited_pos = '-'
 
-        return ' '.join([board_string, who_to_play, last_dir, visited_pos])
+        return ' '.join([board_string, _who_to_play_str, _last_dir_str, visited_pos])
 
     def render(self, mode='human', close=False):
         print(self.get_board_string())
