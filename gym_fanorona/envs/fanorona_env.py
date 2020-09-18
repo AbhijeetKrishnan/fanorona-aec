@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import numpy as np
 
@@ -84,14 +84,14 @@ class FanoronaEnv(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self: FanoronaEnv) -> None:
+    def __init__(self) -> None:
 
         super(FanoronaEnv, self).__init__()
         # would dynamically changing action space be better than current implementation?
         self.action_space = spaces.Tuple((
             spaces.Discrete(NUM_SQUARES),    # from
             spaces.Discrete(len(Direction)), # direction 
-            spaces.Discrete(3)               # capture type (none=0, approach=1, withdrawal=2)
+            spaces.Discrete(3),              # capture type (none=0, approach=1, withdrawal=2)
             spaces.Discrete(2)               # end turn (0 for no, 1 for yes)
         ))
         self.observation_space = spaces.Tuple((
@@ -139,13 +139,13 @@ class FanoronaEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def get_piece(self: FanoronaEnv, position: int) -> Piece:
+    def get_piece(self, position: int) -> Piece:
         """Return type of piece at given position (specified in integer coordinates)."""
         _board_state, _, _, _, _ = self.state
         row, col = pos_to_coords(position)
         return Piece(_board_state[row][col])
 
-    def other_side(self: FanoronaEnv) -> Piece:
+    def other_side(self) -> Piece:
         """Return the color of the opponent's pieces."""
         _, _who_to_play, _, _, _ = self.state
         if _who_to_play == Piece.WHITE:
@@ -163,7 +163,7 @@ class FanoronaEnv(gym.Env):
             return [Direction.S, Direction.SE, Direction.E, Direction.NE, Direction.N]
         elif row == 4 and col == 0: # top-left corner
             return [Direction.S, Direction.SE, Direction.E]
-        elif col = 0: # left edge
+        elif col == 0: # left edge
             return [Direction.S, Direction.E, Direction.N]
         elif row == 0 and col % 2 == 1: # bottom edge 1
             return [Direction.W, Direction.N, Direction.E]
@@ -180,7 +180,7 @@ class FanoronaEnv(gym.Env):
         elif row == 4 and col == 8: # top-right corner
             return [Direction.S, Direction.SW, Direction.W]
         elif col == 8: # right edge
-            return [Direction.S, Direction.W Direction.N]
+            return [Direction.S, Direction.W, Direction.N]
         elif (row + col) % 2 == 0: # 8-point
             return [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N, Direction.NE, Direction.E, Direction.SE]
         elif (row + col) % 2 == 1: # 4-point
@@ -189,7 +189,7 @@ class FanoronaEnv(gym.Env):
     def in_capturing_seq(self):
         """Returns True if current state is part of a capturing sequence i.e. at least one capture has already been made."""
         _, _, last_dir_used, _, _ = self.state
-        return last_dir_used != Direction.X:
+        return last_dir_used != Direction.X
 
     def capture_exists(self):
         """Returns True if capturing move exists in the current state."""
@@ -202,13 +202,13 @@ class FanoronaEnv(gym.Env):
         for pos in range(NUM_SQUARES):
             if self.get_piece(pos) == Piece(_who_to_play):
                 for dir in FanoronaEnv.get_valid_dirs(pos):
-                    if self.get_piece(FanoronaEnv.displace_pos(_to, dir)) == self.other_side() # approach
+                    if self.get_piece(FanoronaEnv.displace_pos(_to, dir)) == self.other_side(): # approach
                         return True
-                    elif self.get_piece(FanoronaEnv.displace_pos(_from, 8 - dir)) == self.other_side # withdrawal
+                    elif self.get_piece(FanoronaEnv.displace_pos(_from, 8 - dir)) == self.other_side: # withdrawal
                         return True
         return False
 
-    def is_valid(self: FanoronaEnv, action) -> bool:
+    def is_valid(self, action) -> bool:
         _from, _dir, _capture_type, _end_turn = action
         _board_state, _who_to_play, _last_dir, _visited_pos, _half_moves = self.state
 
