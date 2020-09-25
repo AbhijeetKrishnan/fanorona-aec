@@ -1,7 +1,9 @@
-import pytest
+import random
 
 import gym
 import gym_fanorona
+import pytest
+
 
 def test_make():
     env = gym.make('fanorona-v0')
@@ -91,21 +93,16 @@ def test_end_turn():
                     action = (pos, dir, capture_type, end_turn)
                     assert env.is_valid(action), f'Action: {action}'
 
+def test_get_valid_moves():
+    pass
 
-@pytest.mark.skip(reason='Too many invalid moves sampled compared to valid moves')
-def test_random_moves():
-    "Test random moves sampled from action space"
+def test_random_valid_moves():
+    "Test random valid moves sampled from action space"
     env = gym.make('fanorona-v0')
     env.reset()
-    valid, invalid = 0, 0
     while True:
-        action = env.action_space.sample()
-        if env.is_valid(action):
-            valid += 1
-            print('Valid')
-        else:
-            invalid += 1
-            print('Invalid')
+        action = random.choice(env.get_valid_moves()) 
+        assert env.is_valid(action)
         try:
             env.step(action)
         except Exception:

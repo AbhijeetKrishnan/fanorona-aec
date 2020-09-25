@@ -108,23 +108,26 @@ class FanoronaEnv(gym.Env):
             spaces.Discrete(MOVE_LIMIT + 1)                                           # number of half-moves
         ))
 
-        # self.seed()
         self.state = None
 
     @staticmethod
     def pos_to_coords(position: int) -> Tuple[int, int]:
         """Converts an integer board coordinate into (row, col) format."""
+        assert 0 <= position < NUM_SQUARES
         return (position // BOARD_COLS, position % BOARD_COLS)
 
     @staticmethod
     def coords_to_pos(coords: Tuple[int, int]) -> int:
         """Converts (row, col) tuple to integer board coordinate."""
         row, col = coords
+        assert 0 <= row < BOARD_ROWS
+        assert 0 <= col < BOARD_COLS
         return row * (BOARD_COLS) + col
 
     @staticmethod
     def displace_pos(pos: int, _dir: Direction) -> int:
         """Adds unit direction vector (given by _dir) to pos."""
+        assert 0 <= pos < NUM_SQUARES
         DIR_VALS = {
             0: (-1, -1), # SW
             1: (-1,  0), # S
@@ -143,6 +146,7 @@ class FanoronaEnv(gym.Env):
 
     def get_piece(self, position: int) -> Piece:
         """Return type of piece at given position (specified in integer coordinates)."""
+        assert 0 <= position < NUM_SQUARES
         _board_state, _, _, _, _ = self.state
         row, col = FanoronaEnv.pos_to_coords(position)
         return Piece(_board_state[row][col])
@@ -158,42 +162,44 @@ class FanoronaEnv(gym.Env):
     @staticmethod
     def get_valid_dirs(pos: int) -> List[Direction]:
         """Get list of valid directions available from a given board position."""
+        assert 0 <= pos < NUM_SQUARES
         row, col = FanoronaEnv.pos_to_coords(pos)
         if row == 0 and col == 0: # bottom-left corner
-            return [Direction.N, Direction.NE, Direction.E]
+            dir_list = [Direction.N, Direction.NE, Direction.E]
         elif row == 2 and col == 0: # middle-left
-            return [Direction.S, Direction.SE, Direction.E, Direction.NE, Direction.N]
+            dir_list = [Direction.S, Direction.SE, Direction.E, Direction.NE, Direction.N]
         elif row == 4 and col == 0: # top-left corner
-            return [Direction.S, Direction.SE, Direction.E]
+            dir_list = [Direction.S, Direction.SE, Direction.E]
         elif col == 0: # left edge
-            return [Direction.S, Direction.E, Direction.N]
+            dir_list = [Direction.S, Direction.E, Direction.N]
         elif row == 0 and col % 2 == 1: # bottom edge 1
-            return [Direction.W, Direction.N, Direction.E]
+            dir_list = [Direction.W, Direction.N, Direction.E]
         elif row == 0 and col % 2 == 0: # bottom edge 2
-            return [Direction.W, Direction.NW, Direction.N, Direction.NE, Direction.E]
+            dir_list = [Direction.W, Direction.NW, Direction.N, Direction.NE, Direction.E]
         elif row == 4 and col % 2 == 1: # top edge 1
-            return [Direction.W, Direction.S, Direction.E]
+            dir_list = [Direction.W, Direction.S, Direction.E]
         elif row == 4 and col % 2 == 0: # top edge 2
-            return [Direction.W, Direction.SW, Direction.S, Direction.SE, Direction.E]
+            dir_list = [Direction.W, Direction.SW, Direction.S, Direction.SE, Direction.E]
         elif row == 0 and col == 8: # bottom-right corner
-            return [Direction.W, Direction.NW, Direction.N]
+            dir_list = [Direction.W, Direction.NW, Direction.N]
         elif row == 2 and col == 8: # middle-right
-            return [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N]
+            dir_list = [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N]
         elif row == 4 and col == 8: # top-right corner
-            return [Direction.S, Direction.SW, Direction.W]
+            dir_list = [Direction.S, Direction.SW, Direction.W]
         elif col == 8: # right edge
-            return [Direction.S, Direction.W, Direction.N]
+            dir_list = [Direction.S, Direction.W, Direction.N]
         elif (row + col) % 2 == 0: # 8-point
-            return [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N, Direction.NE, Direction.E, Direction.SE]
+            dir_list = [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N, Direction.NE, Direction.E, Direction.SE]
         elif (row + col) % 2 == 1: # 4-point
-            return [Direction.S, Direction.W, Direction.N, Direction.E]
+            dir_list = [Direction.S, Direction.W, Direction.N, Direction.E]
+        return dir_list
 
-    def in_capturing_seq(self):
+    def in_capturing_seq(self) -> bool:
         """Returns True if current state is part of a capturing sequence i.e. at least one capture has already been made."""
         _, _, last_dir_used, _, _ = self.state
-        return last_dir_used != Direction.X
+        return bool(last_dir_used != Direction.X)
 
-    def capture_exists(self):
+    def capture_exists(self) -> bool:
         """Returns True if capturing move exists in the current state."""
         _, _who_to_play, _, _, _ = self.state
 
@@ -207,7 +213,7 @@ class FanoronaEnv(gym.Env):
                     _to = FanoronaEnv.displace_pos(_from, _dir)
                     if self.get_piece(_to) == Piece.EMPTY and self.get_piece(FanoronaEnv.displace_pos(_to, _dir)) == self.other_side(): # approach
                         return True
-                    elif self.get_piece(_to) == Piece.EMPTY and self.get_piece(FanoronaEnv.displace_pos(_from, 8 - _dir)) == self.other_side: # withdrawal
+                    elif self.get_piece(_to) == Piece.EMPTY and self.get_piece(FanoronaEnv.displace_pos(_from, Direction(8 - _dir))) == self.other_side: # withdrawal
                         return True
         return False
 
@@ -273,21 +279,39 @@ class FanoronaEnv(gym.Env):
 
         return True
 
-    def piece_exists(self, piece):
+    def piece_exists(self, piece: Piece) -> bool:
         """Checks whether a instance of a piece exists on the game board."""
         for pos in range(NUM_SQUARES):
             if self.get_piece(pos) == piece:
                 return True
         return False
 
-    def get_valid_moves(self):
-        """TODO: Returns a list of all valid moves (in the form of actions)."""
+    def get_valid_moves(self) -> List[Tuple[int, Direction, int, int]]:
+        """Returns a list of all valid moves (in the form of actions)."""
         # scan all pieces (of turn to play) and directions for all possible moves + captures in separate lists
         # if in capturing sequence, add end_turn action (0, 0, 0, 1)
         # if captures not empty, return captures, else moves
-        pass
+        moves: List[Tuple[int, Direction, int, int]] = []
+        captures: List[Tuple[int, Direction, int, int]] = []
+        _board_state, _who_to_play, _last_dir, _visited_pos, _half_moves = self.state
+        for pos in range(NUM_SQUARES):
+            if self.get_piece(pos) == _who_to_play:
+                for _dir in Direction:
+                    move_action = (pos, _dir, 0, 0)
+                    if self.is_valid(move_action):
+                        moves.append(move_action)
+                    for capture_type in [1, 2]:
+                        capture_action = (pos, _dir, capture_type, 0)
+                        if self.is_valid(capture_action):
+                            captures.append(capture_action)
+        if self.in_capturing_seq():
+            captures.append((0, Direction(0), 0, 1))
+        if self.capture_exists():
+            return captures
+        else:
+            return moves
 
-    def is_done(self):
+    def is_done(self) -> Tuple[bool, Reward]:
         """
         Check whether the game is over and return the reward.
 
@@ -301,14 +325,15 @@ class FanoronaEnv(gym.Env):
         else:
             own_piece_exists = self.piece_exists(_who_to_play)
             other_piece_exists = self.piece_exists(self.other_side())
-            if not own_piece_exists: # TODO: actually should be if a move exists, since a piece may exist but not have legal moves
+            # cannot have a situation where a piece exists but there are no valid moves
+            if not own_piece_exists:
                 return True, Reward.LOSS
             if not other_piece_exists:
                 return True, Reward.WIN
             else:
                 return False, Reward.NONE
 
-    def reset_visited_pos(self):
+    def reset_visited_pos(self) -> None:
         """Resets visited_pos of a state to indicate no visited positions."""
         _, _, _, _visited_pos, _ = self.state
         for pos in range(NUM_SQUARES):
@@ -369,6 +394,13 @@ class FanoronaEnv(gym.Env):
             info = {}
             return obs, reward, done, info
 
+        # if in capturing sequence, and no valid moves available (other than end turn), then cause turn to end
+        if self.in_capturing_seq() and len(self.get_valid_moves()) == 1:
+            _who_to_play = self.other_side()
+            _last_dir = Direction.X
+            self.reset_visited_pos()
+            _half_moves += 1
+        
         self.state = (_board_state, _who_to_play, _last_dir, _visited_pos, _half_moves)
         obs = self.state
         done, reward = self.is_done()
@@ -407,12 +439,14 @@ class FanoronaEnv(gym.Env):
 
         return self.state
 
+    # TODO: write single translate_coords method to interconvert between human, pos, and coords
+    # TODO: create state object with attributes, instead of having to unpack it every time
     @staticmethod
     def convert_human_to_coords(human_coords: str) -> Tuple[int, int]:
         """Converts human-readable board coordinates (e.g. 'A7', 'G1') to integer board coordinates."""
-        row, col = list(human_coords)
-        row -= 1
-        col = ord(row) - ord('A')
+        col_str, row_str = list(human_coords)
+        row = int(row_str) - 1
+        col = ord(col_str) - ord('A')
         return row, col
 
     @staticmethod
@@ -459,7 +493,7 @@ class FanoronaEnv(gym.Env):
 
         self.state = (_board_state, _who_to_play, _last_dir, _visited_pos, _half_moves)
 
-    def get_board_str(self):
+    def get_board_str(self) -> str:
         """     
         ●─●─●─●─●─●─●─●─●
         │╲│╱│╲│╱│╲│╱│╲│╱│
@@ -496,16 +530,16 @@ class FanoronaEnv(gym.Env):
         _who_to_play_str = str(Piece(_who_to_play))
         _last_dir_str = str(Direction(_last_dir))
         
-        visited_pos = []
+        visited_pos_list = []
         for row_idx, row in enumerate(_visited_pos):
             for col_idx, col in enumerate(row):
                 if col:
-                    visited_pos.append(FanoronaEnv.convert_coords_to_human(row_idx, col_idx))
-        visited_pos = ','.join(visited_pos)
-        if visited_pos == '':
-            visited_pos = '-'
+                    visited_pos_list.append(FanoronaEnv.convert_coords_to_human(row_idx, col_idx))
+        visited_pos_str = ','.join(visited_pos_list)
+        if not visited_pos_list:
+            visited_pos_str = '-'
 
         return ' '.join([board_string, _who_to_play_str, _last_dir_str, visited_pos, str(_half_moves)])
 
-    def render(self, mode='human', close=False):
+    def render(self, mode: str = 'human', close: bool = False) -> None:
         print(self.get_board_str())
