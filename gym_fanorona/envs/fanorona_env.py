@@ -11,7 +11,7 @@ BOARD_ROWS  = 5
 BOARD_COLS = 9
 MOVE_LIMIT = 50
 
-NUM_SQUARES  = BOARD_ROWS * BOARD_COLS
+BOARD_SQUARES  = BOARD_ROWS * BOARD_COLS
 
 class Piece(IntEnum):
     def __str__(self):
@@ -94,7 +94,7 @@ class FanoronaEnv(gym.Env):
         # TODO: would dynamically changing action space be better than current implementation?
         # if no valid moves, turn gets passed e.g. if capturing sequence cannot be continued - should not have to use end_turn action
         self.action_space = spaces.Tuple((
-            spaces.Discrete(NUM_SQUARES),    # from
+            spaces.Discrete(BOARD_SQUARES),    # from
             spaces.Discrete(len(Direction)), # direction 
             spaces.Discrete(3),              # capture type (none=0, approach=1, withdrawal=2)
             spaces.Discrete(2)               # end turn (0 for no, 1 for yes) 
@@ -113,21 +113,21 @@ class FanoronaEnv(gym.Env):
     @staticmethod
     def pos_to_coords(position: int) -> Tuple[int, int]:
         """Converts an integer board coordinate into (row, col) format."""
-        assert 0 <= position < NUM_SQUARES
+        # assert 0 <= position < BOARD_SQUARES, f'Invalid position is {position}'
         return (position // BOARD_COLS, position % BOARD_COLS)
 
     @staticmethod
     def coords_to_pos(coords: Tuple[int, int]) -> int:
         """Converts (row, col) tuple to integer board coordinate."""
         row, col = coords
-        assert 0 <= row < BOARD_ROWS
-        assert 0 <= col < BOARD_COLS
+        # assert 0 <= row < BOARD_ROWS, f'Invalid row is {row}'
+        # assert 0 <= col < BOARD_COLS, f'Invalid column is {col}'
         return row * (BOARD_COLS) + col
 
     @staticmethod
     def displace_pos(pos: int, _dir: Direction) -> int:
         """Adds unit direction vector (given by _dir) to pos."""
-        assert 0 <= pos < NUM_SQUARES
+        # assert 0 <= pos < BOARD_SQUARES, f'Invalid position is {pos}'
         DIR_VALS = {
             0: (-1, -1), # SW
             1: (-1,  0), # S
@@ -146,7 +146,7 @@ class FanoronaEnv(gym.Env):
 
     def get_piece(self, position: int) -> Piece:
         """Return type of piece at given position (specified in integer coordinates)."""
-        assert 0 <= position < NUM_SQUARES
+        assert 0 <= position < BOARD_SQUARES
         _board_state, _, _, _, _ = self.state
         row, col = FanoronaEnv.pos_to_coords(position)
         return Piece(_board_state[row][col])
@@ -162,7 +162,7 @@ class FanoronaEnv(gym.Env):
     @staticmethod
     def get_valid_dirs(pos: int) -> List[Direction]:
         """Get list of valid directions available from a given board position."""
-        assert 0 <= pos < NUM_SQUARES
+        assert 0 <= pos < BOARD_SQUARES
         row, col = FanoronaEnv.pos_to_coords(pos)
         if row == 0 and col == 0: # bottom-left corner
             dir_list = [Direction.N, Direction.NE, Direction.E]
@@ -200,20 +200,26 @@ class FanoronaEnv(gym.Env):
         return bool(last_dir_used != Direction.X)
 
     def capture_exists(self) -> bool:
-        """Returns True if capturing move exists in the current state."""
+        """Returns True if sny capturing move exists in the current state."""
         _, _who_to_play, _, _, _ = self.state
 
         # Capturing move exists if -
         # a) a piece belonging to the side to play exists
         # b) it has an adjacent empty space
         # c) the opposite color piece exists on approach or withdrawal.
-        for _from in range(NUM_SQUARES):
+        for _from in range(BOARD_SQUARES):
             if self.get_piece(_from) == Piece(_who_to_play):
-                for _dir in FanoronaEnv.get_valid_dirs(_from):
+                valid_dirs = FanoronaEnv.get_valid_dirs(_from)
+                for _dir in valid_dirs:
                     _to = FanoronaEnv.displace_pos(_from, _dir)
-                    if self.get_piece(_to) == Piece.EMPTY and self.get_piece(FanoronaEnv.displace_pos(_to, _dir)) == self.other_side(): # approach
+                    _capture_approach = FanoronaEnv.displace_pos(_to, _dir)
+                    if Direction(8 - _dir) in valid_dirs:
+                        _capture_withdrawal = FanoronaEnv.displace_pos(_from, Direction(8 - _dir))
+                    else:
+                        _capture_withdrawal = BOARD_SQUARES
+                    if self.get_piece(_to) == Piece.EMPTY and 0 <= _capture_approach < BOARD_SQUARES and self.get_piece(_capture_approach) == self.other_side(): # approach
                         return True
-                    elif self.get_piece(_to) == Piece.EMPTY and self.get_piece(FanoronaEnv.displace_pos(_from, Direction(8 - _dir))) == self.other_side: # withdrawal
+                    elif self.get_piece(_to) == Piece.EMPTY and 0 <= _capture_withdrawal < BOARD_SQUARES and self.get_piece(_capture_withdrawal) == self.other_side: # withdrawal
                         return True
         return False
 
@@ -223,7 +229,7 @@ class FanoronaEnv(gym.Env):
 
         _to = FanoronaEnv.displace_pos(_from, _dir)
         if _capture_type == 0:   # none
-            _capture = NUM_SQUARES
+            _capture = BOARD_SQUARES
         elif _capture_type == 1: # approach
             _capture = FanoronaEnv.displace_pos(_to, _dir)
         else:                    # withdraw
@@ -240,9 +246,9 @@ class FanoronaEnv(gym.Env):
 
         # Bounds checking on positions
         for pos in (_from, _to):
-            if not 0 <= pos < NUM_SQUARES: # pos is within board bounds
+            if not 0 <= pos < BOARD_SQUARES: # pos is within board bounds
                 return False
-        if not 0 <= _capture <= NUM_SQUARES: # capture may be NUM_SQUARES in case of paika move
+        if not 0 <= _capture <= BOARD_SQUARES: # capture may be BOARD_SQUARES in case of paika move
             return False 
         if _from == _to:
             return False
@@ -252,7 +258,7 @@ class FanoronaEnv(gym.Env):
             return False
         if self.get_piece(_to) != Piece.EMPTY: # piece must be played to an empty location
             return False
-        if _capture != NUM_SQUARES and self.get_piece(_capture) != self.other_side(): # capturing line must start with opponent color stone
+        if _capture != BOARD_SQUARES and self.get_piece(_capture) != self.other_side(): # capturing line must start with opponent color stone
             return False
 
         # Checking that _dir is permitted from given board position
@@ -281,7 +287,7 @@ class FanoronaEnv(gym.Env):
 
     def piece_exists(self, piece: Piece) -> bool:
         """Checks whether a instance of a piece exists on the game board."""
-        for pos in range(NUM_SQUARES):
+        for pos in range(BOARD_SQUARES):
             if self.get_piece(pos) == piece:
                 return True
         return False
@@ -294,7 +300,7 @@ class FanoronaEnv(gym.Env):
         moves: List[Tuple[int, Direction, int, int]] = []
         captures: List[Tuple[int, Direction, int, int]] = []
         _board_state, _who_to_play, _last_dir, _visited_pos, _half_moves = self.state
-        for pos in range(NUM_SQUARES):
+        for pos in range(BOARD_SQUARES):
             if self.get_piece(pos) == _who_to_play:
                 for _dir in Direction:
                     move_action = (pos, _dir, 0, 0)
@@ -336,7 +342,7 @@ class FanoronaEnv(gym.Env):
     def reset_visited_pos(self) -> None:
         """Resets visited_pos of a state to indicate no visited positions."""
         _, _, _, _visited_pos, _ = self.state
-        for pos in range(NUM_SQUARES):
+        for pos in range(BOARD_SQUARES):
             row, col = FanoronaEnv.pos_to_coords(pos)
             _visited_pos[row][col] = 0
 
@@ -539,7 +545,7 @@ class FanoronaEnv(gym.Env):
         if not visited_pos_list:
             visited_pos_str = '-'
 
-        return ' '.join([board_string, _who_to_play_str, _last_dir_str, visited_pos, str(_half_moves)])
+        return ' '.join([board_string, _who_to_play_str, _last_dir_str, visited_pos_str, str(_half_moves)])
 
     def render(self, mode: str = 'human', close: bool = False) -> None:
         print(self.get_board_str())

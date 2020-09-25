@@ -94,22 +94,23 @@ def test_end_turn():
                     assert env.is_valid(action), f'Action: {action}'
 
 def test_get_valid_moves():
+    # TODO
     pass
 
 def test_random_valid_moves():
     "Test random valid moves sampled from action space"
+    ITERATIONS = 100
     env = gym.make('fanorona-v0')
     env.reset()
-    while True:
-        action = random.choice(env.get_valid_moves()) 
+    valid_moves = env.get_valid_moves()
+    while valid_moves:
+        action = random.choice(valid_moves) 
         assert env.is_valid(action)
         try:
             env.step(action)
         except Exception:
             print(action)
-        if valid >= 100:
-            break
-    assert valid == 100
+        valid_moves = env.get_valid_moves()
     env.close()
 
 @pytest.mark.skip(reason='Inexplicably taking too long to find valid moves after two of them')
