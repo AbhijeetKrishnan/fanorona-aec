@@ -84,11 +84,14 @@ def test_end_turn():
                     assert env.is_valid(action), f'Action: {action}'
     env.close()
 
-@pytest.mark.skip(reason='Not implemented')
 def test_get_valid_moves():
     "Verify that get_valid_moves() returns the correct valid moves from a given state"
-    # TODO
-    pass
+    env = gym.make('fanorona-v0')
+    state = 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0' # start state
+    env.set_state_from_board_str(state)
+    valid_moves = env.get_valid_moves()
+    assert len(valid_moves) == 5
+    env.close()
 
 def test_random_valid_moves():
     "Test random valid moves sampled from action space to verify that they run without error"

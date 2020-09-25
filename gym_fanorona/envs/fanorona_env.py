@@ -169,8 +169,12 @@ class FanoronaEnv(gym.Env):
             dir_list = [Direction.S, Direction.SE, Direction.E, Direction.NE, Direction.N]
         elif row == 4 and col == 0: # top-left corner
             dir_list = [Direction.S, Direction.SE, Direction.E]
-        elif col == 0: # left edge
-            dir_list = [Direction.S, Direction.E, Direction.N]
+        elif row == 0 and col == 8: # bottom-right corner
+            dir_list = [Direction.W, Direction.NW, Direction.N]
+        elif row == 2 and col == 8: # middle-right
+            dir_list = [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N]
+        elif row == 4 and col == 8: # top-right corner
+            dir_list = [Direction.S, Direction.SW, Direction.W]
         elif row == 0 and col % 2 == 1: # bottom edge 1
             dir_list = [Direction.W, Direction.N, Direction.E]
         elif row == 0 and col % 2 == 0: # bottom edge 2
@@ -179,12 +183,8 @@ class FanoronaEnv(gym.Env):
             dir_list = [Direction.W, Direction.S, Direction.E]
         elif row == 4 and col % 2 == 0: # top edge 2
             dir_list = [Direction.W, Direction.SW, Direction.S, Direction.SE, Direction.E]
-        elif row == 0 and col == 8: # bottom-right corner
-            dir_list = [Direction.W, Direction.NW, Direction.N]
-        elif row == 2 and col == 8: # middle-right
-            dir_list = [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N]
-        elif row == 4 and col == 8: # top-right corner
-            dir_list = [Direction.S, Direction.SW, Direction.W]
+        elif col == 0: # left edge
+            dir_list = [Direction.S, Direction.E, Direction.N]
         elif col == 8: # right edge
             dir_list = [Direction.S, Direction.W, Direction.N]
         elif (row + col) % 2 == 0: # 8-point
@@ -212,14 +212,12 @@ class FanoronaEnv(gym.Env):
                 for _dir in valid_dirs:
                     _to = FanoronaEnv.displace_pos(_from, _dir)
                     _capture_approach = FanoronaEnv.displace_pos(_to, _dir)
-                    if Direction(8 - _dir) in valid_dirs:
-                        _capture_withdrawal = FanoronaEnv.displace_pos(_from, Direction(8 - _dir))
-                    else:
-                        _capture_withdrawal = BOARD_SQUARES
                     if self.get_piece(_to) == Piece.EMPTY and 0 <= _capture_approach < BOARD_SQUARES and self.get_piece(_capture_approach) == self.other_side(): # approach
                         return True
-                    elif self.get_piece(_to) == Piece.EMPTY and 0 <= _capture_withdrawal < BOARD_SQUARES and self.get_piece(_capture_withdrawal) == self.other_side: # withdrawal
-                        return True
+                    if Direction(8 - _dir) in valid_dirs:
+                        _capture_withdrawal = FanoronaEnv.displace_pos(_from, Direction(8 - _dir))
+                        if self.get_piece(_to) == Piece.EMPTY and 0 <= _capture_withdrawal < BOARD_SQUARES and self.get_piece(_capture_withdrawal) == self.other_side: # withdrawal
+                            return True
         return False
 
     def is_valid(self, action) -> bool:
