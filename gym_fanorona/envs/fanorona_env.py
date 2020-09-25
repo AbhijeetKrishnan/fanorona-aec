@@ -282,6 +282,9 @@ class FanoronaEnv(gym.Env):
 
     def get_valid_moves(self):
         """TODO: Returns a list of all valid moves (in the form of actions)."""
+        # scan all pieces (of turn to play) and directions for all possible moves + captures in separate lists
+        # if in capturing sequence, add end_turn action (0, 0, 0, 1)
+        # if captures not empty, return captures, else moves
         pass
 
     def is_done(self):
@@ -333,7 +336,7 @@ class FanoronaEnv(gym.Env):
             else:
                 _board_state[_to_row][_to_col] = self.get_piece(_from)
                 _board_state[_from_row][_from_col] = Piece.EMPTY
-                
+
                 if _capture_type == 0: # paika move
                     _who_to_play = FanoronaEnv.other_side()
                     _last_dir = Direction.X
@@ -403,12 +406,60 @@ class FanoronaEnv(gym.Env):
         )
 
         return self.state
-    
-    def set_state_from_board_string(board_string):
-        """TODO: Set the env object state using a board string."""
-        pass
 
-    def get_board_string(self):
+    @staticmethod
+    def convert_human_to_coords(human_coords: str) -> Tuple[int, int]:
+        """Converts human-readable board coordinates (e.g. 'A7', 'G1') to integer board coordinates."""
+        row, col = list(human_coords)
+        row -= 1
+        col = ord(row) - ord('A')
+        return row, col
+
+    @staticmethod
+    def convert_coords_to_human(row: int, col: int) -> str:
+        """Converts integer board coordinates to human-readable board coordinates (e.g. 'A7', 'G1')."""
+        return f'{chr(65 + col)}{row + 1}'
+    
+    def set_state_from_board_str(self, board_string: str) -> None:
+        """Set the env object state using a board string."""
+
+        def process_board_state_str(board_state_str: str):
+            row_strings = board_state_str.split('/')
+            board_state_chars = [list(row) for row in row_strings]
+            board_state = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8)
+            for row, row_content in enumerate(board_state_chars):
+                col_board = 0
+                for col, cell in enumerate(row_content):
+                    if cell == 'W':
+                        board_state[row][col_board] = Piece.WHITE
+                    elif cell == 'B':
+                        board_state[row][col_board] = Piece.BLACK
+                    else:
+                        for col_board in range(col_board, col_board + int(cell)):
+                            board_state[row][col_board] = Piece.EMPTY
+                    col_board += 1
+            return board_state
+
+        def process_visited_pos_str(visited_pos_str: str):
+            visited = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8)
+            if visited_pos_str != '-':
+                visited_pos_list = visited_pos_str.split(',')
+                for human_pos in visited_pos_list:
+                    row, col = FanoronaEnv.convert_human_to_coords(human_pos)
+                    visited[row][col] = True
+            return visited
+                        
+        _board_state_str, _who_to_play_str, _last_dir_str, _visited_pos_str, _half_moves_str = board_string.split()
+
+        _board_state = process_board_state_str(_board_state_str)
+        _who_to_play = Piece.WHITE if _who_to_play_str == 'W' else Piece.BLACK
+        _last_dir = Direction[_last_dir_str] if _last_dir_str != '-' else Direction.X
+        _visited_pos = process_visited_pos_str(_visited_pos_str)
+        _half_moves = int(_half_moves_str)
+
+        self.state = (_board_state, _who_to_play, _last_dir, _visited_pos, _half_moves)
+
+    def get_board_str(self):
         """     
         ●─●─●─●─●─●─●─●─●
         │╲│╱│╲│╱│╲│╱│╲│╱│
@@ -436,6 +487,7 @@ class FanoronaEnv(gym.Env):
                     board_string += col_str
             if count > 0:
                 board_string += str(count)
+                count = 0
             board_string += '/'
         board_string = board_string.rstrip('/')
         if count > 0:
@@ -448,7 +500,7 @@ class FanoronaEnv(gym.Env):
         for row_idx, row in enumerate(_visited_pos):
             for col_idx, col in enumerate(row):
                 if col:
-                    visited_pos.append(f'{chr(65 + col_idx)}{row_idx + 1}')
+                    visited_pos.append(FanoronaEnv.convert_coords_to_human(row_idx, col_idx))
         visited_pos = ','.join(visited_pos)
         if visited_pos == '':
             visited_pos = '-'
@@ -456,4 +508,4 @@ class FanoronaEnv(gym.Env):
         return ' '.join([board_string, _who_to_play_str, _last_dir_str, visited_pos, str(_half_moves)])
 
     def render(self, mode='human', close=False):
-        print(self.get_board_string())
+        print(self.get_board_str())
