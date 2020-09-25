@@ -28,3 +28,10 @@ We use [pytest](http://doc.pytest.org/) for tests. You can run them via:
 ```
 pytest
 ```
+
+## TODO
+
+[ ] Refactor state into a state object with attributes
+[ ] Write a visual interface for playing Fanorona
+[ ] Add multiple tests for each method used
+[ ] Refactor coordinate conversion methods into a single method with flags

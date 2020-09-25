@@ -6,33 +6,31 @@ import pytest
 
 
 def test_make():
+    "Verify that gym.make() executes without error"
     env = gym.make('fanorona-v0')
     env.close()
 
 def test_reset():
+    "Verify that reset() executes without error"
     env = gym.make('fanorona-v0')
     env.reset()
     env.close()
 
-def test_get_board_string_starting():
+def test_reset_starting():
+    "Verify that reset() sets the board state to the correct starting position"
     env = gym.make('fanorona-v0')
     env.reset()
     assert env.get_board_str() == 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0' # starting position
     env.close()
 
 def test_render():
+    "Verify that render() executes without error"
     env = gym.make('fanorona-v0')
     env.reset()
     env.render()
     env.close()
 
 def test_is_valid():
-    env = gym.make('fanorona-v0')
-    env.reset()
-    action = (12, 8, 1, 0)
-    assert env.is_valid(action)
-
-def test_is_valid2():
     "Test 2 opening moves for validity"
     env = gym.make('fanorona-v0')
     env.reset()
@@ -41,20 +39,11 @@ def test_is_valid2():
     assert env.is_valid(action1)
     env.step(action1)
     assert not env.is_valid(action2)
-
-def test_step():
-    "Test simple opening move."
-    env = gym.make('fanorona-v0')
-    env.reset()
-    action = (12, 8, 1, 0) # D2 -> E3 approach capture
-    obs, reward, done, info = env.step(action)
-    assert env.get_board_str() == 'WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB W NE D2,E3 0'
-    assert reward == 0
-    assert not done
     env.close()
 
-def test_step2():
-    "Test end_turn after opening move."
+# TODO: convert test_step() into a class, add methods to test step() with different moves from different initial states
+def test_step():
+    "Test step() with a variety of moves from different initial states"
     env = gym.make('fanorona-v0')
     env.reset()
     action = (12, 8, 1, 0) # D2 -> E3 approach capture
@@ -78,6 +67,7 @@ def test_is_done():
     action = (21, 5, 1, 0)
     obs, reward, done, info = env.step(action)
     assert done
+    env.close()
 
 def test_end_turn():
     "Test end turn action by making an opening capturing move and testing all possible end turn actions in action space"
@@ -92,13 +82,16 @@ def test_end_turn():
                     end_turn = 1
                     action = (pos, dir, capture_type, end_turn)
                     assert env.is_valid(action), f'Action: {action}'
+    env.close()
 
+@pytest.mark.skip(reason='Not implemented')
 def test_get_valid_moves():
+    "Verify that get_valid_moves() returns the correct valid moves from a given state"
     # TODO
     pass
 
 def test_random_valid_moves():
-    "Test random valid moves sampled from action space"
+    "Test random valid moves sampled from action space to verify that they run without error"
     ITERATIONS = 100
     env = gym.make('fanorona-v0')
     env.reset()
@@ -115,7 +108,7 @@ def test_random_valid_moves():
 
 @pytest.mark.skip(reason='Inexplicably taking too long to find valid moves after two of them')
 def test_all_moves():
-    "Test all possible moves by systematically exploring action space"
+    "Test all possible moves by systematically exploring action space and verify that they run without error"
     env = gym.make('fanorona-v0')
     env.reset()
     valid = 0
@@ -131,16 +124,81 @@ def test_all_moves():
                             print(env.get_board_str(), action)
                             valid += 1
                         env.step(action)
+    env.close()
 
 def test_set_state_from_board_str():
+    "Verify that set_state_from_board_str() sets the state correctly"
     board_str = '9/9/3W1B3/9/9 W - - 49'
     env = gym.make('fanorona-v0')
     env.set_state_from_board_str(board_str)
     assert env.get_board_str() == board_str
+    env.close()
 
-def test_random_obs():
+def test_get_board_str():
+    "Test that get_board_str() works with randomly sampled observations"
     env = gym.make('fanorona-v0')
     env.reset()
     for i in range(10):
         env.state = env.observation_space.sample()
         print(env.get_board_str())
+    env.close()
+
+@pytest.mark.skip(reason='Not implemented')
+def test_capture_exists():
+    "TODO: Test that capture_exists() returns the correct results for given states"
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_convert_coords_to_human():
+    "TODO: Test that convert_coords_to_human returns the correct values"
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_convert_human_to_coords():
+    "TODO: Test that convert_human_to_coords returns the correct values"
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_coords_to_pos():
+    "TODO: "
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_pos_to_coords():
+    "TODO: "
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_displace_piece():
+    "TODO: "
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_get_piece():
+    "TODO: "
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_get_valid_dirs():
+    "TODO: "
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_in_capturing_seq():
+    "TODO: "
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_other_side():
+    "TODO: "
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_piece_exists():
+    "TODO: "
+    pass
+
+@pytest.mark.skip(reason='Not implemented')
+def test_reset_visited_pos():
+    "TODO: "
+    pass

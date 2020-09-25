@@ -1,9 +1,8 @@
 from enum import IntEnum
-from typing import List, Dict, Tuple
-
-import numpy as np
+from typing import Dict, List, Tuple
 
 import gym
+import numpy as np
 from gym import error, spaces, utils
 from gym.utils import seeding
 
@@ -132,12 +131,12 @@ class FanoronaEnv(gym.Env):
             0: (-1, -1), # SW
             1: (-1,  0), # S
             2: (-1,  1), # SE
-            3: (0,  -1), # W
-            4: (0,   0), # -
-            5: (0,   1), # E
-            6: (1,  -1), # NW
-            7: (1,   0), # N
-            8: (1,   1)  # NE
+            3: ( 0, -1), # W
+            4: ( 0,  0), # -
+            5: ( 0,  1), # E
+            6: ( 1, -1), # NW
+            7: ( 1,  0), # N
+            8: ( 1,  1)  # NE
         }
         res_row, res_col = FanoronaEnv.pos_to_coords(pos)
         mod_row, mod_col = DIR_VALS[_dir]
@@ -200,7 +199,7 @@ class FanoronaEnv(gym.Env):
         return bool(last_dir_used != Direction.X)
 
     def capture_exists(self) -> bool:
-        """Returns True if sny capturing move exists in the current state."""
+        """Returns True if any capturing move exists in the current state."""
         _, _who_to_play, _, _, _ = self.state
 
         # Capturing move exists if -
