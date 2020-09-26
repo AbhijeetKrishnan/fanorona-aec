@@ -5,6 +5,12 @@ import gym_fanorona
 import pytest
 
 
+TEST_STATES = [
+    'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0', # start state
+    'WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB W NE D2,E3 0', # capturing seq after D2->E3 approach
+    '9/9/3W1B3/9/9 W - - 49', # random endgame state
+]
+
 def test_make():
     "Verify that gym.make() executes without error"
     env = gym.make('fanorona-v0')
@@ -131,10 +137,10 @@ def test_all_moves():
 
 def test_set_state_from_board_str():
     "Verify that set_state_from_board_str() sets the state correctly"
-    board_str = '9/9/3W1B3/9/9 W - - 49'
     env = gym.make('fanorona-v0')
-    env.set_state_from_board_str(board_str)
-    assert env.get_board_str() == board_str
+    for board_str in TEST_STATES:
+        env.set_state_from_board_str(board_str)
+        assert env.get_board_str() == board_str
     env.close()
 
 def test_get_board_str():
@@ -146,10 +152,16 @@ def test_get_board_str():
         print(env.get_board_str())
     env.close()
 
-@pytest.mark.skip(reason='Not implemented')
 def test_capture_exists():
-    "TODO: Test that capture_exists() returns the correct results for given states"
-    pass
+    env = gym.make('fanorona-v0')
+    env.reset()
+    states = TEST_STATES
+    env.set_state_from_board_str(states[0])
+    assert env.capture_exists()
+    env.set_state_from_board_str(states[1])
+    assert not env.capture_exists()
+    env.set_state_from_board_str(states[2])
+    assert env.capture_exists()
 
 @pytest.mark.skip(reason='Not implemented')
 def test_convert_coords_to_human():

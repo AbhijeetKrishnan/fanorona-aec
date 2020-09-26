@@ -199,28 +199,26 @@ class FanoronaEnv(gym.Env):
         return bool(last_dir_used != Direction.X)
 
     def capture_exists(self) -> bool:
-        """Returns True if any capturing move exists in the current state."""
-        _, _who_to_play, _, _, _ = self.state
+        """
+        Returns True if any capturing move exists in the current state.
 
-        # Capturing move exists if -
-        # a) a piece belonging to the side to play exists
-        # b) it has an adjacent empty space
-        # c) the opposite color piece exists on approach or withdrawal.
-        for _from in range(BOARD_SQUARES):
-            if self.get_piece(_from) == Piece(_who_to_play):
-                valid_dirs = FanoronaEnv.get_valid_dirs(_from)
+        A capture exists if -
+        1. a piece belonging to the side to play exists
+        2. the action of moving the piece in any valid direction in any capture type is also valid 
+           (ignoring the no paika when capture exists rule)
+        """
+        _, _who_to_play, _, _, _ = self.state
+        for pos in range(BOARD_SQUARES):
+            if self.get_piece(pos) == _who_to_play:
+                valid_dirs = self.get_valid_dirs(pos)
                 for _dir in valid_dirs:
-                    _to = FanoronaEnv.displace_pos(_from, _dir)
-                    _capture_approach = FanoronaEnv.displace_pos(_to, _dir)
-                    if self.get_piece(_to) == Piece.EMPTY and 0 <= _capture_approach < BOARD_SQUARES and self.get_piece(_capture_approach) == self.other_side(): # approach
-                        return True
-                    if Direction(8 - _dir) in valid_dirs:
-                        _capture_withdrawal = FanoronaEnv.displace_pos(_from, Direction(8 - _dir))
-                        if self.get_piece(_to) == Piece.EMPTY and 0 <= _capture_withdrawal < BOARD_SQUARES and self.get_piece(_capture_withdrawal) == self.other_side: # withdrawal
+                    for capture_type in [1, 2]:
+                        capture_action = (pos, _dir, capture_type, 0)
+                        if self.is_valid(capture_action, skip=['check_no_paika_when_captured']):
                             return True
         return False
 
-    def is_valid(self, action) -> bool:
+    def is_valid(self, action, skip: List[str] = []) -> bool:
         _from, _dir, _capture_type, _end_turn = action
         _board_state, _who_to_play, _last_dir, _visited_pos, _half_moves = self.state
 
@@ -232,54 +230,100 @@ class FanoronaEnv(gym.Env):
         else:                    # withdraw
             _capture = FanoronaEnv.displace_pos(_from, 8 - _dir)
 
-        # Check that move number is under limit
-        if _half_moves >= MOVE_LIMIT:
-            return False
+        def half_move_rule() -> bool:
+            """Check that move number is under limit. An action cannot be performed if limit has been reached."""
+            return _half_moves < MOVE_LIMIT
 
-        # End turn must be done during a capturing sequence, indicated by last_dir not being Direction.X
-        # ignore all other parameters of the action
-        if _end_turn and self.in_capturing_seq():
+        def end_turn_rule():
+            """
+            End turn must be done during a capturing sequence, indicated by last_dir not being 
+            Direction.X. Ignore all other parameters of the action
+            """
+            if _end_turn:
+                return self.in_capturing_seq()
             return True
 
-        # Bounds checking on positions
-        for pos in (_from, _to):
-            if not 0 <= pos < BOARD_SQUARES: # pos is within board bounds
+        def bounds_checking() -> bool:
+            """Bounds checking on positions"""
+            if _end_turn:
+                return True
+            for pos in (_from, _to):
+                if not 0 <= pos < BOARD_SQUARES: # pos is within board bounds
+                    return False
+            if not 0 <= _capture <= BOARD_SQUARES: # capture may be BOARD_SQUARES in case of paika move
+                return False 
+            if _from == _to:
                 return False
-        if not 0 <= _capture <= BOARD_SQUARES: # capture may be BOARD_SQUARES in case of paika move
-            return False 
-        if _from == _to:
-            return False
+            return True
 
-        # Checking validity of pieces at action positions
-        if self.get_piece(_from) != _who_to_play: # from position must contain a piece 
-            return False
-        if self.get_piece(_to) != Piece.EMPTY: # piece must be played to an empty location
-            return False
-        if _capture != BOARD_SQUARES and self.get_piece(_capture) != self.other_side(): # capturing line must start with opponent color stone
-            return False
+        def check_piece_validity() -> bool:
+            """Checking validity of pieces at action positions"""
+            if _end_turn:
+                return True
+            if self.get_piece(_from) != _who_to_play: # from position must contain a piece 
+                return False
+            if self.get_piece(_to) != Piece.EMPTY: # piece must be played to an empty location
+                return False
+            if _capture != BOARD_SQUARES and self.get_piece(_capture) != self.other_side(): # capturing line must start with opponent color stone
+                return False
+            return True
 
-        # Checking that _dir is permitted from given board position
-        if _dir not in FanoronaEnv.get_valid_dirs(_from):
-            return False
+        def check_valid_dir() -> bool:
+            """Checking that _dir is permitted from given board position"""
+            if _end_turn:
+                return True
+            return _dir in FanoronaEnv.get_valid_dirs(_from)
 
-        # Check if paika is being played when capturing move exists, which is illegal
-        if _capture_type == 0 and self.capture_exists():
-            return False
+        def check_no_paika_when_capture() -> bool:
+            """Check if paika is being played when capturing move exists, which is illegal"""
+            if _end_turn:
+                return True
+            return not (_capture_type == 0 and self.capture_exists())
 
-        # If in a capturing sequence, check that capturing piece is the one being moved, and not some other piece
-        _from_row, _from_col = FanoronaEnv.pos_to_coords(_from)
-        if self.in_capturing_seq() and _visited_pos[_from_row][_from_col] != 1:
-            return False
+        def move_only_capturing_piece() -> bool:
+            """
+            If in a capturing sequence, check that capturing piece is the one being moved, and 
+            not some other piece
+            """
+            if _end_turn:
+                return True
+            _from_row, _from_col = FanoronaEnv.pos_to_coords(_from)
+            if self.in_capturing_seq() and _visited_pos[_from_row][_from_col] != 1:
+                return False
+            return True
         
-        # Check that capturing piece is not visiting previously visited pos in capturing path
-        _to_row, _to_col = FanoronaEnv.pos_to_coords(_to)
-        if _visited_pos[_to_row][_to_col] == 1:
-            return False
+        def check_no_overlap() -> bool:
+            """Check that capturing piece is not visiting previously visited pos in capturing path"""
+            if _end_turn:
+                return True
+            _to_row, _to_col = FanoronaEnv.pos_to_coords(_to)
+            if _visited_pos[_to_row][_to_col] == 1:
+                return False
+            return True
 
-        # Check that capturing piece is not moving twice in the same direction
-        if _dir == _last_dir:
-            return False
+        def check_no_same_dir() -> bool:
+            """Check that capturing piece is not moving twice in the same direction"""
+            if _end_turn:
+                return True
+            return _dir != _last_dir
 
+        rules = {
+            'half_move_rule': half_move_rule,
+            'end_turn_rule': end_turn_rule,
+            'bounds_checking': bounds_checking,
+            'check_piece_validity': check_piece_validity,
+            'check_valid_dir': check_valid_dir,
+            'check_no_paika_when_capture': check_no_paika_when_capture,
+            'move_only_capturing_piece': move_only_capturing_piece, 
+            'check_no_overlap': check_no_overlap,
+            'check_no_same_dir': check_no_same_dir
+        }
+        for name, test in rules.items():
+            if name in skip:
+                continue
+            if not test():
+                print(name)
+                return False
         return True
 
     def piece_exists(self, piece: Piece) -> bool:
@@ -290,10 +334,14 @@ class FanoronaEnv(gym.Env):
         return False
 
     def get_valid_moves(self) -> List[Tuple[int, Direction, int, int]]:
-        """Returns a list of all valid moves (in the form of actions)."""
-        # scan all pieces (of turn to play) and directions for all possible moves + captures in separate lists
-        # if in capturing sequence, add end_turn action (0, 0, 0, 1)
-        # if captures not empty, return captures, else moves
+        """
+        Returns a list of all valid moves (in the form of actions).
+
+        Incorporates the rule that a capture must be played if one is available. Works by -
+        1. Scan all pieces (of turn to play) and directions for all possible moves + captures in separate lists
+        2. If in capturing sequence, add end_turn action (0, 0, 0, 1)
+        3. If captures not empty, return captures, else moves
+        """
         moves: List[Tuple[int, Direction, int, int]] = []
         captures: List[Tuple[int, Direction, int, int]] = []
         _board_state, _who_to_play, _last_dir, _visited_pos, _half_moves = self.state
@@ -309,7 +357,7 @@ class FanoronaEnv(gym.Env):
                             captures.append(capture_action)
         if self.in_capturing_seq():
             captures.append((0, Direction(0), 0, 1))
-        if self.capture_exists():
+        if captures:
             return captures
         else:
             return moves
