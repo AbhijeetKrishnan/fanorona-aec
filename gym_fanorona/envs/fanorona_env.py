@@ -326,13 +326,6 @@ class FanoronaEnv(gym.Env):
                 return False
         return True
 
-    def piece_exists(self, piece: Piece) -> bool:
-        """Checks whether a instance of a piece exists on the game board."""
-        for pos in range(BOARD_SQUARES):
-            if self.get_piece(pos) == piece:
-                return True
-        return False
-
     def get_valid_moves(self) -> List[Tuple[int, Direction, int, int]]:
         """
         Returns a list of all valid moves (in the form of actions).
@@ -361,6 +354,13 @@ class FanoronaEnv(gym.Env):
             return captures
         else:
             return moves
+
+    def piece_exists(self, piece: Piece) -> bool:
+        """Checks whether a instance of a piece exists on the game board."""
+        for pos in range(BOARD_SQUARES):
+            if self.get_piece(pos) == piece:
+                return True
+        return False
 
     def is_done(self) -> Tuple[bool, Reward]:
         """
