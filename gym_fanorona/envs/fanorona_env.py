@@ -341,6 +341,7 @@ class FanoronaEnv(gym.Env):
                 return False
         return True
 
+    # TODO: turn this into a generator
     def get_valid_moves(self) -> List[Tuple[int, Direction, int, int]]:
         """
         Returns a list of all valid moves (in the form of actions).
@@ -593,4 +594,47 @@ class FanoronaEnv(gym.Env):
         return ' '.join([board_string, _who_to_play_str, _last_dir_str, visited_pos_str, str(_half_moves)])
 
     def render(self, mode: str = 'human', close: bool = False) -> None:
-        print(self.get_board_str())
+        _board_state, _, _, _, _ = self.state
+        if mode == 'human':
+            print(self.get_board_str())
+        elif mode == 'svg':
+            def convert(coord: Tuple[int, int]) -> Tuple[int, int]:
+                row, col = coord
+                return 100 + col * 100, 100 + (4 - row) * 100
+            svg_w = 1000
+            svg_h = 600
+            black_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="black" />'
+            white_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="white" />'
+            line = '<line x1="{0[0]!s}" y1="{0[1]!s}" x2="{1[0]!s}" y2="{1[1]!s}" stroke="black" stroke-width="1.5" />'
+            board_lines = []
+            for row in range(BOARD_ROWS):
+                _from, _to = convert((row, 0)), convert((row, 8))
+                horizontal = line.format(_from, _to)
+                board_lines.append(horizontal)
+            for col in range(BOARD_COLS):
+                _from, _to = convert((0, col)), convert((4, col))
+                vertical = line.format(_from, _to)
+                board_lines.append(vertical)
+            for diag_forward in range(0, BOARD_COLS, 2):
+                _from = [(2, 0), (0, 0), (0, 2), (0, 4), (0, 6)]
+                _to = [(4, 2), (4, 4), (4, 6), (4, 8), (2, 8)]
+                board_lines.extend([line.format(convert(f), convert(t)) for f, t in zip(_from, _to)])
+            for diag_backward in range(0, BOARD_COLS, 2):
+                _from = [(2, 0), (4, 0), (4, 2), (4, 4), (4, 6)]
+                _to = [(0, 2), (0, 4), (0, 6), (0, 8), (2, 8)]
+                board_lines.extend([line.format(convert(f), convert(t)) for f, t in zip(_from, _to)])
+            board_pieces = []
+            for pos in range(BOARD_SQUARES):
+                row, col = FanoronaEnv.convert_pos_to_coords(pos)
+                if _board_state[row][col] == Piece.WHITE:
+                    board_pieces.append(white_piece.format(convert((row, col))))
+                elif _board_state[row][col] == Piece.BLACK:
+                    board_pieces.append(black_piece.format(convert((row, col))))
+            svg_lines = '\n\t'.join(board_lines + board_pieces)
+            svg = f"""
+<svg height="{svg_h}" width="{svg_w}">
+    {svg_lines}
+</svg>
+"""
+            with open('temp.svg', 'w') as outfile:
+                outfile.write(svg)

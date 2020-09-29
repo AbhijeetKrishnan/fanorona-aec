@@ -30,10 +30,16 @@ def test_reset_starting():
     env.close()
 
 def test_render():
-    "Verify that render() executes without error"
+    "Verify that render() executes without error for default parameters"
     env = gym.make('fanorona-v0')
     env.reset()
     env.render()
+    env.close()
+
+def test_render_svg():
+    env = gym.make('fanorona-v0')
+    env.reset()
+    env.render(mode='svg')
     env.close()
 
 def test_is_valid():
