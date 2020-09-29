@@ -248,7 +248,22 @@ def test_piece_exists():
     "TODO: "
     pass
 
-@pytest.mark.skip(reason='Not implemented')
 def test_reset_visited_pos():
-    "TODO: "
-    pass
+    env = gym.make('fanorona-v0')
+    env.reset()
+    states = TEST_STATES
+    env.set_state_from_board_str(states[0])
+    _, _, _, visited, _ = env.state
+    for row in range(5):
+        for col in range(9):
+            assert not visited[row][col]
+    env.set_state_from_board_str(states[1])
+    env.reset_visited_pos()
+    for row in range(5):
+        for col in range(9):
+            assert not visited[row][col]
+    env.set_state_from_board_str(states[2])
+    env.reset_visited_pos()
+    for row in range(5):
+        for col in range(9):
+            assert not visited[row][col]
