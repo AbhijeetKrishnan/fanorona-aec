@@ -322,7 +322,6 @@ class FanoronaEnv(gym.Env):
             if name in skip:
                 continue
             if not test():
-                print(name)
                 return False
         return True
 
@@ -414,7 +413,7 @@ class FanoronaEnv(gym.Env):
                 _board_state[_from_row][_from_col] = Piece.EMPTY
 
                 if _capture_type == 0: # paika move
-                    _who_to_play = FanoronaEnv.other_side()
+                    _who_to_play = self.other_side()
                     _last_dir = Direction.X
                     self.reset_visited_pos()
                     _half_moves += 1

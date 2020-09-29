@@ -3,7 +3,7 @@ import random
 import gym
 import gym_fanorona
 import pytest
-
+from gym_fanorona.envs.fanorona_env import FanoronaEnv
 
 TEST_STATES = [
     'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0', # start state
@@ -108,10 +108,7 @@ def test_random_valid_moves():
     while valid_moves:
         action = random.choice(valid_moves) 
         assert env.is_valid(action)
-        try:
-            env.step(action)
-        except Exception:
-            print(action)
+        env.step(action)
         valid_moves = env.get_valid_moves()
     env.close()
 
@@ -128,7 +125,6 @@ def test_all_moves():
                     for end_turn in range(2):
                         action = (pos, dir, capture_type, end_turn)
                         valid = env.is_valid(action)
-                        #print(action, valid)
                         if valid:
                             print(env.get_board_str(), action)
                             valid += 1
@@ -163,15 +159,32 @@ def test_capture_exists():
     env.set_state_from_board_str(states[2])
     assert env.capture_exists()
 
-@pytest.mark.skip(reason='Not implemented')
 def test_convert_coords_to_human():
-    "TODO: Test that convert_coords_to_human returns the correct values"
-    pass
+    "Test that convert_coords_to_human returns the correct values"
+    answer = {
+        (0, 0): 'A1', (0, 1): 'B1', (0, 2): 'C1', (0, 3): 'D1', (0, 4): 'E1', (0, 5): 'F1', (0, 6): 'G1', (0, 7): 'H1', (0, 8): 'I1',
+        (1, 0): 'A2', (1, 1): 'B2', (1, 2): 'C2', (1, 3): 'D2', (1, 4): 'E2', (1, 5): 'F2', (1, 6): 'G2', (1, 7): 'H2', (1, 8): 'I2',
+        (2, 0): 'A3', (2, 1): 'B3', (2, 2): 'C3', (2, 3): 'D3', (2, 4): 'E3', (2, 5): 'F3', (2, 6): 'G3', (2, 7): 'H3', (2, 8): 'I3',
+        (3, 0): 'A4', (3, 1): 'B4', (3, 2): 'C4', (3, 3): 'D4', (3, 4): 'E4', (3, 5): 'F4', (3, 6): 'G4', (3, 7): 'H4', (3, 8): 'I4',
+        (4, 0): 'A5', (4, 1): 'B5', (4, 2): 'C5', (4, 3): 'D5', (4, 4): 'E5', (4, 5): 'F5', (4, 6): 'G5', (4, 7): 'H5', (4, 8): 'I5',
+    }
+    for row in range(5):
+        for col in range(9):
+            assert FanoronaEnv.convert_coords_to_human(row, col) == answer[(row, col)]
 
-@pytest.mark.skip(reason='Not implemented')
 def test_convert_human_to_coords():
-    "TODO: Test that convert_human_to_coords returns the correct values"
-    pass
+    "Test that convert_human_to_coords returns the correct values"
+    answer = {
+        'A1': (0, 0), 'B1': (0, 1), 'C1': (0, 2), 'D1': (0, 3), 'E1': (0, 4), 'F1': (0, 5), 'G1': (0, 6), 'H1': (0, 7), 'I1': (0, 8),
+        'A2': (1, 0), 'B2': (1, 1), 'C2': (1, 2), 'D2': (1, 3), 'E2': (1, 4), 'F2': (1, 5), 'G2': (1, 6), 'H2': (1, 7), 'I2': (1, 8),
+        'A3': (2, 0), 'B3': (2, 1), 'C3': (2, 2), 'D3': (2, 3), 'E3': (2, 4), 'F3': (2, 5), 'G3': (2, 6), 'H3': (2, 7), 'I3': (2, 8),
+        'A4': (3, 0), 'B4': (3, 1), 'C4': (3, 2), 'D4': (3, 3), 'E4': (3, 4), 'F4': (3, 5), 'G4': (3, 6), 'H4': (3, 7), 'I4': (3, 8),
+        'A5': (4, 0), 'B5': (4, 1), 'C5': (4, 2), 'D5': (4, 3), 'E5': (4, 4), 'F5': (4, 5), 'G5': (4, 6), 'H5': (4, 7), 'I5': (4, 8),
+    }
+    for row in range(1, 6):
+        for col in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']:
+            human = col + str(row)
+            assert FanoronaEnv.convert_human_to_coords(human) == answer[human]
 
 @pytest.mark.skip(reason='Not implemented')
 def test_coords_to_pos():
