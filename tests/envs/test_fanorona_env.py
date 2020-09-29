@@ -160,7 +160,7 @@ def test_capture_exists():
     assert env.capture_exists()
 
 def test_convert_coords_to_human():
-    "Test that convert_coords_to_human returns the correct values"
+    "Test that convert_coords_to_human returns the correct values for all valid board coords"
     answer = {
         (0, 0): 'A1', (0, 1): 'B1', (0, 2): 'C1', (0, 3): 'D1', (0, 4): 'E1', (0, 5): 'F1', (0, 6): 'G1', (0, 7): 'H1', (0, 8): 'I1',
         (1, 0): 'A2', (1, 1): 'B2', (1, 2): 'C2', (1, 3): 'D2', (1, 4): 'E2', (1, 5): 'F2', (1, 6): 'G2', (1, 7): 'H2', (1, 8): 'I2',
@@ -173,7 +173,7 @@ def test_convert_coords_to_human():
             assert FanoronaEnv.convert_coords_to_human((row, col)) == answer[(row, col)]
 
 def test_convert_human_to_coords():
-    "Test that convert_human_to_coords returns the correct values"
+    "Test that convert_human_to_coords returns the correct values for all valid board coords"
     answer = {
         'A1': (0, 0), 'B1': (0, 1), 'C1': (0, 2), 'D1': (0, 3), 'E1': (0, 4), 'F1': (0, 5), 'G1': (0, 6), 'H1': (0, 7), 'I1': (0, 8),
         'A2': (1, 0), 'B2': (1, 1), 'C2': (1, 2), 'D2': (1, 3), 'E2': (1, 4), 'F2': (1, 5), 'G2': (1, 6), 'H2': (1, 7), 'I2': (1, 8),
@@ -187,7 +187,7 @@ def test_convert_human_to_coords():
             assert FanoronaEnv.convert_human_to_coords(human) == answer[human]
 
 def test_convert_coords_to_pos():
-    "Test that convert_coords_to_pos returns the correct values"
+    "Test that convert_coords_to_pos returns the correct values for all valid board coords"
     answer = {
         (0, 0): 0, (0, 1): 1, (0, 2): 2, (0, 3): 3, (0, 4): 4, (0, 5): 5, (0, 6): 6, (0, 7): 7, (0, 8): 8,
         (1, 0): 9, (1, 1): 10, (1, 2): 11, (1, 3): 12, (1, 4): 13, (1, 5): 14, (1, 6): 15, (1, 7): 16, (1, 8): 17,
@@ -200,7 +200,7 @@ def test_convert_coords_to_pos():
             assert FanoronaEnv.convert_coords_to_pos((row, col)) == answer[(row, col)]
 
 def test_convert_pos_to_coords():
-    "Test convert_pos_to_coords"
+    "Test that convert_pos_to_coords returns the correct values for all valid board positions"
     answer = {
         (0, 0): 0, (0, 1): 1, (0, 2): 2, (0, 3): 3, (0, 4): 4, (0, 5): 5, (0, 6): 6, (0, 7): 7, (0, 8): 8,
         (1, 0): 9, (1, 1): 10, (1, 2): 11, (1, 3): 12, (1, 4): 13, (1, 5): 14, (1, 6): 15, (1, 7): 16, (1, 8): 17,
