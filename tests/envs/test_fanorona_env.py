@@ -213,7 +213,7 @@ def test_convert_pos_to_coords():
         assert FanoronaEnv.convert_pos_to_coords(pos) == answer[pos]
 
 @pytest.mark.skip(reason='Not implemented')
-def test_displace_piece():
+def test_displace_pos():
     "TODO: "
     pass
 
@@ -227,10 +227,16 @@ def test_get_valid_dirs():
     "TODO: "
     pass
 
-@pytest.mark.skip(reason='Not implemented')
 def test_in_capturing_seq():
-    "TODO: "
-    pass
+    env = gym.make('fanorona-v0')
+    env.reset()
+    states = TEST_STATES
+    env.set_state_from_board_str(states[0])
+    assert not env.in_capturing_seq()
+    env.set_state_from_board_str(states[1])
+    assert env.in_capturing_seq()
+    env.set_state_from_board_str(states[2])
+    assert not env.in_capturing_seq()
 
 @pytest.mark.skip(reason='Not implemented')
 def test_other_side():
