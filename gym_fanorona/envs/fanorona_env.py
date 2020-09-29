@@ -109,14 +109,30 @@ class FanoronaEnv(gym.Env):
 
         self.state = None
 
+    # TODO: write single translate_coords method to interconvert between human, pos, and coords
+    # TODO: create state object with attributes, instead of having to unpack it every time
     @staticmethod
-    def pos_to_coords(position: int) -> Tuple[int, int]:
+    def convert_human_to_coords(human_coords: str) -> Tuple[int, int]:
+        """Converts human-readable board coordinates (e.g. 'A7', 'G1') to integer board coordinates."""
+        col_str, row_str = list(human_coords)
+        row = int(row_str) - 1
+        col = ord(col_str) - ord('A')
+        return row, col
+
+    @staticmethod
+    def convert_coords_to_human(coords: Tuple) -> str:
+        """Converts integer board coordinates to human-readable board coordinates (e.g. 'A7', 'G1')."""
+        row, col = coords
+        return f'{chr(65 + col)}{row + 1}'
+
+    @staticmethod
+    def convert_pos_to_coords(position: int) -> Tuple[int, int]:
         """Converts an integer board coordinate into (row, col) format."""
         # assert 0 <= position < BOARD_SQUARES, f'Invalid position is {position}'
         return (position // BOARD_COLS, position % BOARD_COLS)
 
     @staticmethod
-    def coords_to_pos(coords: Tuple[int, int]) -> int:
+    def convert_coords_to_pos(coords: Tuple[int, int]) -> int:
         """Converts (row, col) tuple to integer board coordinate."""
         row, col = coords
         # assert 0 <= row < BOARD_ROWS, f'Invalid row is {row}'
@@ -138,16 +154,16 @@ class FanoronaEnv(gym.Env):
             7: ( 1,  0), # N
             8: ( 1,  1)  # NE
         }
-        res_row, res_col = FanoronaEnv.pos_to_coords(pos)
+        res_row, res_col = FanoronaEnv.convert_pos_to_coords(pos)
         mod_row, mod_col = DIR_VALS[_dir]
         res = (res_row + mod_row, res_col + mod_col)
-        return FanoronaEnv.coords_to_pos(res)
+        return FanoronaEnv.convert_coords_to_pos(res)
 
     def get_piece(self, position: int) -> Piece:
         """Return type of piece at given position (specified in integer coordinates)."""
         assert 0 <= position < BOARD_SQUARES
         _board_state, _, _, _, _ = self.state
-        row, col = FanoronaEnv.pos_to_coords(position)
+        row, col = FanoronaEnv.convert_pos_to_coords(position)
         return Piece(_board_state[row][col])
 
     def other_side(self) -> Piece:
@@ -162,7 +178,7 @@ class FanoronaEnv(gym.Env):
     def get_valid_dirs(pos: int) -> List[Direction]:
         """Get list of valid directions available from a given board position."""
         assert 0 <= pos < BOARD_SQUARES
-        row, col = FanoronaEnv.pos_to_coords(pos)
+        row, col = FanoronaEnv.convert_pos_to_coords(pos)
         if row == 0 and col == 0: # bottom-left corner
             dir_list = [Direction.N, Direction.NE, Direction.E]
         elif row == 2 and col == 0: # middle-left
@@ -287,7 +303,7 @@ class FanoronaEnv(gym.Env):
             """
             if _end_turn:
                 return True
-            _from_row, _from_col = FanoronaEnv.pos_to_coords(_from)
+            _from_row, _from_col = FanoronaEnv.convert_pos_to_coords(_from)
             if self.in_capturing_seq() and _visited_pos[_from_row][_from_col] != 1:
                 return False
             return True
@@ -296,7 +312,7 @@ class FanoronaEnv(gym.Env):
             """Check that capturing piece is not visiting previously visited pos in capturing path"""
             if _end_turn:
                 return True
-            _to_row, _to_col = FanoronaEnv.pos_to_coords(_to)
+            _to_row, _to_col = FanoronaEnv.convert_pos_to_coords(_to)
             if _visited_pos[_to_row][_to_col] == 1:
                 return False
             return True
@@ -387,7 +403,7 @@ class FanoronaEnv(gym.Env):
         """Resets visited_pos of a state to indicate no visited positions."""
         _, _, _, _visited_pos, _ = self.state
         for pos in range(BOARD_SQUARES):
-            row, col = FanoronaEnv.pos_to_coords(pos)
+            row, col = FanoronaEnv.convert_pos_to_coords(pos)
             _visited_pos[row][col] = 0
 
     def step(self, action):
@@ -396,8 +412,8 @@ class FanoronaEnv(gym.Env):
         _from, _dir, _capture_type, _end_turn = action
         _board_state, _who_to_play, _last_dir, _visited_pos, _half_moves = self.state
         _to = FanoronaEnv.displace_pos(_from, _dir)
-        _from_row, _from_col = FanoronaEnv.pos_to_coords(_from)
-        _to_row, _to_col = FanoronaEnv.pos_to_coords(_to)
+        _from_row, _from_col = FanoronaEnv.convert_pos_to_coords(_from)
+        _to_row, _to_col = FanoronaEnv.convert_pos_to_coords(_to)
 
         if self.is_valid(action):
 
@@ -426,11 +442,11 @@ class FanoronaEnv(gym.Env):
                     else: # withdraw
                         _capture = FanoronaEnv.displace_pos(_from, 8 - _dir)
                         _capture_dir = 8 - _dir
-                    _capture_row, _capture_col = FanoronaEnv.pos_to_coords(_capture)
+                    _capture_row, _capture_col = FanoronaEnv.convert_pos_to_coords(_capture)
                     while 0 <= _capture_row < BOARD_ROWS and 0 <= _capture_col < BOARD_COLS and _board_state[_capture_row][_capture_col] == self.other_side():
                         _board_state[_capture_row][_capture_col] = Piece.EMPTY
                         _capture = FanoronaEnv.displace_pos(_capture, _capture_dir)
-                        _capture_row, _capture_col = FanoronaEnv.pos_to_coords(_capture)
+                        _capture_row, _capture_col = FanoronaEnv.convert_pos_to_coords(_capture)
                     
                     _last_dir = _dir
                     _visited_pos[_from_row][_from_col] = 1
@@ -488,21 +504,6 @@ class FanoronaEnv(gym.Env):
         )
 
         return self.state
-
-    # TODO: write single translate_coords method to interconvert between human, pos, and coords
-    # TODO: create state object with attributes, instead of having to unpack it every time
-    @staticmethod
-    def convert_human_to_coords(human_coords: str) -> Tuple[int, int]:
-        """Converts human-readable board coordinates (e.g. 'A7', 'G1') to integer board coordinates."""
-        col_str, row_str = list(human_coords)
-        row = int(row_str) - 1
-        col = ord(col_str) - ord('A')
-        return row, col
-
-    @staticmethod
-    def convert_coords_to_human(row: int, col: int) -> str:
-        """Converts integer board coordinates to human-readable board coordinates (e.g. 'A7', 'G1')."""
-        return f'{chr(65 + col)}{row + 1}'
     
     def set_state_from_board_str(self, board_string: str) -> None:
         """Set the env object state using a board string."""
@@ -584,7 +585,7 @@ class FanoronaEnv(gym.Env):
         for row_idx, row in enumerate(_visited_pos):
             for col_idx, col in enumerate(row):
                 if col:
-                    visited_pos_list.append(FanoronaEnv.convert_coords_to_human(row_idx, col_idx))
+                    visited_pos_list.append(FanoronaEnv.convert_coords_to_human((row_idx, col_idx)))
         visited_pos_str = ','.join(visited_pos_list)
         if not visited_pos_list:
             visited_pos_str = '-'

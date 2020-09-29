@@ -170,7 +170,7 @@ def test_convert_coords_to_human():
     }
     for row in range(5):
         for col in range(9):
-            assert FanoronaEnv.convert_coords_to_human(row, col) == answer[(row, col)]
+            assert FanoronaEnv.convert_coords_to_human((row, col)) == answer[(row, col)]
 
 def test_convert_human_to_coords():
     "Test that convert_human_to_coords returns the correct values"
@@ -186,15 +186,31 @@ def test_convert_human_to_coords():
             human = col + str(row)
             assert FanoronaEnv.convert_human_to_coords(human) == answer[human]
 
-@pytest.mark.skip(reason='Not implemented')
-def test_coords_to_pos():
-    "TODO: "
-    pass
+def test_convert_coords_to_pos():
+    "Test that convert_coords_to_pos returns the correct values"
+    answer = {
+        (0, 0): 0, (0, 1): 1, (0, 2): 2, (0, 3): 3, (0, 4): 4, (0, 5): 5, (0, 6): 6, (0, 7): 7, (0, 8): 8,
+        (1, 0): 9, (1, 1): 10, (1, 2): 11, (1, 3): 12, (1, 4): 13, (1, 5): 14, (1, 6): 15, (1, 7): 16, (1, 8): 17,
+        (2, 0): 18, (2, 1): 19, (2, 2): 20, (2, 3): 21, (2, 4): 22, (2, 5): 23, (2, 6): 24, (2, 7): 25, (2, 8): 26,
+        (3, 0): 27, (3, 1): 28, (3, 2): 29, (3, 3): 30, (3, 4): 31, (3, 5): 32, (3, 6): 33, (3, 7): 34, (3, 8): 35,
+        (4, 0): 36, (4, 1): 37, (4, 2): 38, (4, 3): 39, (4, 4): 40, (4, 5): 41, (4, 6): 42, (4, 7): 43, (4, 8): 44,
+    }
+    for row in range(5):
+        for col in range(9):
+            assert FanoronaEnv.convert_coords_to_pos((row, col)) == answer[(row, col)]
 
-@pytest.mark.skip(reason='Not implemented')
-def test_pos_to_coords():
-    "TODO: "
-    pass
+def test_convert_pos_to_coords():
+    "Test convert_pos_to_coords"
+    answer = {
+        (0, 0): 0, (0, 1): 1, (0, 2): 2, (0, 3): 3, (0, 4): 4, (0, 5): 5, (0, 6): 6, (0, 7): 7, (0, 8): 8,
+        (1, 0): 9, (1, 1): 10, (1, 2): 11, (1, 3): 12, (1, 4): 13, (1, 5): 14, (1, 6): 15, (1, 7): 16, (1, 8): 17,
+        (2, 0): 18, (2, 1): 19, (2, 2): 20, (2, 3): 21, (2, 4): 22, (2, 5): 23, (2, 6): 24, (2, 7): 25, (2, 8): 26,
+        (3, 0): 27, (3, 1): 28, (3, 2): 29, (3, 3): 30, (3, 4): 31, (3, 5): 32, (3, 6): 33, (3, 7): 34, (3, 8): 35,
+        (4, 0): 36, (4, 1): 37, (4, 2): 38, (4, 3): 39, (4, 4): 40, (4, 5): 41, (4, 6): 42, (4, 7): 43, (4, 8): 44,
+    }
+    answer = {value: key for key, value in answer.items()}
+    for pos in range(45):
+        assert FanoronaEnv.convert_pos_to_coords(pos) == answer[pos]
 
 @pytest.mark.skip(reason='Not implemented')
 def test_displace_piece():
