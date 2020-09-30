@@ -32,8 +32,8 @@ pytest
 ## TODO
 
 - [x] Refactor state into a state object with attributes
-- [ ] Refactor action into an action object with attributes, and a convenient string representation to interconvert between
+- [x] Refactor action into an action object with attributes, and a convenient string representation to interconvert between
 - [x] Write a visual interface for playing Fanorona
 - [x] Add multiple tests for each method used
-- [ ] Refactor coordinate conversion methods into a single method with flags
+- [x] Refactor coordinate conversion methods into a single method with flags
 - [x] Refactor validity checking into list of smaller rule checks combined in a larger method, so that is_valid() and is_capture_valid() can reuse code (possibly as a list of methods which must all return True)
