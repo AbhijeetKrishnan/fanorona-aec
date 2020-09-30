@@ -31,7 +31,7 @@ pytest
 
 ## TODO
 
-- [ ] Refactor state into a state object with attributes
+- [x] Refactor state into a state object with attributes
 - [ ] Refactor action into an action object with attributes, and a convenient string representation to interconvert between
 - [x] Write a visual interface for playing Fanorona
 - [x] Add multiple tests for each method used
