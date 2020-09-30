@@ -39,6 +39,6 @@ pytest
 - [x] Add multiple tests for each method used
 - [x] Refactor coordinate conversion methods into a single method with flags
 - [x] Refactor validity checking into list of smaller rule checks combined in a larger method, so that is_valid() and is_capture_valid() can reuse code (possibly as a list of methods which must all return True)
-- [ ] Organize imports to remove unused imports
+- [x] Organize imports to remove unused imports
 - [ ] Test environment with a complete game
 - [ ] Build interface to easily communicate moves and visualize output

@@ -205,7 +205,7 @@ class FanoronaEnv(gym.Env):
                 if self.state.board_state[row][col] == Piece.WHITE:
                     board_pieces.append(white_piece.format(convert((row, col))))
                 elif self.state.board_state[row][col] == Piece.BLACK:
-                    board_pieces.append(black_piece.format(convert((row, col))))
+                        board_pieces.append(black_piece.format(convert((row, col))))
             svg_lines = '\n\t'.join(board_lines + board_pieces)
             svg = f"""
 <svg height="{svg_h}" width="{svg_w}">
