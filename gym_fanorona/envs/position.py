@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import Iterator, List, Tuple, Union
 
 from .constants import BOARD_COLS, BOARD_ROWS, BOARD_SQUARES
 from .enums import Direction
@@ -21,24 +21,26 @@ class Position:
         else:
             raise Exception
     
-    def __eq__(self, other: 'Position') -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Position):
+            raise NotImplementedError
         return self.pos == other.pos
 
     def __repr__(self):
         return f'<Position: {self.pos}>'
 
     @staticmethod
-    def pos_range() -> 'Position':
+    def pos_range() -> Iterator['Position']:
         for pos in range(BOARD_SQUARES):
             yield Position(pos)
 
     @staticmethod
-    def coord_range() -> Tuple[int, int]:
+    def coord_range() -> Iterator[Tuple[int, int]]:
         for pos in Position.pos_range():
             yield pos.to_coords()
 
     @staticmethod
-    def human_range() -> str:
+    def human_range() -> Iterator[str]:
         for pos in Position.pos_range():
             yield pos.to_human()
     

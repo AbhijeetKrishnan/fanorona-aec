@@ -49,7 +49,7 @@ def test_step():
     env = gym.make('fanorona-v0')
     env.reset()
     action = FanoronaMove(Position(12), Direction(8), 1, False) # D2 -> E3 approach capture
-    obs, reward, done, info = env.step(action)
+    _, reward, done, _ = env.step(action)
     assert env.state.get_board_str() == 'WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - 1' # turn automatically skips due to no available moves
     assert reward == 0
     assert not done
@@ -68,7 +68,6 @@ def test_get_valid_moves():
 
 def test_random_valid_moves():
     "Test random valid moves sampled from action space to verify that they run without error"
-    ITERATIONS = 100
     env = gym.make('fanorona-v0')
     env.reset()
     valid_moves = env.get_valid_moves()

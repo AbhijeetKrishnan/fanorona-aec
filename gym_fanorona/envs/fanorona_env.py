@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import gym
 import numpy as np
@@ -74,7 +74,7 @@ class FanoronaEnv(gym.Env):
             spaces.Discrete(MOVE_LIMIT + 1)                                           # number of half-moves
         ))
 
-        self.state: Optional[FanoronaState] = None
+        self.state: FanoronaState = FanoronaState()
 
     # TODO: turn this into a generator
     def get_valid_moves(self) -> List[FanoronaMove]:
@@ -151,7 +151,7 @@ class FanoronaEnv(gym.Env):
             obs = self.state
             done, reward = self.state.is_done()
             reward = Reward.ILLEGAL_MOVE
-            info = {}
+            info: Dict[Any, Any] = {}
             return obs, reward, done, info
 
         # if in capturing sequence, and no valid moves available (other than end turn), then cause turn to end
@@ -184,21 +184,21 @@ class FanoronaEnv(gym.Env):
             line = '<line x1="{0[0]!s}" y1="{0[1]!s}" x2="{1[0]!s}" y2="{1[1]!s}" stroke="black" stroke-width="1.5" />'
             board_lines = []
             for row in range(BOARD_ROWS):
-                _from, _to = convert((row, 0)), convert((row, 8))
-                horizontal = line.format(_from, _to)
+                _from_h, _to_h = convert((row, 0)), convert((row, 8))
+                horizontal = line.format(_from_h, _to_h)
                 board_lines.append(horizontal)
             for col in range(BOARD_COLS):
-                _from, _to = convert((0, col)), convert((4, col))
-                vertical = line.format(_from, _to)
+                _from_v, _to_v = convert((0, col)), convert((4, col))
+                vertical = line.format(_from_v, _to_v)
                 board_lines.append(vertical)
-            for diag_forward in range(0, BOARD_COLS, 2):
-                _from = [(2, 0), (0, 0), (0, 2), (0, 4), (0, 6)]
-                _to = [(4, 2), (4, 4), (4, 6), (4, 8), (2, 8)]
-                board_lines.extend([line.format(convert(f), convert(t)) for f, t in zip(_from, _to)])
-            for diag_backward in range(0, BOARD_COLS, 2):
-                _from = [(2, 0), (4, 0), (4, 2), (4, 4), (4, 6)]
-                _to = [(0, 2), (0, 4), (0, 6), (0, 8), (2, 8)]
-                board_lines.extend([line.format(convert(f), convert(t)) for f, t in zip(_from, _to)])
+            for _ in range(0, BOARD_COLS, 2): # diagonal forward lines
+                _from_df = [(2, 0), (0, 0), (0, 2), (0, 4), (0, 6)]
+                _to_df = [(4, 2), (4, 4), (4, 6), (4, 8), (2, 8)]
+                board_lines.extend([line.format(convert(f), convert(t)) for f, t in zip(_from_df, _to_df)])
+            for _ in range(0, BOARD_COLS, 2): # diagonal backward lines
+                _from_db = [(2, 0), (4, 0), (4, 2), (4, 4), (4, 6)]
+                _to_db = [(0, 2), (0, 4), (0, 6), (0, 8), (2, 8)]
+                board_lines.extend([line.format(convert(f), convert(t)) for f, t in zip(_from_db, _to_db)])
             board_pieces = []
             for pos in Position.pos_range():
                 row, col = pos.to_coords()

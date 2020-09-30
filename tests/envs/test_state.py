@@ -27,7 +27,7 @@ def test_is_done():
     env = gym.make('fanorona-v0')
     env.state = FanoronaState.set_from_board_str(board_str)
     action = FanoronaMove(Position(21), Direction(5), 1, False)
-    obs, reward, done, info = env.step(action)
+    _, _, done, _ = env.step(action)
     assert done
     env.close()
 
@@ -60,7 +60,7 @@ def test_get_board_str():
     "Test that get_board_str() works with randomly sampled observations without error"
     env = gym.make('fanorona-v0')
     env.reset()
-    for i in range(10):
+    for _ in range(10):
         env.state = FanoronaState(env.observation_space.sample())
         print(env.state.get_board_str())
     env.close()

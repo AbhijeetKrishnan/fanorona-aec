@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Any
 
 import numpy as np
 
@@ -101,7 +101,7 @@ class FanoronaState:
             self.visited[row][col] = 0
 
     @staticmethod
-    def set_from_board_str(board_string: str) -> None:
+    def set_from_board_str(board_string: str) -> 'FanoronaState':
         """Return a new state object using a board string."""
 
         def process_board_state_str(board_state_str: str):
@@ -110,7 +110,7 @@ class FanoronaState:
             board_state = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8)
             for row, row_content in enumerate(board_state_chars):
                 col_board = 0
-                for col, cell in enumerate(row_content):
+                for cell in row_content:
                     if cell == 'W':
                         board_state[row][col_board] = Piece.WHITE
                     elif cell == 'B':
