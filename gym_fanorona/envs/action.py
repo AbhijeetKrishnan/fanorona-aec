@@ -14,7 +14,7 @@ class FanoronaMove:
         self.end_turn = end_turn
 
     def __repr__(self):
-        return f'<Action: position={str(self.position.pos)}, direction={str(self.direction)}, capture_type={capture_type}, end_turn={end_turn}>'
+        return f'<FanoronaMove: position={str(self.position.pos)}, direction={str(self.direction)}, capture_type={self.capture_type}, end_turn={self.end_turn}>'
     
     def __str__(self):
         return f'{self.position.to_human()}{self.direction.value}{self.capture_type}{int(self.end_turn)}'
@@ -59,7 +59,7 @@ class FanoronaMove:
             """Checking validity of pieces at action positions"""
             if self.end_turn:
                 return True
-            if state.get_piece(self.position) != state.who_to_play: # from position must contain a piece 
+            if state.get_piece(self.position) != state.turn_to_play: # from position must contain a piece 
                 return False
             if state.get_piece(to) != Piece.EMPTY: # piece must be played to an empty location
                 return False

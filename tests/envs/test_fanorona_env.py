@@ -1,10 +1,13 @@
+import random
+
 import gym
-from gym_fanorona.envs import FanoronaMove, Position, Direction, MOVE_LIMIT
 import pytest
+from gym_fanorona.envs import (MOVE_LIMIT, Direction, FanoronaMove,
+                               FanoronaState, Position)
 
 TEST_STATES = [
     'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0', # start state
-    'WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB W NE D2,E3 0', # capturing seq after D2->E3 approach
+    'WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - 1', # capturing seq after D2->E3 approach
     '9/9/3W1B3/9/9 W - - 49', # random endgame state
 ]
 
@@ -47,23 +50,19 @@ def test_step():
     env.reset()
     action = FanoronaMove(Position(12), Direction(8), 1, False) # D2 -> E3 approach capture
     obs, reward, done, info = env.step(action)
-    assert env.state.get_board_str() == 'WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB W NE D2,E3 0'
+    assert env.state.get_board_str() == 'WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - 1' # turn automatically skips due to no available moves
     assert reward == 0
     assert not done
     action = FanoronaMove(Position(0), Direction(0), 0, True) # end turn action can be of the form (X, X, X, 1)
-    assert action.is_valid(env.state)
-    obs, reward, done, info = env.step(action)
-    assert env.state.get_board_str() == 'WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - 1'
-    assert reward == 0
-    assert not done
+    assert not action.is_valid(env.state)
     env.close()
 
 def test_get_valid_moves():
     "Verify that get_valid_moves() returns the correct valid moves from a given state"
     env = gym.make('fanorona-v0')
-    state = 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0' # start state
-    env.state.set_from_board_str(state)
-    valid_moves = env.state.get_valid_moves()
+    state_str = 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0' # start state
+    env.state = FanoronaState.set_from_board_str(state_str)
+    valid_moves = env.get_valid_moves()
     assert len(valid_moves) == 5
     env.close()
 
@@ -72,12 +71,13 @@ def test_random_valid_moves():
     ITERATIONS = 100
     env = gym.make('fanorona-v0')
     env.reset()
-    valid_moves = env.state.get_valid_moves()
+    valid_moves = env.get_valid_moves()
     while valid_moves:
+        print(valid_moves)
         action = random.choice(valid_moves) 
         assert action.is_valid(env.state)
         env.step(action)
-        valid_moves = env.state.get_valid_moves()
+        valid_moves = env.get_valid_moves()
     env.close()
 
 @pytest.mark.skip(reason='Inexplicably taking too long to find valid moves after two of them')

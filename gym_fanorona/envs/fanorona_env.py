@@ -89,7 +89,7 @@ class FanoronaEnv(gym.Env):
         moves: List[FanoronaMove] = []
         captures: List[FanoronaMove] = []
         for pos in Position.pos_range():
-            if self.state.get_piece(pos) == self.state.who_to_play:
+            if self.state.get_piece(pos) == self.state.turn_to_play:
                 for direction in Direction:
                     move_action = FanoronaMove(pos, direction, 0, False)
                     if move_action.is_valid(self.state):
@@ -98,8 +98,9 @@ class FanoronaEnv(gym.Env):
                         capture_action = FanoronaMove(pos, direction, capture_type, False)
                         if capture_action.is_valid(self.state):
                             captures.append(capture_action)
-        if self.sstate.in_capturing_seq():
-            captures.append((Position(0), Direction(0), 0, True))
+        if self.state.in_capturing_seq():
+            end_turn_action = FanoronaMove(Position(0), Direction(0), 0, True)
+            captures.append(end_turn_action)
         if captures:
             return captures
         else:
@@ -115,7 +116,7 @@ class FanoronaEnv(gym.Env):
         if action.is_valid(self.state):
 
             if action.end_turn: # end turn
-                self.state.who_to_play = self.state.other_side()
+                self.state.turn_to_play = self.state.other_side()
                 self.state.last_dir = Direction.X
                 self.state.reset_visited_pos()
                 self.state.half_moves += 1
@@ -124,7 +125,7 @@ class FanoronaEnv(gym.Env):
                 self.state.board_state[from_row][from_col] = Piece.EMPTY
 
                 if action.capture_type == 0: # paika move
-                    self.state.who_to_play = self.state.other_side()
+                    self.state.turn_to_play = self.state.other_side()
                     self.state.last_dir = Direction.X
                     self.state.reset_visited_pos()
                     self.state.half_moves += 1
@@ -155,46 +156,19 @@ class FanoronaEnv(gym.Env):
 
         # if in capturing sequence, and no valid moves available (other than end turn), then cause turn to end
         if self.state.in_capturing_seq() and len(self.get_valid_moves()) == 1:
-            self.state.who_to_play = self.state.other_side()
+            self.state.turn_to_play = self.state.other_side()
             self.state.last_dir = Direction.X
             self.state.reset_visited_pos()
             self.state.half_moves += 1
         
         obs = self.state
-        done, reward = self.is_done()
+        done, reward = self.state.is_done()
         info = {}
         return obs, reward, done, info
 
     def reset(self) -> None:
-        if self.state:
-            START_STATE_STR = 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0'
-            self.state.set_from_board_str(START_STATE_STR)
-        else:
-            self.state = FanoronaState()
-            self.state.board_state = np.array(
-                [
-                    [int(Piece.WHITE)] * BOARD_COLS,
-                    [int(Piece.WHITE)] * BOARD_COLS,
-                    [int(Piece.BLACK), int(Piece.WHITE), int(Piece.BLACK), int(Piece.WHITE), int(Piece.EMPTY), int(Piece.BLACK), int(Piece.WHITE), int(Piece.BLACK), int(Piece.WHITE)],
-                    [int(Piece.BLACK)] * BOARD_COLS,
-                    [int(Piece.BLACK)] * BOARD_COLS,
-                    
-                ],
-                dtype=np.int8
-            )
-            self.state.who_to_play = Piece.WHITE
-            self.state.last_dir = Direction.X
-            self.state.visited = np.array(
-                [
-                    [0] * BOARD_COLS,
-                    [0] * BOARD_COLS,
-                    [0] * BOARD_COLS,
-                    [0] * BOARD_COLS,
-                    [0] * BOARD_COLS,
-                ],
-                dtype=np.int8
-            )
-            self.state.half_moves = 0
+        START_STATE_STR = 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0'
+        self.state = FanoronaState.set_from_board_str(START_STATE_STR)
 
     def render(self, mode: str = 'human', close: bool = False) -> None:
         if mode == 'human':
