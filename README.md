@@ -40,5 +40,9 @@ pytest
 - [x] Refactor coordinate conversion methods into a single method with flags
 - [x] Refactor validity checking into list of smaller rule checks combined in a larger method, so that is_valid() and is_capture_valid() can reuse code (possibly as a list of methods which must all return True)
 - [x] Organize imports to remove unused imports
-- [ ] Test environment with a complete game
+- [x] Test environment with a complete game
 - [ ] Build interface to easily communicate moves and visualize output
+- [ ] Would dynamically changing action space be better than current implementation?
+- [ ] Use` capture_type` to indicate `end_turn` action as well (reduces number of states from 2430 to 1620)
+- [ ] Turn `FanoronaEnv.get_valid_moves()` into a generator
+- [ ] Replace types in FanoronaState with numpy types from numpy.typing OR consider not using numpy at all

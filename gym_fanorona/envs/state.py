@@ -10,10 +10,10 @@ from .position import Position
 class FanoronaState:
 
     def __init__(self, sample: tuple = None):
-        self.board_state: Any = None # TODO: replace with numpy types from numpy.typing
+        self.board_state: Any = None
         self.turn_to_play: Piece = Piece.EMPTY
         self.last_dir: Direction = Direction.X
-        self.visited: Any = None # TODO: replace with numpy types from numpy.typing OR consider not using numpy at all
+        self.visited: Any = None 
         self.half_moves: int = 0
 
         if sample:

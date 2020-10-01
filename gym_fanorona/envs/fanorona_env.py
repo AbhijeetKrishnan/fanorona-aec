@@ -58,13 +58,11 @@ class FanoronaEnv(gym.Env):
     def __init__(self) -> None:
 
         super(FanoronaEnv, self).__init__()
-        # TODO: would dynamically changing action space be better than current implementation?
         self.action_space = spaces.Tuple((
             spaces.Discrete(BOARD_SQUARES),    # from
             spaces.Discrete(len(Direction)), # direction 
             spaces.Discrete(3),              # capture type (none=0, approach=1, withdrawal=2)
             spaces.Discrete(2)               # end turn (0 for no, 1 for yes) 
-            # TODO: use capture_type to indicate end_turn action as well (reduces number of states from 2430 to 1620)
         ))
         self.observation_space = spaces.Tuple((
             spaces.Box(low=0, high=2, shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8), # board state: (9 x 5) x Piece
@@ -76,7 +74,6 @@ class FanoronaEnv(gym.Env):
 
         self.state: FanoronaState = FanoronaState()
 
-    # TODO: turn this into a generator
     def get_valid_moves(self) -> List[FanoronaMove]:
         """
         Returns a list of all valid moves (in the form of actions).
