@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from .constants import BOARD_SQUARES, MOVE_LIMIT
+from .constants import BOARD_ROWS, BOARD_COLS, MOVE_LIMIT
 from .enums import Direction, Piece
 from .position import Position
 from .state import FanoronaState
@@ -14,17 +14,37 @@ class FanoronaMove:
         self.end_turn = end_turn
 
     def __repr__(self):
-        return f'<FanoronaMove: position={str(self.position.pos)}, direction={str(self.direction)}, capture_type={self.capture_type}, end_turn={self.end_turn}>'
+        return f'<FanoronaMove: position={str(self.position.to_human())}, direction={str(self.direction)}, capture_type={self.capture_type}, end_turn={self.end_turn}>'
     
     def __str__(self):
         return f'{self.position.to_human()}{self.direction.value}{self.capture_type}{int(self.end_turn)}'
 
+    @staticmethod
+    def get_action(action_string: str) -> Optional['FanoronaMove']:
+        """
+        Return FanoronaMove object from string representation of move.
+
+        Move is represented by 'FFTTCE', where
+            FF - initial position of piece to be moved in human-readable coordinates (e.g. A3, G4)
+            TT - final position of piece to be moved in human-readable coordinates
+            C - capture type (paika (0), approach (1) or withdrawal (2))
+            E - end turn (yes (1) or no (0))
+        """
+        import re
+        action_pattern = re.compile(r'(?P<from>[A-I][1-5])(?P<to>[A-I][1-5])(?P<capture_type>[0-2])(?P<end_turn>[01])')
+        match = action_pattern.match(action_string)
+        if not match:
+            ret_val = None
+        else:
+            for direction in Direction.dir_range():
+                if Position(match.group('from')).displace(direction) == Position(match.group('to')):
+                    ret_val = FanoronaMove(Position(match.group('from')), direction, int(match.group('capture_type')), bool(int(match.group('end_turn'))))
+        return ret_val
+
     def is_valid(self, state: FanoronaState, skip: List[str] = []) -> bool:
 
         to = self.position.displace(self.direction)
-        if self.capture_type == 0: # none
-            capture = Position(BOARD_SQUARES)
-        elif self.capture_type == 1: # approach
+        if self.capture_type == 1: # approach
             capture = to.displace(self.direction)
         else: # withdraw
             capture = self.position.displace(self.direction.opposite())
@@ -49,7 +69,7 @@ class FanoronaMove:
             for pos in (self.position, to):
                 if not pos.is_valid(): # pos is within board bounds
                     return False
-            if not 0 <= capture.pos <= BOARD_SQUARES: # capture may be BOARD_SQUARES in case of paika move
+            if self.capture_type != 0 and not capture.is_valid(): # capture may be outside in case of paika move
                 return False 
             if self.position == to:
                 return False
@@ -63,7 +83,7 @@ class FanoronaMove:
                 return False
             if state.get_piece(to) != Piece.EMPTY: # piece must be played to an empty location
                 return False
-            if capture.pos != BOARD_SQUARES and state.get_piece(capture) != state.other_side(): # capturing line must start with opponent color stone
+            if self.capture_type != 0 and capture.is_valid() and state.get_piece(capture) != state.other_side(): # capturing line must start with opponent color stone
                 return False
             return True
 

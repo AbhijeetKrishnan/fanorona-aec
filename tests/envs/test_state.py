@@ -14,8 +14,8 @@ def test_is_valid():
     "Test 2 opening moves for validity"
     env = gym.make('fanorona-v0')
     env.reset()
-    action1 = FanoronaMove(Position(12), Direction(8), 1, False)
-    action2 = FanoronaMove(Position(24), Direction(6), 1, False) # cannot move different piece in capturing sequence - illegal move
+    action1 = FanoronaMove(Position('D2'), Direction['NE'], 1, False)
+    action2 = FanoronaMove(Position('E1'), Direction['NW'], 1, False) # cannot move different piece in capturing sequence - illegal move
     assert action1.is_valid(env.state)
     env.step(action1)
     assert not action2.is_valid(env.state)
@@ -26,7 +26,8 @@ def test_is_done():
     board_str = '9/9/3W1B3/9/9 W - - 49'
     env = gym.make('fanorona-v0')
     env.state = FanoronaState.set_from_board_str(board_str)
-    action = FanoronaMove(Position(21), Direction(5), 1, False)
+    action = FanoronaMove(Position('D3'), Direction['E'], 1, False)
+    assert action.is_valid(env.state)
     _, _, done, _ = env.step(action)
     assert done
     env.close()
@@ -35,7 +36,7 @@ def test_end_turn():
     "Test end turn action by making an opening capturing move and testing all possible end turn actions in action space"
     env = gym.make('fanorona-v0')
     env.reset()
-    action = FanoronaMove(Position(12), Direction(8), 1, False) # D2 -> E3 approach capture
+    action = FanoronaMove(Position('D2'), Direction(8), 1, False) # D2 -> E3 approach capture
     env.step(action)
     action = FanoronaMove(Position('E5'), Direction['SE'], 1, False) # Black: E5 -> F4 approach capture
     assert(action.is_valid(env.state))

@@ -99,7 +99,7 @@ class FanoronaEnv(gym.Env):
                         if capture_action.is_valid(self.state):
                             captures.append(capture_action)
         if self.state.in_capturing_seq():
-            end_turn_action = FanoronaMove(Position(0), Direction(0), 0, True)
+            end_turn_action = FanoronaMove(Position((0, 0)), Direction(0), 0, True)
             captures.append(end_turn_action)
         if captures:
             return captures
@@ -170,7 +170,7 @@ class FanoronaEnv(gym.Env):
         START_STATE_STR = 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0'
         self.state = FanoronaState.set_from_board_str(START_STATE_STR)
 
-    def render(self, mode: str = 'human', close: bool = False) -> None:
+    def render(self, mode: str = 'human', close: bool = False, filename: str = 'board_000.svg') -> None:
         if mode == 'human':
             print(self.state.get_board_str())
         elif mode == 'svg':
@@ -212,5 +212,5 @@ class FanoronaEnv(gym.Env):
     {svg_lines}
 </svg>
 """
-            with open('temp.svg', 'w') as outfile:
+            with open(filename, 'w') as outfile:
                 outfile.write(svg)

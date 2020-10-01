@@ -40,7 +40,7 @@ def test_convert_coords_to_pos():
         (4, 0): 36, (4, 1): 37, (4, 2): 38, (4, 3): 39, (4, 4): 40, (4, 5): 41, (4, 6): 42, (4, 7): 43, (4, 8): 44,
     }
     for row, col in Position.coord_range():
-        assert Position((row, col)).pos == answer[(row, col)]
+        assert Position((row, col)).to_pos() == answer[(row, col)]
 
 def test_convert_pos_to_coords():
     """
@@ -56,7 +56,7 @@ def test_convert_pos_to_coords():
     }
     answer = {value: key for key, value in answer.items()} # inverting the dictionary created in the previous test
     for pos in Position.pos_range():
-        assert pos.to_coords() == answer[pos.pos]
+        assert pos.to_coords() == answer[pos.to_pos()]
 
 @pytest.mark.skip(reason='Not implemented')
 def test_get_valid_dirs():
