@@ -15,12 +15,28 @@ pip install -e .
 
 ## Usage
 
+### Setting up a basic environment
+
 In a Python shell, run the following:
 
 ```python
 import gym
 import gym_fanorona
 env = gym.make('fanorona-v0')
+```
+
+### Running a game between two (random) agents
+
+In a Python shell, run the following:
+
+```python
+import gym
+import gym_fanorona
+from gym_fanorona.agents.random_agent import RandomAgent
+
+white, black = RandomAgent(), RandomAgent()
+env = gym.make('fanorona-v0', white_player=white, black_player=black)
+moves = env.play_game()
 ```
 
 ## Testing
