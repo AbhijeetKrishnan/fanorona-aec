@@ -1,3 +1,4 @@
+import os
 import random
 
 import gym
@@ -57,8 +58,8 @@ def test_step():
     assert not action.is_valid(env.state)
     env.close()
 
-def test_game():
-    "Test environment with a whole game"
+def test_game(tmpdir):
+    "Test environment with a whole game and svg rendering"
     env = gym.make('fanorona-v0')
     env.reset()
     action_list = [
@@ -99,12 +100,13 @@ def test_game():
     ]
     actions = [FanoronaMove.get_action(action_string) for action_string in action_list]
     ctr = 0
-    env.render(mode='svg', filename=f'board-{ctr:03d}.svg')
+    img = tmpdir.mkdir('imgs').join(f'board-{ctr:03d}.svg')
+    env.render(mode='svg', filename=img)
     for action in actions:
         assert action.is_valid(env.state)
         env.step(action)
         ctr += 1
-        env.render(mode='svg', filename=f'board-{ctr:03d}.svg')
+        env.render(mode='svg', filename=img)
 
 def test_get_valid_moves():
     "Verify that get_valid_moves() returns the correct valid moves from a given state"
@@ -146,3 +148,8 @@ def test_all_moves():
                             valid += 1
                         env.step(action)
     env.close()
+
+@pytest.mark.skip(reason='Not implemented')
+def test_play_game():
+    "Test play_game() function"
+    pass

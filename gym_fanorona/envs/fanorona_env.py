@@ -53,9 +53,9 @@ class FanoronaEnv(gym.Env):
         Game ends in a win, draw or loss
     """
 
-    metadata = {'render.modes': ['human']}
+    metadata = {'render.modes': ['human', 'svg']}
 
-    def __init__(self) -> None:
+    def __init__(self, white_player = None, black_player = None) -> None:
 
         super(FanoronaEnv, self).__init__()
         self.action_space = spaces.Tuple((
@@ -73,6 +73,8 @@ class FanoronaEnv(gym.Env):
         ))
 
         self.state: FanoronaState = FanoronaState()
+        self.white_player = white_player # agent playing as white
+        self.black_player = black_player # agent playing as black
 
     def get_valid_moves(self) -> List[FanoronaMove]:
         """
@@ -211,3 +213,20 @@ class FanoronaEnv(gym.Env):
 """
             with open(filename, 'w') as outfile:
                 outfile.write(svg)
+
+    def play_game(self):
+        self.reset()
+        move_list = []
+        done = False
+        while not done:
+            if not done:
+                white_move = self.white_player.move(self)
+                move_list.append(white_move)
+                obs, reward, done, info = self.step(white_move)
+                self.white_player.receive_reward(reward)
+            if not done:
+                black_move = self.black_player.move(self)
+                move_list.append(black_move)
+                obs, reward, done, info = self.step(black_move)
+                self.black_player.receive_reward(reward)
+        return move_list
