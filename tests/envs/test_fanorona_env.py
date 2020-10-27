@@ -17,38 +17,34 @@ def test_make():
     env = gym.make('fanorona-v0')
     env.close()
 
-def test_reset():
+def test_reset(env):
     "Verify that reset() executes without error"
+    env.reset()
+
+@pytest.fixture(scope='function')
+def env():
     env = gym.make('fanorona-v0')
     env.reset()
+    yield env
     env.close()
 
-def test_reset_starting():
+def test_reset_starting(env):
     "Verify that reset() sets the board state to the correct starting position"
-    env = gym.make('fanorona-v0')
-    env.reset()
     assert env.state.get_board_str() == 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0' # starting position
-    env.close()
 
-def test_render():
+def test_render(env):
     "Verify that render() executes without error for default parameters"
-    env = gym.make('fanorona-v0')
-    env.reset()
     env.render()
-    env.close()
 
-def test_render_svg():
+def test_render_svg(env, tmpdir):
     "Verify that render() executes without error for svg"
-    env = gym.make('fanorona-v0')
-    env.reset()
-    env.render(mode='svg')
-    env.close()
+    name = 'test_img.svg'
+    img = tmpdir.mkdir("imgs").join(name)
+    env.render(mode='svg', filename=img)
 
 # TODO: convert test_step() into a class, add methods to test step() with different moves from different initial states
-def test_step():
+def test_step(env):
     "Test step() with a variety of moves from different initial states"
-    env = gym.make('fanorona-v0')
-    env.reset()
     action = FanoronaMove(Position('D2'), Direction(8), 1, False) # D2 -> E3 approach capture
     _, reward, done, _ = env.step(action)
     assert env.state.get_board_str() == 'WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - 1' # turn automatically skips due to no available moves
@@ -56,12 +52,9 @@ def test_step():
     assert not done
     action = FanoronaMove(Position('A1'), Direction(0), 0, True) # end turn action can be of the form (X, X, X, 1)
     assert not action.is_valid(env.state)
-    env.close()
 
-def test_game(tmpdir):
+def test_game(env, tmpdir):
     "Test environment with a whole game and svg rendering"
-    env = gym.make('fanorona-v0')
-    env.reset()
     action_list = [
         'D2E310',
         'G4G520',
@@ -108,19 +101,15 @@ def test_game(tmpdir):
         ctr += 1
         env.render(mode='svg', filename=img)
 
-def test_get_valid_moves():
+def test_get_valid_moves(env):
     "Verify that get_valid_moves() returns the correct valid moves from a given state"
-    env = gym.make('fanorona-v0')
     state_str = 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0' # start state
     env.state = FanoronaState.set_from_board_str(state_str)
     valid_moves = env.get_valid_moves()
     assert len(valid_moves) == 5
-    env.close()
 
-def test_random_valid_moves():
+def test_random_valid_moves(env):
     "Test random valid moves sampled from action space to verify that they run without error"
-    env = gym.make('fanorona-v0')
-    env.reset()
     valid_moves = env.get_valid_moves()
     while valid_moves:
         print(valid_moves)
@@ -128,13 +117,10 @@ def test_random_valid_moves():
         assert action.is_valid(env.state)
         env.step(action)
         valid_moves = env.get_valid_moves()
-    env.close()
 
 @pytest.mark.skip(reason='Inexplicably taking too long to find valid moves after two of them')
-def test_all_moves():
+def test_all_moves(env):
     "Test all possible moves by systematically exploring action space and verify that they run without error"
-    env = gym.make('fanorona-v0')
-    env.reset()
     valid = 0
     while valid < 3:
         for pos in Position.pos_range():
@@ -147,9 +133,8 @@ def test_all_moves():
                             print(env.get_board_str(), action)
                             valid += 1
                         env.step(action)
-    env.close()
 
 @pytest.mark.skip(reason='Not implemented')
-def test_play_game():
+def test_play_game(env):
     "Test play_game() function"
     pass

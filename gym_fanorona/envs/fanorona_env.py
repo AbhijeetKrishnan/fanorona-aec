@@ -214,7 +214,7 @@ class FanoronaEnv(gym.Env):
             with open(filename, 'w') as outfile:
                 outfile.write(svg)
 
-    def play_game(self):
+    def play_game(self) -> List[FanoronaMove]:
         self.reset()
         move_list = []
         done = False
