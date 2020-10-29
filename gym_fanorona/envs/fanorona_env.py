@@ -93,7 +93,7 @@ class FanoronaEnv(gym.Env):
                     move_action = FanoronaMove(pos, direction, 0, False)
                     if move_action.is_valid(self.state):
                         moves.append(move_action)
-                    for capture_type in [1, 2]:
+                    for capture_type in [1, 2]: # approach = 1, withdrawal = 2
                         capture_action = FanoronaMove(pos, direction, capture_type, False)
                         if capture_action.is_valid(self.state):
                             captures.append(capture_action)
