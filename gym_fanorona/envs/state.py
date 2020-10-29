@@ -73,26 +73,24 @@ class FanoronaState:
                 return True
         return False
 
-    def is_done(self) -> Tuple[bool, Reward]:
+    def is_done(self) -> bool:
         """
-        Check whether the game is over and return the reward.
+        Check whether the game is over (i.e. the current state is a terminal state).
 
         The game is over when -
-        a) One side has no pieces left to move (loss/win)
+        a) One side has no pieces left to move (loss for the side which has no pieces to move)
         b) The number of half-moves exceeds the limit (draw)
         """
         if self.half_moves >= MOVE_LIMIT:
-            return True, Reward.DRAW
+            return True
         else:
             own_piece_exists = self.piece_exists(self.turn_to_play)
             other_piece_exists = self.piece_exists(self.other_side())
-            # cannot have a situation where a piece exists but there are no valid moves
-            if not own_piece_exists:
-                return True, Reward.LOSS
-            if not other_piece_exists:
-                return True, Reward.WIN
+            # Conjecture: cannot have a situation in Fanorona where a piece exists but there are no valid moves
+            if own_piece_exists and other_piece_exists:
+                return False
             else:
-                return False, Reward.NONE
+                return True
 
     def reset_visited_pos(self) -> None:
         """Resets visited_pos of a state to indicate no visited positions."""

@@ -105,7 +105,7 @@ class FanoronaEnv(gym.Env):
         else:
             return moves
 
-    def step(self, action: FanoronaMove):
+    def step(self, action: FanoronaMove) -> Tuple[FanoronaState, int, bool, dict]:
         """Compute return values based on action taken."""
 
         to = action.position.displace(action.direction)
@@ -148,12 +148,12 @@ class FanoronaEnv(gym.Env):
 
         else: # invalid move
             obs = self.state
-            done, reward = self.state.is_done()
+            done = self.state.is_done()
             reward = Reward.ILLEGAL_MOVE
             info: Dict[Any, Any] = {}
             return obs, reward, done, info
 
-        # if in capturing sequence, and no valid moves available (other than end turn), then cause turn to end
+        # if in capturing sequence, and no valid moves available (other than end turn), then force turn to end
         if self.state.in_capturing_seq() and len(self.get_valid_moves()) == 1:
             self.state.turn_to_play = self.state.other_side()
             self.state.last_dir = Direction.X
@@ -161,7 +161,8 @@ class FanoronaEnv(gym.Env):
             self.state.half_moves += 1
         
         obs = self.state
-        done, reward = self.state.is_done()
+        reward = Reward.NONE # reward logic should be refined based on training requirements
+        done = self.state.is_done()
         info = {}
         return obs, reward, done, info
 
@@ -169,7 +170,10 @@ class FanoronaEnv(gym.Env):
         START_STATE_STR = 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0'
         self.state = FanoronaState.set_from_board_str(START_STATE_STR)
 
-    def render(self, mode: str = 'human', close: bool = False, filename: str = 'board_000.svg') -> None:
+    def render(self, 
+               mode: str = 'human', 
+               close: bool = False, 
+               filename: str = 'board_000.svg') -> None:
         if mode == 'human':
             print(self.state.get_board_str())
         elif mode == 'svg':
