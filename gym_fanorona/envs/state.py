@@ -1,4 +1,4 @@
-from typing import Tuple, Any
+from typing import Tuple, Any, Optional
 
 import numpy as np
 
@@ -91,6 +91,20 @@ class FanoronaState:
                 return False
             else:
                 return True
+
+    def utility(self) -> float:
+        """Return the reward from a state if done else return None."""
+        if self.half_moves >= MOVE_LIMIT: # draw
+            return Reward.DRAW
+        else:
+            own_piece_exists = self.piece_exists(self.turn_to_play)
+            other_piece_exists = self.piece_exists(self.other_side())
+            if not own_piece_exists: # loss
+                return Reward.LOSS
+            elif not other_piece_exists: # win
+                return Reward.WIN
+            else: # not done
+                raise Exception('The utility of a non-terminal state is not defined without a heuristic.')
 
     def reset_visited_pos(self) -> None:
         """Resets visited_pos of a state to indicate no visited positions."""

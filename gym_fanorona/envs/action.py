@@ -53,7 +53,7 @@ class FanoronaMove:
             """Check that move number is under limit. An action cannot be performed if limit has been reached."""
             return state.half_moves < MOVE_LIMIT
 
-        def end_turn_rule():
+        def end_turn_rule() -> bool:
             """
             End turn must be done during a capturing sequence, indicated by last_dir not being 
             Direction.X. Ignore all other parameters of the action
