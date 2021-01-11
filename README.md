@@ -1,6 +1,8 @@
 # Fanorona Gym Environment
 
+[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 
 This is an implementation of the Fanorona board game as an OpenAI Gym environment. The rules have
 been sourced from [here](https://www.mindsports.nl/index.php/the-pit/528-fanorona). An additional
