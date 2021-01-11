@@ -2,8 +2,8 @@ import random
 
 from .agent import FanoronaAgent
 
-class RandomAgent(FanoronaAgent):
 
+class RandomAgent(FanoronaAgent):
     def __init__(self, seed=None):
         super(RandomAgent, self).__init__()
         random.seed(seed)

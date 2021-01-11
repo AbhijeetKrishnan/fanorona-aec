@@ -53,28 +53,36 @@ class FanoronaEnv(gym.Env):
         Game ends in a win, draw or loss
     """
 
-    metadata = {'render.modes': ['human', 'svg']}
+    metadata = {"render.modes": ["human", "svg"]}
 
-    def __init__(self, white_player = None, black_player = None) -> None:
+    def __init__(self, white_player=None, black_player=None) -> None:
 
         super(FanoronaEnv, self).__init__()
-        self.action_space = spaces.Tuple((
-            spaces.Discrete(BOARD_SQUARES),    # from
-            spaces.Discrete(len(Direction)), # direction 
-            spaces.Discrete(3),              # capture type (none=0, approach=1, withdrawal=2)
-            spaces.Discrete(2)               # end turn (0 for no, 1 for yes) 
-        ))
-        self.observation_space = spaces.Tuple((
-            spaces.Box(low=0, high=2, shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8), # board state: (9 x 5) x Piece
-            spaces.Discrete(2),                                                       # turn to play: (WHITE, BLACK)
-            spaces.Discrete(len(Direction)),                                          # last direction used: Direction 
-            spaces.Box(low=0, high=1, shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8), # positions used: (9 x 5) x (True, False)
-            spaces.Discrete(MOVE_LIMIT + 1)                                           # number of half-moves
-        ))
+        self.action_space = spaces.Tuple(
+            (
+                spaces.Discrete(BOARD_SQUARES),  # from
+                spaces.Discrete(len(Direction)),  # direction
+                spaces.Discrete(3),  # capture type (none=0, approach=1, withdrawal=2)
+                spaces.Discrete(2),  # end turn (0 for no, 1 for yes)
+            )
+        )
+        self.observation_space = spaces.Tuple(
+            (
+                spaces.Box(
+                    low=0, high=2, shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8
+                ),  # board state: (9 x 5) x Piece
+                spaces.Discrete(2),  # turn to play: (WHITE, BLACK)
+                spaces.Discrete(len(Direction)),  # last direction used: Direction
+                spaces.Box(
+                    low=0, high=1, shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8
+                ),  # positions used: (9 x 5) x (True, False)
+                spaces.Discrete(MOVE_LIMIT + 1),  # number of half-moves
+            )
+        )
 
         self.state: FanoronaState = FanoronaState()
-        self.white_player = white_player # agent playing as white
-        self.black_player = black_player # agent playing as black
+        self.white_player = white_player  # agent playing as white
+        self.black_player = black_player  # agent playing as black
 
     def get_valid_moves(self) -> List[FanoronaMove]:
         """
@@ -93,8 +101,10 @@ class FanoronaEnv(gym.Env):
                     move_action = FanoronaMove(pos, direction, 0, False)
                     if move_action.is_valid(self.state):
                         moves.append(move_action)
-                    for capture_type in [1, 2]: # approach = 1, withdrawal = 2
-                        capture_action = FanoronaMove(pos, direction, capture_type, False)
+                    for capture_type in [1, 2]:  # approach = 1, withdrawal = 2
+                        capture_action = FanoronaMove(
+                            pos, direction, capture_type, False
+                        )
                         if capture_action.is_valid(self.state):
                             captures.append(capture_action)
         if self.state.in_capturing_seq():
@@ -114,39 +124,45 @@ class FanoronaEnv(gym.Env):
 
         if action.is_valid(self.state):
 
-            if action.end_turn: # end turn
+            if action.end_turn:  # end turn
                 self.state.turn_to_play = self.state.other_side()
                 self.state.last_dir = Direction.X
                 self.state.reset_visited_pos()
                 self.state.half_moves += 1
             else:
-                self.state.board_state[to_row][to_col] = self.state.get_piece(action.position)
+                self.state.board_state[to_row][to_col] = self.state.get_piece(
+                    action.position
+                )
                 self.state.board_state[from_row][from_col] = Piece.EMPTY
 
-                if action.capture_type == 0: # paika move
+                if action.capture_type == 0:  # paika move
                     self.state.turn_to_play = self.state.other_side()
                     self.state.last_dir = Direction.X
                     self.state.reset_visited_pos()
                     self.state.half_moves += 1
-                
-                else: # capture (approach, withdrawal)
-                    if action.capture_type == 1: # approach
+
+                else:  # capture (approach, withdrawal)
+                    if action.capture_type == 1:  # approach
                         capture = to.displace(action.direction)
                         capture_dir = action.direction
-                    else: # withdraw
+                    else:  # withdraw
                         capture = action.position.displace(action.direction.opposite())
                         capture_dir = action.direction.opposite()
                     capture_row, capture_col = capture.to_coords()
-                    while capture.is_valid() and self.state.board_state[capture_row][capture_col] == self.state.other_side():
+                    while (
+                        capture.is_valid()
+                        and self.state.board_state[capture_row][capture_col]
+                        == self.state.other_side()
+                    ):
                         self.state.board_state[capture_row][capture_col] = Piece.EMPTY
                         capture = capture.displace(capture_dir)
                         capture_row, capture_col = capture.to_coords()
-                    
+
                     self.state.last_dir = action.direction
                     self.state.visited[from_row][from_col] = 1
                     self.state.visited[to_row][to_col] = 1
 
-        else: # invalid move
+        else:  # invalid move
             obs = self.state
             done = self.state.is_done()
             reward = Reward.ILLEGAL_MOVE
@@ -159,27 +175,30 @@ class FanoronaEnv(gym.Env):
             self.state.last_dir = Direction.X
             self.state.reset_visited_pos()
             self.state.half_moves += 1
-        
+
         obs = self.state
-        reward = Reward.NONE # reward logic should be refined based on training requirements
+        reward = (
+            Reward.NONE
+        )  # reward logic should be refined based on training requirements
         done = self.state.is_done()
         info = {}
         return obs, reward, done, info
 
     def reset(self) -> None:
-        START_STATE_STR = 'WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0'
+        START_STATE_STR = "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0"
         self.state = FanoronaState.set_from_board_str(START_STATE_STR)
 
-    def render(self, 
-               mode: str = 'human', 
-               close: bool = False, 
-               filename: str = 'board_000.svg') -> None:
-        if mode == 'human':
+    def render(
+        self, mode: str = "human", close: bool = False, filename: str = "board_000.svg"
+    ) -> None:
+        if mode == "human":
             print(self.state.get_board_str())
-        elif mode == 'svg':
+        elif mode == "svg":
+
             def convert(coord: Tuple[int, int]) -> Tuple[int, int]:
                 row, col = coord
                 return 100 + col * 100, 100 + (4 - row) * 100
+
             svg_w = 1000
             svg_h = 600
             black_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="black" />'
@@ -194,28 +213,38 @@ class FanoronaEnv(gym.Env):
                 _from_v, _to_v = convert((0, col)), convert((4, col))
                 vertical = line.format(_from_v, _to_v)
                 board_lines.append(vertical)
-            for _ in range(0, BOARD_COLS, 2): # diagonal forward lines
+            for _ in range(0, BOARD_COLS, 2):  # diagonal forward lines
                 _from_df = [(2, 0), (0, 0), (0, 2), (0, 4), (0, 6)]
                 _to_df = [(4, 2), (4, 4), (4, 6), (4, 8), (2, 8)]
-                board_lines.extend([line.format(convert(f), convert(t)) for f, t in zip(_from_df, _to_df)])
-            for _ in range(0, BOARD_COLS, 2): # diagonal backward lines
+                board_lines.extend(
+                    [
+                        line.format(convert(f), convert(t))
+                        for f, t in zip(_from_df, _to_df)
+                    ]
+                )
+            for _ in range(0, BOARD_COLS, 2):  # diagonal backward lines
                 _from_db = [(2, 0), (4, 0), (4, 2), (4, 4), (4, 6)]
                 _to_db = [(0, 2), (0, 4), (0, 6), (0, 8), (2, 8)]
-                board_lines.extend([line.format(convert(f), convert(t)) for f, t in zip(_from_db, _to_db)])
+                board_lines.extend(
+                    [
+                        line.format(convert(f), convert(t))
+                        for f, t in zip(_from_db, _to_db)
+                    ]
+                )
             board_pieces = []
             for pos in Position.pos_range():
                 row, col = pos.to_coords()
                 if self.state.board_state[row][col] == Piece.WHITE:
                     board_pieces.append(white_piece.format(convert((row, col))))
                 elif self.state.board_state[row][col] == Piece.BLACK:
-                        board_pieces.append(black_piece.format(convert((row, col))))
-            svg_lines = '\n\t'.join(board_lines + board_pieces)
+                    board_pieces.append(black_piece.format(convert((row, col))))
+            svg_lines = "\n\t".join(board_lines + board_pieces)
             svg = f"""
 <svg height="{svg_h}" width="{svg_w}">
     {svg_lines}
 </svg>
 """
-            with open(filename, 'w') as outfile:
+            with open(filename, "w") as outfile:
                 outfile.write(svg)
 
     def play_game(self) -> List[FanoronaMove]:

@@ -1,5 +1,7 @@
 # Fanorona Gym Environment
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 This is an implementation of the Fanorona board game as an OpenAI Gym environment. The rules have
 been sourced from [here](https://www.mindsports.nl/index.php/the-pit/528-fanorona). An additional
 rule where games exceeding 50 half-moves end in a draw has been implemented, since the original
