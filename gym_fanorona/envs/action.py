@@ -83,7 +83,7 @@ class FanoronaMove:
             if self.end_turn:
                 return True
             for pos in (self.position, to):
-                if not pos.is_valid():  # pos is within board bounds
+                if not pos.is_valid():  # pos is not within board bounds
                     return False
             if (
                 self.capture_type != 0 and not capture.is_valid()
@@ -119,12 +119,6 @@ class FanoronaMove:
                 return True
             return self.direction in self.position.get_valid_dirs()
 
-        def check_no_paika_when_capture() -> bool:
-            """Check if paika is being played when capturing move exists, which is illegal"""
-            if self.end_turn:
-                return True
-            return not (self.capture_type == 0 and state.capture_exists())
-
         def move_only_capturing_piece() -> bool:
             """
             If in a capturing sequence, check that capturing piece is the one being moved, and 
@@ -158,7 +152,6 @@ class FanoronaMove:
             "bounds_checking": bounds_checking,
             "check_piece_validity": check_piece_validity,
             "check_valid_dir": check_valid_dir,
-            "check_no_paika_when_capture": check_no_paika_when_capture,
             "move_only_capturing_piece": move_only_capturing_piece,
             "check_no_overlap": check_no_overlap,
             "check_no_same_dir": check_no_same_dir,

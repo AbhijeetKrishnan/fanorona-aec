@@ -3,6 +3,18 @@ from typing import Iterator, List, Tuple, Union
 from .constants import BOARD_COLS, BOARD_ROWS, BOARD_SQUARES
 from .enums import Direction
 
+DISPLACEMENT_VECTORS = {
+    0: (-1, -1),  # SW
+    1: (-1, 0),  # S
+    2: (-1, 1),  # SE
+    3: (0, -1),  # W
+    4: (0, 0),  # -
+    5: (0, 1),  # E
+    6: (1, -1),  # NW
+    7: (1, 0),  # N
+    8: (1, 1),  # NE
+}
+
 
 class Position:
     def __init__(self, pos: Union[Tuple[int, int], str]):
@@ -57,17 +69,6 @@ class Position:
 
     def displace(self, direction: Direction) -> "Position":
         """Returns the resultant position obtained from adding a given unit direction vector (given by 'direction') to pos."""
-        DISPLACEMENT_VECTORS = {
-            0: (-1, -1),  # SW
-            1: (-1, 0),  # S
-            2: (-1, 1),  # SE
-            3: (0, -1),  # W
-            4: (0, 0),  # -
-            5: (0, 1),  # E
-            6: (1, -1),  # NW
-            7: (1, 0),  # N
-            8: (1, 1),  # NE
-        }
         del_row, del_col = DISPLACEMENT_VECTORS[direction]
         res = (self.row + del_row, self.col + del_col)
         return Position(res)

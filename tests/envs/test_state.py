@@ -86,16 +86,6 @@ def test_get_board_str(env):
         print(env.state.get_board_str())
 
 
-def test_capture_exists(env):
-    states = TEST_STATES
-    env.state = FanoronaState.set_from_board_str(states[0])
-    assert env.state.capture_exists()
-    env.state = FanoronaState.set_from_board_str(states[1])
-    assert env.state.capture_exists()
-    env.state = FanoronaState.set_from_board_str(states[2])
-    assert env.state.capture_exists()
-
-
 def test_in_capturing_seq(env):
     states = TEST_STATES
     env.state = FanoronaState.set_from_board_str(states[0])

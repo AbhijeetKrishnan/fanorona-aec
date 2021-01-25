@@ -30,9 +30,9 @@ class FanoronaState:
 
     def get_piece(self, position: Position) -> Piece:
         """Return type of piece at given position (specified in integer coordinates)."""
-        assert position.is_valid()
-        row, col = position.to_coords()
-        return Piece(self.board_state[row][col])
+        # assert position.is_valid()
+        # row, col = position.to_coords()
+        return Piece(self.board_state[position.row][position.col])
 
     def other_side(self) -> Piece:
         """Return the color of the opponent's pieces."""
@@ -44,30 +44,6 @@ class FanoronaState:
     def in_capturing_seq(self) -> bool:
         """Returns True if current state is part of a capturing sequence i.e. at least one capture has already been made."""
         return bool(self.last_dir != Direction.X)
-
-    def capture_exists(self) -> bool:
-        """
-        Returns True if any capturing move exists in the current state.
-
-        A capture exists if -
-        1. a piece belonging to the side to play exists
-        2. the action of moving the piece in any valid direction in any capture type is also valid 
-           (ignoring the no paika when capture exists rule)
-        """
-        from .action import FanoronaMove
-
-        for pos in Position.pos_range():
-            if self.get_piece(pos) == self.turn_to_play:
-                for direction in pos.get_valid_dirs():
-                    for capture_type in [1, 2]:
-                        capture_action = FanoronaMove(
-                            pos, direction, capture_type, False
-                        )
-                        if capture_action.is_valid(
-                            self, skip=["check_no_paika_when_captured"]
-                        ):
-                            return True
-        return False
 
     def piece_exists(self, piece: Piece) -> bool:
         """Checks whether a instance of a piece exists on the game board."""

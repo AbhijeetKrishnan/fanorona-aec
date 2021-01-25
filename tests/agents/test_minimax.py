@@ -1,4 +1,5 @@
 import random
+import cProfile
 
 import gym
 import gym_fanorona
@@ -14,4 +15,4 @@ def test_game():
         RandomAgent(),
     )
     env = gym.make("fanorona-v0", white_player=white, black_player=black)
-    env.play_game()
+    cProfile.runctx("env.play_game()", globals(), locals(), "minimax.stats")

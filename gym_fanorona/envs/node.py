@@ -8,22 +8,26 @@ from .fanorona_env import FanoronaEnv
 class FanoronaTreeNode:
     def __init__(self, env: FanoronaEnv):
         self.env = env
+        self.state = env.state
         self.parent: "FanoronaTreeNode"
         self.depth = 0
 
     def terminal_test(self) -> bool:
-        return self.env.state.is_done()
+        return self.state.is_done()
 
     def actions(self) -> List[FanoronaMove]:
+        self.env.state = self.state
         return self.env.get_valid_moves()
 
     def utility(self) -> float:
-        return float(self.env.state.utility())
+        return float(self.state.utility())
 
     def result(self, action: FanoronaMove) -> "FanoronaTreeNode":
-        env_copy = deepcopy(self.env)
-        env_copy.step(action)
-        result_node = FanoronaTreeNode(env_copy)
+        self.env.state = self.state
+        self.env.step(action)
+        state_copy = deepcopy(self.env.state)
+        result_node = FanoronaTreeNode(self.env)
         result_node.parent = self
         result_node.depth = self.depth + 1
+        result_node.state = state_copy
         return result_node
