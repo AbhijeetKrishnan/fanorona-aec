@@ -43,5 +43,5 @@ class Reward(IntEnum):
     ILLEGAL_MOVE = -1
     LOSS = -1
     WIN = 1
-    DRAW = 0
+    DRAW = 0.5
     NONE = 0

@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import Dict, Tuple, Optional, cast, Callable
+import dill
 
 from gym_fanorona.envs.action import FanoronaMove
 from gym_fanorona.envs.node import FanoronaTreeNode
@@ -61,3 +62,29 @@ class QlearningAgent(FanoronaAgent):
             key=lambda action: self.f(self.Q[node, action], self.Nsa[node, action]),
         )
         return self.a
+
+    def train(
+        self,
+        env: FanoronaEnv,
+        trials: int,
+        model_location: str = None,
+        save_every: int = 50,
+    ) -> None:
+        env.reset()
+        env.white_player = self
+        env.black_player = QlearningAgent()
+        env.black_player.Q = env.white_player.Q
+        env.black_player.Nsa = env.white_player.Nsa
+
+        if model_location:  # model exists, load it and unpickle
+            model = open(model_location, "rb")
+            self.Q, self.Nsa = dill.load(model)
+
+        for trial in range(trials):
+            env.reset()
+            env.play_game()
+            print(env.white_player.reward, env.black_player.reward, str(env.state))
+
+            if trial % save_every == 0:
+                model = open(f"model-{trial // save_every:02d}.pickle", "wb")
+                dill.dump((self.Q, self.Nsa), model)

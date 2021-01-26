@@ -15,3 +15,10 @@ def test_game():
     )
     env = gym.make("fanorona-v0", white_player=white, black_player=black)
     env.play_game()
+
+
+def test_train():
+    """Test that training a q-learning agent works correctly."""
+    q_agent = QlearningAgent()
+    env = gym.make("fanorona-v0")
+    q_agent.train(env, 1000)

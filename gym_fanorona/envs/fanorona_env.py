@@ -177,16 +177,25 @@ class FanoronaEnv(gym.Env):
             self.state.half_moves += 1
 
         obs = self.state
-        reward = (
-            Reward.NONE
-        )  # reward logic should be refined based on training requirements
+        reward = Reward.NONE
         done = self.state.is_done()
+        if done:
+            if self.state.half_moves >= MOVE_LIMIT:
+                reward = Reward.DRAW
+            else:
+                reward = (
+                    Reward.WIN
+                )  # if you've made a move and the game gets done, it means you've won
         info = {}
         return obs, reward, done, info
 
     def reset(self) -> None:
         START_STATE_STR = "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0"
         self.state = FanoronaState.set_from_board_str(START_STATE_STR)
+        if self.white_player:
+            self.white_player.reward = 0
+        if self.black_player:
+            self.black_player.reward = 0
 
     def render(
         self, mode: str = "human", close: bool = False, filename: str = "board_000.svg"
@@ -254,12 +263,16 @@ class FanoronaEnv(gym.Env):
         while not done:
             if not done:
                 white_move = self.white_player.move(self)
+                print("White", white_move)
                 move_list.append(white_move)
                 obs, reward, done, info = self.step(white_move)
+                print("White", reward, done)
                 self.white_player.receive_reward(reward)
             if not done:
                 black_move = self.black_player.move(self)
+                print("Black", black_move)
                 move_list.append(black_move)
                 obs, reward, done, info = self.step(black_move)
+                print("Black", reward, done)
                 self.black_player.receive_reward(reward)
         return move_list

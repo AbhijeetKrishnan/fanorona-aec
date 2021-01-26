@@ -32,9 +32,9 @@ class FanoronaMove:
 
         Move is represented by 'FFTTCE', where
             FF - initial position of piece to be moved in human-readable coordinates (e.g. A3, G4)
-            TT - final position of piece to be moved in human-readable coordinates
-            C - capture type (paika (0), approach (1) or withdrawal (2))
-            E - end turn (yes (1) or no (0))
+            D  - direction in which piece is moved
+            C  - capture type (paika (0), approach (1) or withdrawal (2))
+            E  - end turn (yes (1) or no (0))
         """
         import re
 
