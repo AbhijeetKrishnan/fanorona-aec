@@ -22,5 +22,5 @@ def test_train():
     q_agent = QlearningAgent()
     opponent = RandomAgent()
     env = gym.make("fanorona-v0")
-    q_agent.train(env, 1000, opponent=opponent)
+    q_agent.train(env, 10, opponent=opponent)
     print(q_agent.Q)
