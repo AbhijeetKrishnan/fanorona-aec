@@ -1,4 +1,4 @@
-from gym_fanorona.envs import Position
+from gym_fanorona.envs import Position, Direction
 import pytest
 
 
@@ -224,13 +224,108 @@ def test_convert_pos_to_coords():
         assert pos.to_coords() == answer[pos.to_pos()]
 
 
-@pytest.mark.skip(reason="Not implemented")
 def test_get_valid_dirs():
-    "TODO: "
-    pass
+    "Verify that Position.get_valid_dirs() returns the right directions for all possible types of positions"
+
+    pos = Position((0, 0))
+    result = [Direction.N, Direction.NE, Direction.E]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((2, 0))
+    result = [
+        Direction.S,
+        Direction.SE,
+        Direction.E,
+        Direction.NE,
+        Direction.N,
+    ]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((4, 0))
+    result = [Direction.S, Direction.SE, Direction.E]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((0, 8))
+    result = [Direction.W, Direction.NW, Direction.N]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((2, 8))
+    result = [
+        Direction.S,
+        Direction.SW,
+        Direction.W,
+        Direction.NW,
+        Direction.N,
+    ]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((4, 8))
+    result = [Direction.S, Direction.SW, Direction.W]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((0, 1))
+    result = [Direction.W, Direction.N, Direction.E]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((0, 2))
+    result = [
+        Direction.W,
+        Direction.NW,
+        Direction.N,
+        Direction.NE,
+        Direction.E,
+    ]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((4, 1))
+    result = [Direction.W, Direction.S, Direction.E]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((4, 2))
+    result = [
+        Direction.W,
+        Direction.SW,
+        Direction.S,
+        Direction.SE,
+        Direction.E,
+    ]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((1, 0))
+    result = [Direction.S, Direction.E, Direction.N]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((1, 8))
+    result = [Direction.S, Direction.W, Direction.N]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((1, 1))
+    result = [
+        Direction.S,
+        Direction.SW,
+        Direction.W,
+        Direction.NW,
+        Direction.N,
+        Direction.NE,
+        Direction.E,
+        Direction.SE,
+    ]
+    assert pos.get_valid_dirs() == result
+
+    pos = Position((1, 2))
+    result = [Direction.S, Direction.W, Direction.N, Direction.E]
+    assert pos.get_valid_dirs() == result
 
 
-@pytest.mark.skip(reason="Not implemented")
-def test_displace_pos():
-    "TODO: "
-    pass
+def test_displace():
+    "Test that displace() returns the right result for all possible directions from a position"
+    pos = Position((0, 0))
+    assert pos.displace(Direction.SW) == Position((-1, -1))
+    assert pos.displace(Direction.S) == Position((-1, 0))
+    assert pos.displace(Direction.SE) == Position((-1, 1))
+    assert pos.displace(Direction.W) == Position((0, -1))
+    assert pos.displace(Direction.X) == Position((0, 0))
+    assert pos.displace(Direction.E) == Position((0, 1))
+    assert pos.displace(Direction.NW) == Position((1, -1))
+    assert pos.displace(Direction.N) == Position((1, 0))
+    assert pos.displace(Direction.NE) == Position((1, 1))

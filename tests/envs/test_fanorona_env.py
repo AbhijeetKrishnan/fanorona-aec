@@ -10,6 +10,7 @@ from gym_fanorona.envs import (
     FanoronaState,
     Position,
 )
+from gym_fanorona.agents import RandomAgent
 
 TEST_STATES = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0",  # start state
@@ -68,7 +69,7 @@ def test_step(env):
         env.state.get_board_str()
         == "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - 1"
     )  # turn automatically skips due to no available moves
-    assert reward == 0
+    assert reward == 2
     assert not done
     action = FanoronaMove(
         Position("A1"), Direction(0), 0, True
@@ -79,40 +80,51 @@ def test_step(env):
 def test_game(env, tmpdir):
     "Test environment with a whole game and svg rendering"
     action_list = [
-        "D2E310",
-        "G4G520",
-        "G5F410",
-        "A1A101",
-        "E2E310",
-        "E3D220",
-        "D4E310",
-        "E3E210",
-        "E2F220",
-        "D3E310",
-        "E3D420",
-        "D4E420",
-        "C3D320",
-        "D3D210",
-        "D2E320",
-        "E3E220",
-        "A1A210",
-        "H3G320",
-        "G3F420",
-        "I2I310",
-        "H4G520",
-        "F1G100",
-        "E2F200",
-        "B1C100",
-        "F2E320",
-        "E3D210",
-        "H1G100",
-        "D2C300",
-        "G1F100",
-        "F4G300",
-        "F1E100",
-        "G3F210",
-        "A2A100",
-        "C3B210",
+        "E2710",
+        "F4620",
+        "E5110",
+        "G2710",
+        "F3310",
+        "A1001",
+        "D2710",
+        "E3620",
+        "D4720",
+        "E1610",
+        "H4620",
+        "A1001",
+        "G3710",
+        "A1001",
+        "E4510",
+        "A1001",
+        "C2710",
+        "F4010",
+        "E3310",
+        "A1001",
+        "H1710",
+        "D3110",
+        "D2310",
+        "A1710",
+        "A1001",
+        "I4110",
+        "H2020",
+        "C2310",
+        "B2720",
+        "F1700",
+        "B3300",
+        "F2500",
+        "I5000",
+        "G1800",
+        "H4110",
+        "G2300",
+        "D5100",
+        "F2610",
+        "H5300",
+        "E3810",
+        "A1001",
+        "B5100",
+        "F4120",
+        "A1001",
+        "H3310",
     ]
     actions = [FanoronaMove.get_action(action_string) for action_string in action_list]
     ctr = 0
@@ -146,26 +158,9 @@ def test_random_valid_moves(env):
         valid_moves = env.get_valid_moves()
 
 
-@pytest.mark.skip(
-    reason="Inexplicably taking too long to find valid moves after two of them"
-)
-def test_all_moves(env):
-    "Test all possible moves by systematically exploring action space and verify that they run without error"
-    valid = 0
-    while valid < 3:
-        for pos in Position.pos_range():
-            for dir in range(9):
-                for capture_type in range(3):
-                    for end_turn in range(2):
-                        action = (pos, dir, capture_type, end_turn)
-                        valid = env.is_valid(action)
-                        if valid:
-                            print(env.get_board_str(), action)
-                            valid += 1
-                        env.step(action)
-
-
-@pytest.mark.skip(reason="Not implemented")
 def test_play_game(env):
-    "Test play_game() function"
-    pass
+    "Verify that play_game() works without error"
+    env.set_white_player(RandomAgent())
+    env.set_black_player(RandomAgent())
+    move_list = env.play_game()
+    print([str(move) for move in move_list])

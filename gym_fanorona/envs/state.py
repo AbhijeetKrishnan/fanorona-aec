@@ -1,4 +1,4 @@
-from typing import Tuple, Any, Optional
+from typing import Tuple, Any, Optional, Union
 
 import numpy as np
 
@@ -30,23 +30,22 @@ class FanoronaState:
 
     def get_piece(self, position: Position) -> Piece:
         """Return type of piece at given position (specified in integer coordinates)."""
-        # assert position.is_valid()
-        # row, col = position.to_coords()
         return Piece(self.board_state[position.row][position.col])
+
+    def count(self, side: Piece) -> int:
+        """Return count of number of pieces of a side on the board."""
+        return sum([1 for pos in Position.pos_range() if self.get_piece(pos) == side])
 
     def other_side(self) -> Piece:
         """Return the color of the opponent's pieces."""
-        if self.turn_to_play == Piece.WHITE:
-            return Piece.BLACK
-        else:
-            return Piece.WHITE
+        return self.turn_to_play.other()
 
     def in_capturing_seq(self) -> bool:
         """Returns True if current state is part of a capturing sequence i.e. at least one capture has already been made."""
         return bool(self.last_dir != Direction.X)
 
     def piece_exists(self, piece: Piece) -> bool:
-        """Checks whether a instance of a piece exists on the game board."""
+        """Checks whether an instance of a piece exists on the game board."""
         for pos in Position.pos_range():
             if self.get_piece(pos) == piece:
                 return True
@@ -71,18 +70,21 @@ class FanoronaState:
             else:
                 return True
 
-    def utility(self) -> Reward:
+    def utility(self, side: Piece) -> Union[Reward, int]:
         """Return the reward from a state if done else return None."""
         if self.half_moves >= MOVE_LIMIT:  # draw
             return Reward.DRAW
-        else:
-            own_piece_exists = self.piece_exists(self.turn_to_play)
-            other_piece_exists = self.piece_exists(self.other_side())
-            if not own_piece_exists:  # loss
-                return Reward.LOSS
-            elif not other_piece_exists:  # win
+        elif self.is_done():
+            if self.piece_exists(self.turn_to_play):
+                winner = self.turn_to_play
+            else:
+                winner = self.other_side()
+            if side == winner:
                 return Reward.WIN
-        return Reward.NONE  # default value
+            else:
+                return Reward.LOSS
+        else:
+            return self.count(side) - self.count(side.other())
 
     def reset_visited_pos(self) -> None:
         """Resets visited_pos of a state to indicate no visited positions."""

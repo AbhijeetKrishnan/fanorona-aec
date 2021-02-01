@@ -5,6 +5,14 @@ class Piece(IntEnum):
     def __str__(self):
         return self.name[0]  # just the first letter
 
+    def other(self) -> "Piece":
+        if self.value == 0:
+            return Piece(1)
+        elif self.value == 1:
+            return Piece(0)
+        else:
+            return Piece(2)
+
     WHITE = 0
     BLACK = 1
     EMPTY = 2
@@ -17,7 +25,7 @@ class Direction(IntEnum):
         else:
             return self.name
 
-    def opposite(self):
+    def opposite(self) -> "Direction":
         "Return the direction of opposite orientation to the current one e.g. NE.opposite() == SW"
         return Direction(8 - self.value)
 

@@ -3,7 +3,7 @@ import pytest
 
 
 def test_get_action():
-    action_str = "A2A300"
+    action_str = "A2700"
     action = FanoronaMove.get_action(action_str)
     assert action.position == Position("A2")
     assert action.direction == Direction["N"]

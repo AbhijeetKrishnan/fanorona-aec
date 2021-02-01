@@ -49,14 +49,14 @@ class QlearningAgent(FanoronaAgent):
     def move(self, env: FanoronaEnv) -> FanoronaMove:
         node = FanoronaTreeNode(env)
         if node.terminal_test():
-            self.Q[node, None] = node.utility()
+            self.Q[node, None] = node.utility(self.side)
         if self.s:
             self.Nsa[self.s, self.a] += 1
             max_q = max(self.Q[node, action] for action in node.actions())
             self.Q[self.s, self.a] += self.alpha(self.Nsa[self.s, self.a]) * (
                 cast(float, self.r) + self.gamma * max_q - self.Q[self.s, self.a]
             )
-        self.s, self.r = node, node.utility()
+        self.s, self.r = node, node.utility(self.side)
         self.a = max(
             node.actions(),
             key=lambda action: self.f(self.Q[node, action], self.Nsa[node, action]),
@@ -71,8 +71,8 @@ class QlearningAgent(FanoronaAgent):
         save_every: int = 50,
     ) -> None:
         env.reset()
-        env.white_player = self
-        env.black_player = QlearningAgent()
+        env.set_white_player(self)
+        env.set_black_player(QlearningAgent())
         env.black_player.Q = env.white_player.Q
         env.black_player.Nsa = env.white_player.Nsa
 

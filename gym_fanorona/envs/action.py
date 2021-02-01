@@ -30,7 +30,7 @@ class FanoronaMove:
         """
         Return FanoronaMove object from string representation of move.
 
-        Move is represented by 'FFTTCE', where
+        Move is represented by 'FFDCE', where
             FF - initial position of piece to be moved in human-readable coordinates (e.g. A3, G4)
             D  - direction in which piece is moved
             C  - capture type (paika (0), approach (1) or withdrawal (2))
@@ -39,22 +39,18 @@ class FanoronaMove:
         import re
 
         action_pattern = re.compile(
-            r"(?P<from>[A-I][1-5])(?P<to>[A-I][1-5])(?P<capture_type>[0-2])(?P<end_turn>[01])"
+            r"(?P<from>[A-I][1-5])(?P<direction>[0-8])(?P<capture_type>[0-2])(?P<end_turn>[01])"
         )
         match = action_pattern.match(action_string)
         if not match:
             ret_val = None
         else:
-            for direction in Direction.dir_range():
-                if Position(match.group("from")).displace(direction) == Position(
-                    match.group("to")
-                ):
-                    ret_val = FanoronaMove(
-                        Position(match.group("from")),
-                        direction,
-                        int(match.group("capture_type")),
-                        bool(int(match.group("end_turn"))),
-                    )
+            ret_val = FanoronaMove(
+                Position(match.group("from")),
+                Direction(int(match.group("direction"))),
+                int(match.group("capture_type")),
+                bool(int(match.group("end_turn"))),
+            )
         return ret_val
 
     def is_valid(self, state: FanoronaState, skip: List[str] = []) -> bool:

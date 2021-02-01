@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import gym
 import numpy as np
@@ -81,8 +81,18 @@ class FanoronaEnv(gym.Env):
         )
 
         self.state: FanoronaState = FanoronaState()
-        self.white_player = white_player  # agent playing as white
-        self.black_player = black_player  # agent playing as black
+        self.set_white_player(white_player)
+        self.set_black_player(black_player)
+
+    def set_white_player(self, white_player) -> None:
+        self.white_player = white_player
+        if white_player:
+            self.white_player.side = Piece.WHITE
+
+    def set_black_player(self, black_player) -> None:
+        self.black_player = black_player
+        if black_player:
+            self.black_player.side = Piece.BLACK
 
     def get_valid_moves(self) -> List[FanoronaMove]:
         """
@@ -121,6 +131,7 @@ class FanoronaEnv(gym.Env):
         to = action.position.displace(action.direction)
         from_row, from_col = action.position.to_coords()
         to_row, to_col = to.to_coords()
+        prev_turn_to_play = self.state.turn_to_play
 
         if action.is_valid(self.state):
 
@@ -177,15 +188,8 @@ class FanoronaEnv(gym.Env):
             self.state.half_moves += 1
 
         obs = self.state
-        reward = Reward.NONE
+        reward = cast(Reward, self.state.utility(prev_turn_to_play))
         done = self.state.is_done()
-        if done:
-            if self.state.half_moves >= MOVE_LIMIT:
-                reward = Reward.DRAW
-            else:
-                reward = (
-                    Reward.WIN
-                )  # if you've made a move and the game gets done, it means you've won
         info = {}
         return obs, reward, done, info
 
@@ -261,18 +265,14 @@ class FanoronaEnv(gym.Env):
         move_list = []
         done = False
         while not done:
-            if not done:
+            if not done and self.state.turn_to_play == Piece.WHITE:
                 white_move = self.white_player.move(self)
-                print("White", white_move)
                 move_list.append(white_move)
                 obs, reward, done, info = self.step(white_move)
-                print("White", reward, done)
                 self.white_player.receive_reward(reward)
-            if not done:
+            if not done and self.state.turn_to_play == Piece.BLACK:
                 black_move = self.black_player.move(self)
-                print("Black", black_move)
                 move_list.append(black_move)
                 obs, reward, done, info = self.step(black_move)
-                print("Black", reward, done)
                 self.black_player.receive_reward(reward)
         return move_list

@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from .action import FanoronaMove
 from .fanorona_env import FanoronaEnv
+from .enums import Piece
 
 
 class FanoronaTreeNode:
@@ -19,8 +20,8 @@ class FanoronaTreeNode:
         self.env.state = self.state
         return self.env.get_valid_moves()
 
-    def utility(self) -> float:
-        return float(self.state.utility())
+    def utility(self, side: Piece) -> float:
+        return float(self.state.utility(side))
 
     def result(self, action: FanoronaMove) -> "FanoronaTreeNode":
         self.env.state = self.state

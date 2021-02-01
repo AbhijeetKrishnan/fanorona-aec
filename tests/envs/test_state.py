@@ -1,7 +1,14 @@
 import random
 
 import gym
-from gym_fanorona.envs import FanoronaMove, FanoronaState, Position, Direction, Reward
+from gym_fanorona.envs import (
+    FanoronaMove,
+    FanoronaState,
+    Position,
+    Direction,
+    Reward,
+    Piece,
+)
 import pytest
 
 TEST_STATES = [
@@ -47,7 +54,7 @@ def test_utility(env):
     action = FanoronaMove(Position("D3"), Direction["E"], 1, False)
     assert action.is_valid(env.state)
     env.step(action)
-    utility = env.state.utility()
+    utility = env.state.utility(Piece.BLACK)
     print(env.state)
     assert utility is not None
     assert utility == Reward.LOSS
@@ -111,19 +118,24 @@ def test_reset_visited_pos(env):
         assert not env.state.visited[row][col]
 
 
-@pytest.mark.skip(reason="Not implemented")
-def test_get_piece():
-    "TODO: "
-    pass
+def test_get_piece(env):
+    "Verify that state.get_piece() works correctly"
+    assert env.state.get_piece(Position("A1")) == Piece.WHITE
+    assert env.state.get_piece(Position("A5")) == Piece.BLACK
+    assert env.state.get_piece(Position("E3")) == Piece.EMPTY
 
 
-@pytest.mark.skip(reason="Not implemented")
-def test_other_side():
-    "TODO: "
-    pass
+def test_other_side(env):
+    "Verify that state.other_side() works correctly"
+    assert env.state.other_side() == Piece.BLACK
 
 
-@pytest.mark.skip(reason="Not implemented")
-def test_piece_exists():
-    "TODO: "
-    pass
+def test_piece_exists(env):
+    "Verify that state.piece_exists() works correctly"
+    assert env.state.piece_exists(Piece.WHITE)
+    assert env.state.piece_exists(Piece.BLACK)
+    assert env.state.piece_exists(Piece.EMPTY)
+
+    env.state = FanoronaState.set_from_board_str("9/4W4/9/9/9 W - - 30")
+    assert env.state.piece_exists(Piece.WHITE)
+    assert not env.state.piece_exists(Piece.BLACK)
