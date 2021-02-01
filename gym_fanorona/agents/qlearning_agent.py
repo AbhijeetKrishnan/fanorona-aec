@@ -67,17 +67,21 @@ class QlearningAgent(FanoronaAgent):
         self,
         env: FanoronaEnv,
         trials: int,
-        model_location: str = None,
+        opponent: Optional[FanoronaAgent] = None,
+        model_file: str = None,
         save_every: int = 50,
     ) -> None:
         env.reset()
         env.set_white_player(self)
-        env.set_black_player(QlearningAgent())
-        env.black_player.Q = env.white_player.Q
-        env.black_player.Nsa = env.white_player.Nsa
+        if opponent is not None:
+            env.set_black_player(opponent)
+        else:
+            env.set_black_player(QlearningAgent())
+            env.black_player.Q = env.white_player.Q
+            env.black_player.Nsa = env.white_player.Nsa
 
-        if model_location:  # model exists, load it and unpickle
-            model = open(model_location, "rb")
+        if model_file:  # model exists, load it and unpickle
+            model = open(model_file, "rb")
             self.Q, self.Nsa = dill.load(model)
 
         for trial in range(trials):

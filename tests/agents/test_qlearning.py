@@ -20,6 +20,7 @@ def test_game():
 def test_train():
     """Test that training a q-learning agent works correctly."""
     q_agent = QlearningAgent()
+    opponent = RandomAgent()
     env = gym.make("fanorona-v0")
-    q_agent.train(env, 10)
+    q_agent.train(env, 1000, opponent=opponent)
     print(q_agent.Q)

@@ -49,7 +49,7 @@ class Reward(IntEnum):
     PAIKA = 0
     END_TURN = 0
     ILLEGAL_MOVE = -1
-    LOSS = -1
-    WIN = 1
+    LOSS = -100
+    WIN = 100
     DRAW = 0.5
     NONE = 0
