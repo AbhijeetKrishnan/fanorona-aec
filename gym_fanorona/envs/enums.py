@@ -3,15 +3,10 @@ from enum import IntEnum
 
 class Piece(IntEnum):
     def __str__(self):
-        return self.name[0]  # just the first letter
+        return str(self.name)[0]  # just the first letter
 
     def other(self) -> "Piece":
-        if self.value == 0:
-            return Piece(1)
-        elif self.value == 1:
-            return Piece(0)
-        else:
-            return Piece(2)
+        return Piece(self.value ^ 1)
 
     WHITE = 0
     BLACK = 1

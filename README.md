@@ -3,7 +3,6 @@
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-
 This is an implementation of the Fanorona board game as an OpenAI Gym environment. The rules have
 been sourced from [here](https://www.mindsports.nl/index.php/the-pit/528-fanorona). An additional
 rule where games exceeding 50 half-moves end in a draw has been implemented, since the original
@@ -68,4 +67,4 @@ pytest
 - [ ] Replace types in FanoronaState with numpy types from numpy.typing OR consider not using numpy at all
 - [x] Automatically delete .svg files generated from tests
 - [ ] Clarify reward-giving mechanism to agents (at each step, and at end of game; who stores the cumulative reward?)
-- [ ] Add minimax agent
+- [x] Add minimax agent
