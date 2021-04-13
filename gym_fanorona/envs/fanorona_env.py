@@ -1,10 +1,8 @@
-from enum import IntEnum
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, List, Tuple, cast
 
 import gym
 import numpy as np
-from gym import error, spaces, utils
-from gym.utils import seeding
+from gym import spaces
 
 from .action import FanoronaMove
 from .constants import BOARD_COLS, BOARD_ROWS, BOARD_SQUARES, MOVE_LIMIT

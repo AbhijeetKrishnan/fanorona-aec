@@ -1,4 +1,4 @@
-from typing import Tuple, Any, Optional, Union
+from typing import Tuple, Any, Union
 
 import numpy as np
 
@@ -191,3 +191,74 @@ class FanoronaState:
                 str(self.half_moves),
             ]
         )
+
+    def get_svg(self) -> str:
+        def convert(coord: Tuple[int, int]) -> Tuple[int, int]:
+            row, col = coord
+            return 100 + col * 100, 100 + (4 - row) * 100
+
+        svg_w = 1000
+        svg_h = 600
+        black_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="black" />'
+        white_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="white" />'
+        line = '<line x1="{0[0]!s}" y1="{0[1]!s}" x2="{1[0]!s}" y2="{1[1]!s}" stroke="black" stroke-width="1.5" />'
+        board_lines = []
+        for row in range(BOARD_ROWS):
+            _from_h, _to_h = convert((row, 0)), convert((row, 8))
+            horizontal = line.format(_from_h, _to_h)
+            board_lines.append(horizontal)
+        for col in range(BOARD_COLS):
+            _from_v, _to_v = convert((0, col)), convert((4, col))
+            vertical = line.format(_from_v, _to_v)
+            board_lines.append(vertical)
+        for _ in range(0, BOARD_COLS, 2):  # diagonal forward lines
+            _from_df = [(2, 0), (0, 0), (0, 2), (0, 4), (0, 6)]
+            _to_df = [(4, 2), (4, 4), (4, 6), (4, 8), (2, 8)]
+            board_lines.extend(
+                [line.format(convert(f), convert(t)) for f, t in zip(_from_df, _to_df)]
+            )
+        for _ in range(0, BOARD_COLS, 2):  # diagonal backward lines
+            _from_db = [(2, 0), (4, 0), (4, 2), (4, 4), (4, 6)]
+            _to_db = [(0, 2), (0, 4), (0, 6), (0, 8), (2, 8)]
+            board_lines.extend(
+                [line.format(convert(f), convert(t)) for f, t in zip(_from_db, _to_db)]
+            )
+        board_pieces = []
+        for pos in Position.pos_range():
+            row, col = pos.to_coords()
+            if self.board_str[row][col] == Piece.WHITE:
+                board_pieces.append(white_piece.format(convert((row, col))))
+            elif self.board_state[row][col] == Piece.BLACK:
+                board_pieces.append(black_piece.format(convert((row, col))))
+        svg_lines = "\n\t".join(board_lines + board_pieces)
+        svg = f"""
+<svg height="{svg_h}" width="{svg_w}">
+{svg_lines}
+</svg>
+"""
+        return svg
+
+    @staticmethod
+    def get_observation(self, agent):
+        "Return NN-style observation based on the current board state and requesting agent"
+        pass
+
+    @property
+    def legal_moves(self):
+        "Return a list of legal moves allowed from the current state"
+        pass
+
+    def push(self, move):
+        """Implement the rules of Fanorona and make the desired move on the board. Returns flags and
+        status codes depending on game over or draw"""
+        pass
+
+    def get_result(self) -> int:
+        """Return result of the current game state if done. Returns 1 for white win, -1 for
+        black win, and 0 for draw"""
+        pass
+
+    @staticmethod
+    def reset() -> FanoronaState:
+        "Return the start state"
+        pass

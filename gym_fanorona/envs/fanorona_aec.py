@@ -1,0 +1,121 @@
+from typing import Any, Dict, List, Tuple, cast
+
+from gym import spaces
+import numpy as np
+from pettingzoo import AECEnv
+from pettingzoo.utils import agent_selector
+from pettingzoo.utils import wrappers
+
+from .action import FanoronaMove
+from .state import FanoronaState
+
+
+def env():
+    env = raw_env()
+    env = wrappers.CaptureStdoutWrapper(env)
+    env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
+    env = wrappers.AssertOutOfBoundsWrapper(env)
+    env = wrappers.OrderEnforcingWrapper(env)
+    return env
+
+
+class raw_env(AECEnv):
+    """
+    Description:
+        Implements the Fanorona board game following the 5x9 Fanoron Tsivy
+        variation. A draw is declared if 50 half-moves have been exceeded 
+        since the start of the game. Consecutive captures count as one move.
+
+    References: 
+        https://www.mindsports.nl/index.php/the-pit/528-fanorona
+        https://en.wikipedia.org/wiki/Fanorona
+    
+    Reward:
+        +1: win
+         0: draw
+        -1: loss, illegal move
+
+    Starting State:
+        Starting board setup for Fanorona (see https://en.wikipedia.org/wiki/Fanorona#/media/File:Fanorona-1.svg)
+
+    Episode Termination:
+        Game ends in a win, draw, loss or illegal move
+    """
+
+    metadata = {"render.modes": ["human", "svg"], "name": "fanorona_v1"}
+
+    def __init__(self):
+        self.possible_agents = ["player_" + str(r) for r in range(2)]
+        self.agent_name_mapping = dict(
+            zip(self.possible_agents, list(range(len(self.possible_agents))))
+        )
+
+        # TODO: action space doc
+        self.action_spaces = {
+            agent: spaces.Discrete(45 * 8 * 3 + 1) for agent in self.possible_agents
+        }
+
+        # TODO: observation space doc
+        self.observation_spaces = {
+            name: spaces.Dict(
+                {
+                    "observation": spaces.Box(
+                        low=0, high=1, shape=(5, 9, 5), dtype=np.int32
+                    ),  # ideally should be np.bool
+                    "action_mask": spaces.Box(
+                        low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int32
+                    ),  # ideally should be np.int8
+                }
+            )
+            for name in self.agents
+        }
+
+    def render(self, mode="human"):
+        if mode == "human":
+            print(self.state.get_board_str())
+        elif mode == "svg":
+            print(self.state.get_svg())
+
+    def observe(self, agent):
+        observation = FanoronaState.get_observation(
+            self.state, self.possible_agents.index(agent)
+        )
+        legal_moves = self.state.legal_moves if agent == self.agent_selection else []
+
+        action_mask = np.zeros(45 * 8 * 3 + 1, int)
+        for i in legal_moves:
+            action_mask[i] = 1
+
+        return {"observation": observation, "action_mask": action_mask}
+
+    def close(self):
+        pass
+
+    def reset(self):
+        self.agents = self.possible_agents[:]
+        self.rewards = {agent: 0 for agent in self.agents}
+        self._cumulative_rewards = {agent: 0 for agent in self.agents}
+        self.dones = {agent: False for agent in self.agents}
+        self.infos = {agent: {} for agent in self.agents}
+
+        self._agent_selector = agent_selector(self.agents)
+        self.agent_selection = self._agent_selector.next()
+
+        self.state = FanoronaState.reset()
+
+    def step(self, action):
+        if self.dones[self.agent_selection]:
+            return self._was_done_step(action)
+
+        chosen_move = FanoronaMove.action_to_move(self.state, action)
+        assert chosen_move in self.state.legal_moves
+        self.state.push(chosen_move)
+        if self.state.is_game_over():
+            result = self.state.get_result()
+            for i, name in enumerate(self.agents):
+                self.dones[name] = True
+                result_coeff = 1 if i == 0 else -1
+                self.rewards[name] = result[i] * result_coeff
+                self.infos[name] = {"legal_moves": []}
+
+        self._accumulate_rewards()
