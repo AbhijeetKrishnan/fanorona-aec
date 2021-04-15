@@ -1,12 +1,10 @@
-from typing import Any, Dict, List, Tuple, cast
-
 from gym import spaces
 import numpy as np
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
 
-from .action import FanoronaMove
+from .move import FanoronaMove
 from .state import FanoronaState
 
 

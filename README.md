@@ -1,18 +1,18 @@
-# Fanorona Gym Environment
+# Fanorona AEC Environment
 
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-This is an implementation of the Fanorona board game as an OpenAI Gym environment. The rules have
-been sourced from [here](https://www.mindsports.nl/index.php/the-pit/528-fanorona). An additional
-rule where games exceeding 50 half-moves end in a draw has been implemented, since the original
-rules do not have explicit draw conditions.
+This is an implementation of the Fanorona board game as a [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) [AEC](https://arxiv.org/abs/2009.13051) game.
+The rules have been sourced from [here](https://www.mindsports.nl/index.php/the-pit/528-fanorona).
+An additional rule where games exceeding 45 moves end in a draw has been implemented, since the
+original rules do not have explicit draw conditions.
 
 ## Installation
 
 ```bash
-git clone https://github.com/AbhijeetKrishnan/gym-fanorona.git
-cd gym-fanorona
+git clone https://github.com/AbhijeetKrishnan/fanorona-aec.git
+cd fanorona-aec
 pip install -e .
 ```
 
@@ -23,23 +23,9 @@ pip install -e .
 In a Python shell, run the following:
 
 ```python
-import gym
-import gym_fanorona
-env = gym.make('fanorona-v0')
-```
-
-### Running a game between two (random) agents
-
-In a Python shell, run the following:
-
-```python
-import gym
-import gym_fanorona
-from gym_fanorona.agents.random_agent import RandomAgent
-
-white, black = RandomAgent(), RandomAgent()
-env = gym.make('fanorona-v0', white_player=white, black_player=black)
-moves = env.play_game()
+import pettingzoo
+import fanorona_aec
+env = fanorona_v0.env()
 ```
 
 ## Testing
@@ -49,22 +35,3 @@ We use [pytest](http://doc.pytest.org/) for tests. You can run them via:
 ```bash
 pytest
 ```
-
-## TODO
-
-- [x] Refactor state into a state object with attributes
-- [x] Refactor action into an action object with attributes, and a convenient string representation to interconvert between
-- [x] Write a visual interface for playing Fanorona
-- [x] Add multiple tests for each method used
-- [x] Refactor coordinate conversion methods into a single method with flags
-- [x] Refactor validity checking into list of smaller rule checks combined in a larger method, so that is_valid() and is_capture_valid() can reuse code (possibly as a list of methods which must all return True)
-- [x] Organize imports to remove unused imports
-- [x] Test environment with a complete game
-- [ ] Build interface to easily communicate moves and visualize output (using tkinter)
-- [ ] Would dynamically changing action space be better than current implementation?
-- [ ] Use` capture_type` to indicate `end_turn` action as well (reduces number of states from 2430 to 1620)
-- [ ] Turn `FanoronaEnv.get_valid_moves()` into a generator
-- [ ] Replace types in FanoronaState with numpy types from numpy.typing OR consider not using numpy at all
-- [x] Automatically delete .svg files generated from tests
-- [ ] Clarify reward-giving mechanism to agents (at each step, and at end of game; who stores the cumulative reward?)
-- [x] Add minimax agent

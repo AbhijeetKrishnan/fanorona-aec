@@ -1,63 +1,38 @@
-import random
+from fanorona_aec import fanorona_v0
 
-import gym
-from gym_fanorona.envs import (
-    FanoronaMove,
-    FanoronaState,
+from fanorona_aec.move import FanoronaMove
+from fanorona_aec.state import FanoronaState
+from fanorona_aec.utils import (
     Position,
     Direction,
-    Reward,
     Piece,
 )
 import pytest
 
 TEST_STATES = [
-    "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0",  # start state
-    "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - 1",  # capturing seq after D2->E3 approach
-    "9/9/3W1B3/9/9 W - - 49",  # random endgame state
+    "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",  # start state
+    "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - - 1",  # capturing seq after D2->E3 approach
+    "9/9/3W1B3/9/9 W - - - 49",  # random endgame state
 ]
+
+# TODO: fix and update these tests
 
 
 @pytest.fixture(scope="function")
 def env():
-    env = gym.make("fanorona-v0")
+    env = fanorona_v0.env()
     env.reset()
     yield env
     env.close()
 
 
-def test_is_valid(env):
-    "Test 2 opening moves for validity"
-    action1 = FanoronaMove(Position("D2"), Direction["NE"], 1, False)
-    action2 = FanoronaMove(
-        Position("E1"), Direction["NW"], 1, False
-    )  # cannot move different piece in capturing sequence - illegal move
-    assert action1.is_valid(env.state)
-    env.step(action1)
-    assert not action2.is_valid(env.state)
-
-
-def test_is_done(env):
+def test_is_game_over(env):
     "Test that is_done method is correctly identifying end of game states."
-    board_str = "9/9/3W1B3/9/9 W - - 30"
-    env.state = FanoronaState.set_from_board_str(board_str)
-    action = FanoronaMove(Position("D3"), Direction["E"], 1, False)
-    assert action.is_valid(env.state)
-    _, _, done, _ = env.step(action)
-    assert done
-
-
-def test_utility(env):
-    "Test that utility() method is correctly returning the verdict of end of game states."
-    board_str = "9/9/3W1B3/9/9 W - - 30"
-    env.state = FanoronaState.set_from_board_str(board_str)
-    action = FanoronaMove(Position("D3"), Direction["E"], 1, False)
-    assert action.is_valid(env.state)
-    env.step(action)
-    utility = env.state.utility(Piece.BLACK)
-    print(env.state)
-    assert utility is not None
-    assert utility == Reward.LOSS
+    board_str = "9/9/3W1B3/9/9 W - - - 30"
+    env.state.set_from_board_str(board_str)
+    move = FanoronaMove(Position("D3"), Direction["E"], 1, False)
+    env.state.push(move)
+    assert env.state.is_game_over()
 
 
 def test_end_turn(env):

@@ -4,7 +4,7 @@ import numpy as np
 import numpy.typing as npt
 
 from .utils import MOVE_LIMIT, BOARD_COLS, BOARD_ROWS, Direction, Piece, Position
-from .action import FanoronaMove, MoveType, END_TURN
+from .move import FanoronaMove, MoveType, END_TURN
 
 
 class FanoronaState:

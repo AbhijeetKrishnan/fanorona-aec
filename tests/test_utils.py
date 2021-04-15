@@ -1,5 +1,4 @@
-from gym_fanorona.envs import Position, Direction
-import pytest
+from fanorona_aec.utils import Position, Direction
 
 
 def test_convert_coords_to_human():

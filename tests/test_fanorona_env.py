@@ -1,10 +1,8 @@
-import os
 import random
 
 import gym
 import pytest
 from gym_fanorona.envs import (
-    MOVE_LIMIT,
     Direction,
     FanoronaMove,
     FanoronaState,

@@ -4,10 +4,10 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="gym-fanorona",
+    name="fanorona-aec",
     version="0.0.1",
-    description="An OpenAI Gym implementation of the Fanorona board game.",
-    url="https://github.com/AbhijeetKrishnan/gym-fanorona",
+    description="A PettingZoo AECEnv implementation of the Fanorona board game.",
+    url="https://github.com/AbhijeetKrishnan/fanorona-aec",
     author="Abhijeet Krishnan",
     author_email="abhijeet.krishnan@gmail.com",
     license="MIT",
@@ -19,6 +19,6 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.8",
-    install_requires=["gym"],
+    install_requires=["pettingzoo"],
     tests_require=["pytest"],
 )
