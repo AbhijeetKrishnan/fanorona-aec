@@ -4,16 +4,16 @@ import numpy as np
 import numpy.typing as npt
 
 from .utils import MOVE_LIMIT, BOARD_COLS, BOARD_ROWS, Direction, Piece, Position
-from .action import FanoronaMove, MoveType
+from .action import FanoronaMove, MoveType, END_TURN
 
 
 class FanoronaState:
     def __init__(self):
         self.board_state: Optional[npt.ArrayLike] = None
         self.turn_to_play: Piece = Piece.EMPTY
-        self.last_capture: Tuple[
-            Position, Direction
-        ] = None  # TODO: propagate this addition to the rest of the code
+        self.last_capture: Optional[
+            Tuple[Position, Direction]
+        ] = None  # TODO: remove requirement to index using 0 and 1 (NamedTuple?)
         self.visited: Optional[npt.ArrayLike] = None
         self.half_moves: int = 0
 
@@ -42,7 +42,12 @@ class FanoronaState:
             board_string += str(count)
 
         turn_to_play_str = str(Piece(self.turn_to_play))
-        last_dir_str = str(Direction(self.last_dir))
+        if self.last_capture:
+            last_capture_str = (
+                f"{self.last_capture[0].to_human()} {str(self.last_capture[1])}"
+            )
+        else:
+            last_capture_str = f"- -"
 
         visited_pos_list = []
         for row_idx, row in enumerate(self.visited):
@@ -57,7 +62,7 @@ class FanoronaState:
             [
                 board_string,
                 turn_to_play_str,
-                last_dir_str,
+                last_capture_str,
                 visited_pos_str,
                 str(self.half_moves),
             ]
@@ -124,6 +129,9 @@ class FanoronaState:
         """Implement the rules of Fanorona and make the desired move on the board. Returns flags and
         status codes depending on game over or draw
         """
+        # Direction.X is not part of the action space and is an internal implementation detail
+        if move.end_turn:
+            move.direction = Direction.X
         to = move.position.displace(move.direction)
         from_row, from_col = move.position.to_coords()
         to_row, to_col = to.to_coords()
@@ -131,14 +139,13 @@ class FanoronaState:
         # Assume move is valid. Validity check implemented using action mask and TerminateIllegal
         # wrapper
 
-        # Assume that when move.end_turn is True, move.direction is Direction.X
         from_piece = self.get_piece(move.position)
         self.board_state[from_row][from_col] = Piece.EMPTY
         self.board_state[to_row][to_col] = from_piece
 
         def end_turn():
             self.turn_to_play = self.turn_to_play.other()
-            self.last_dir = Direction.X
+            self.last_capture = None
             self.visited.fill(0)  # reset visited ndarray
             self.half_moves += 1
 
@@ -159,7 +166,7 @@ class FanoronaState:
                 capture_pos = capture_pos.displace(capture_dir)
                 capture_row, capture_col = capture_pos.to_coords()
 
-            self.last_dir = move.direction
+            self.last_capture = (to, move.direction)
             self.visited[from_row][from_col] = 1
             self.visited[to_row][to_col] = 1
 
@@ -210,7 +217,7 @@ class FanoronaState:
 
     def reset(self) -> None:
         "Reset to the start state"
-        START_STATE_STR = "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0"
+        START_STATE_STR = "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0"
         self.set_from_board_str(START_STATE_STR)
 
     def set_from_board_str(self, board_string: str) -> None:
@@ -244,14 +251,21 @@ class FanoronaState:
         (
             board_state_str,
             turn_to_play_str,
-            last_dir_str,
+            last_capture_pos,
+            last_capture_dir,
             visited_pos_str,
             half_moves_str,
         ) = board_string.split()
 
         process_board_state_str(self, board_state_str)
         self.turn_to_play = Piece.WHITE if turn_to_play_str == "W" else Piece.BLACK
-        self.last_dir = Direction[last_dir_str] if last_dir_str != "-" else Direction.X
+        if last_capture_pos != "-" and last_capture_dir != "-":
+            self.last_capture = (
+                Position(last_capture_pos),
+                Direction(last_capture_dir),
+            )
+        else:
+            self.last_capture = None
         process_visited_pos_str(self, visited_pos_str)
         self.half_moves = int(half_moves_str)
 
@@ -260,9 +274,7 @@ class FanoronaState:
         "Return NN-style observation based on the current board state and requesting agent"
         pass
 
-    def is_valid(
-        self, move: FanoronaMove
-    ) -> bool:  # TODO: fix this; split it according to move type - paika, fresh capture, capture from capturing sequence
+    def is_valid(self, move: FanoronaMove) -> bool:
         """Check if a given move is valid from the current board state.
 
         Assumes the following about the input move -
@@ -276,29 +288,24 @@ class FanoronaState:
         else:  # withdraw
             capture = move.position.displace(move.direction.opposite())
 
-        def bounds_checking() -> bool:
+        def check_bounds(pos_list: Tuple[Position]) -> bool:
             """Bounds checking on positions"""
-            for pos in (move.position, to):
-                if not pos.is_valid():  # pos is not within board bounds
-                    return False
-            if (
-                move.capture_type != 0 and not capture.is_valid()
-            ):  # capture may be outside in case of paika move
-                return False
-            if move.position == to:
-                return False
-            return True
+            return all(map(lambda pos: pos.is_valid(), pos_list))
 
         def check_valid_dir() -> bool:
             """Checking that _dir is permitted from given board position"""
             return move.direction in move.position.get_valid_dirs()
 
-        def check_piece_validity() -> bool:
-            """Checking validity of pieces at action positions"""
+        def check_move_to_empty() -> bool:
+            """Checking that piece is being moved to empty location"""
             if (
                 self.get_piece(to) != Piece.EMPTY
             ):  # piece must be played to an empty location
                 return False
+            return True
+
+        def check_opposite_color_capture() -> bool:
+            """Checking that piece being captured is of opposite color"""
             if (
                 move.capture_type != 0
                 and capture.is_valid()
@@ -308,69 +315,84 @@ class FanoronaState:
             return True
 
         def move_only_capturing_piece() -> bool:
-            """
-            If in a capturing sequence, check that capturing piece is the one being moved, and 
+            """If in a capturing sequence, check that capturing piece is the one being moved, and 
             not some other piece
             """
-            if move.end_turn:
-                return True
-            _from_row, _from_col = move.position.to_coords()
-            if state.in_capturing_seq() and state.visited[_from_row][_from_col] != 1:
+            if self.last_capture[0] != move.position:
                 return False
             return True
 
         def check_no_overlap() -> bool:
-            """Check that capturing piece is not visiting previously visited pos in capturing path"""
-            if move.end_turn:
-                return True
+            """Check that capturing piece is not visiting previously visited pos in capturing path
+            """
             _to_row, _to_col = to.to_coords()
-            if state.visited[_to_row][_to_col] == 1:
+            if self.visited[_to_row][_to_col] == 1:
                 return False
             return True
 
         def check_no_same_dir() -> bool:
-            """Check that capturing piece is not moving twice in the same direction"""
-            if move.end_turn:
-                return True
-            return move.direction != state.last_dir
+            """Check that capturing piece is not moving twice in the same direction
+            """
+            return move.direction != self.last_capture[1]
 
-        rules = {
-            "bounds_checking": bounds_checking,
-            "check_piece_validity": check_piece_validity,
-            "check_valid_dir": check_valid_dir,
-            "move_only_capturing_piece": move_only_capturing_piece,
-            "check_no_overlap": check_no_overlap,
-            "check_no_same_dir": check_no_same_dir,
-        }
-        for name, test in rules.items():
-            if name in skip:
-                continue
-            if not test():
-                return False
-        return True
+        if move.capture_type == 0:  # paika
+            valid = all(
+                [
+                    check_bounds((move.position, to)),
+                    check_valid_dir(),
+                    check_move_to_empty(),
+                ]
+            )
+        elif (
+            move.capture_type != 0 and not move.last_capture
+        ):  # beginning of capturing sequence
+            valid = all(
+                [
+                    check_bounds((move.position, to, capture)),
+                    check_valid_dir(),
+                    check_move_to_empty(),
+                    check_opposite_color_capture(),
+                ]
+            )
+        else:  # in capturing sequence
+            valid = all(
+                [
+                    check_bounds((move.position, to, capture)),
+                    check_valid_dir(),
+                    check_move_to_empty(),
+                    check_opposite_color_capture(),
+                    move_only_capturing_piece(),
+                    check_no_overlap(),
+                    check_no_same_dir(),
+                ]
+            )
+        return valid
 
     @property
     def legal_moves(self) -> List[int]:
         """Return a list of legal actions allowed from the current state. Actions are in their
         integer encoding
-
-        Iterates through all possible actions and validates them, then adds them to the list.
         """
         legal_captures: List[int] = []
         legal_paikas: List[int] = []
 
-        if self.last_dir != Direction.X:
-            # TODO: check for captures involving last moved piece only
+        # check for captures involving last moved piece only if in capturing sequence
+        if self.last_capture:
+            pos = self.last_capture[0]
+            for direction in Direction:
+                for capture_type in [MoveType.APPROACH, MoveType.WITHDRAWAL]:
+                    capture = FanoronaMove(pos, direction, capture_type, False)
+                    if self.is_valid(capture):
+                        legal_captures.append(capture.to_action())
 
             # add end turn
-            end_turn_action = FanoronaMove(Position((0, 0)), Direction.X, 0, True)
-            legal_captures.append(end_turn_action)
+            legal_captures.append(END_TURN)
 
         # check for captures
         for pos in Position.pos_range():
             if self.get_piece(pos) == self.turn_to_play:
                 for direction in Direction:
-                    for capture_type in [1, 2]:  # approach = 1, withdrawal = 2
+                    for capture_type in [MoveType.APPROACH, MoveType.WITHDRAWAL]:
                         capture = FanoronaMove(pos, direction, capture_type, False)
                         if self.is_valid(capture):
                             legal_captures.append(capture.to_action())

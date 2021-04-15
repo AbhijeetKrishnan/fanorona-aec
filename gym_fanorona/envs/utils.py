@@ -60,7 +60,7 @@ class Direction(IntEnum):
 
 
 class Position:
-    def __init__(self, pos: Union[Tuple[int, int], str]):
+    def __init__(self, pos: Union[Tuple[int, int], str, int]):
         self.row: int = 0
         self.col: int = 0
         if isinstance(pos, tuple):
@@ -69,6 +69,9 @@ class Position:
             col_str, row_str = list(pos)
             self.row = int(row_str) - 1
             self.col = ord(col_str) - ord("A")
+        elif isinstance(pos, int):
+            self.col = pos % BOARD_COLS
+            self.row = (pos - self.col) // BOARD_COLS
         else:
             raise Exception(f"Object of type {type(pos)} was passed")
 

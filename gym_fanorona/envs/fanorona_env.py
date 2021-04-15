@@ -84,14 +84,15 @@ class raw_env(AECEnv):
             )
             for name in self.agents
         }
+        self.state = FanoronaState()
 
-    def render(self, mode="human"):
+    def render(self, mode: str = "human"):
         if mode == "human":
             print(str(self.state))
         elif mode == "svg":
             print(self.state.to_svg())
 
-    def observe(self, agent):
+    def observe(self, agent: str):
         observation = FanoronaState.get_observation(
             self.state, self.possible_agents.index(agent)
         )
@@ -118,7 +119,7 @@ class raw_env(AECEnv):
 
         self.state.reset()
 
-    def step(self, action):
+    def step(self, action: int):
         if self.dones[self.agent_selection]:
             return self._was_done_step(action)
 

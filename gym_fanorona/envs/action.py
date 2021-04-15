@@ -34,12 +34,33 @@ class FanoronaMove:
 
     def to_action(self) -> int:
         "Return integer encoding of FanoronaMove object"
-        pass
+        if self.end_turn:
+            return 5 * 9 * 8 * 3
+        else:
+            pos_int = self.position.to_pos
+            dir_int = self.direction.value - (
+                1 if self.direction.value >= 4 else 0
+            )  # to account for Direction.X
+            capture_type_int = self.capture_type.value
+            return pos_int * 8 * 3 + dir_int * 3 + capture_type_int
 
     @staticmethod
     def action_to_move(action: int) -> "FanoronaMove":
-        "Converts NN-style action to a FanoronaMove object"
-        pass
+        "Converts integer-encoded action to a FanoronaMove object"
+        result = FanoronaMove(Position((4, 8)), Direction(7), MoveType(2), True)
+        if action != 5 * 9 * 8 * 3:
+            result.end_turn = False
+            capture_type_int = action % 3
+            action = (action - capture_type_int) // 3
+            dir_int = action % 8
+            action = (action - dir_int) // 8
+            if dir_int >= 4:
+                dir_int += 1  # to account for Direction.X
+            pos_int = action
+            result.position = Position(pos_int)
+            result.direction = Direction(dir_int)
+            result.capture_type = MoveType(capture_type_int)
+        return result
 
     @staticmethod
     def str_to_move(action_string: str) -> Optional["FanoronaMove"]:
@@ -68,3 +89,7 @@ class FanoronaMove:
                 bool(int(match.group("end_turn"))),
             )
         return ret_val
+
+
+# End turn move needs to encode to a value of 5 * 9 * 8 * 3
+END_TURN = FanoronaMove(Position((4, 8)), Direction(7), MoveType(2), True)
