@@ -1,7 +1,11 @@
+from enum import IntEnum
 from typing import Iterator, List, Tuple, Union
 
-from .constants import BOARD_COLS, BOARD_ROWS, BOARD_SQUARES
-from .enums import Direction
+BOARD_ROWS = 5
+BOARD_COLS = 9
+MOVE_LIMIT = 45
+
+BOARD_SQUARES = BOARD_ROWS * BOARD_COLS
 
 DISPLACEMENT_VECTORS = {
     0: (-1, -1),  # SW
@@ -14,6 +18,45 @@ DISPLACEMENT_VECTORS = {
     7: (1, 0),  # N
     8: (1, 1),  # NE
 }
+
+
+class Piece(IntEnum):
+    def __str__(self):
+        return str(self.name)[0]  # just the first letter
+
+    def other(self) -> "Piece":
+        return Piece(self.value ^ 1)
+
+    WHITE = 0
+    BLACK = 1
+    EMPTY = 2
+
+
+class Direction(IntEnum):
+    def __str__(self):
+        if self.value == 4:
+            return "-"
+        else:
+            return self.name
+
+    def opposite(self) -> "Direction":
+        "Return the direction of opposite orientation to the current one e.g. NE.opposite() == SW"
+        return Direction(8 - self.value)
+
+    @staticmethod
+    def dir_range():
+        for i in range(9):
+            yield Direction(i)
+
+    SW = 0
+    S = 1
+    SE = 2
+    W = 3
+    X = 4  # No direction
+    E = 5
+    NW = 6
+    N = 7
+    NE = 8
 
 
 class Position:
