@@ -8,6 +8,8 @@ class MoveType(IntEnum):
     PAIKA = 0
     APPROACH = 1
     WITHDRAWAL = 2
+
+
 class FanoronaMove:
     def __init__(
         self,

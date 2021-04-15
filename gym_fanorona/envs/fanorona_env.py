@@ -62,7 +62,7 @@ class raw_env(AECEnv):
         # The main observation space is a 5x9 space representing the board. It has 7 channels
         # representing -
         #   Channel 1: whose turn to play (all 0s for white, all 1s for black)
-        #   Channel 2: move counter counting up to 45 moves. Represented by a single channel where 
+        #   Channel 2: move counter counting up to 45 moves. Represented by a single channel where
         #              the n^th element in the flattened channel is set if there has been n moves.
         #   Channel 3: positions used (1 in the squares whose positions have been used in a
         #              capturing sequence)

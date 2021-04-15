@@ -11,7 +11,9 @@ class FanoronaState:
     def __init__(self):
         self.board_state: Optional[npt.ArrayLike] = None
         self.turn_to_play: Piece = Piece.EMPTY
-        self.last_capture: Tuple[Position, Direction] = None # TODO: propagate this addition to the rest of the code
+        self.last_capture: Tuple[
+            Position, Direction
+        ] = None  # TODO: propagate this addition to the rest of the code
         self.visited: Optional[npt.ArrayLike] = None
         self.half_moves: int = 0
 
@@ -60,8 +62,10 @@ class FanoronaState:
                 str(self.half_moves),
             ]
         )
-    
-    def to_svg(self, svg_w: int=1000, svg_h: int=600) -> str: # TODO: adjust output svg size dynamically
+
+    def to_svg(
+        self, svg_w: int = 1000, svg_h: int = 600
+    ) -> str:  # TODO: adjust output svg size dynamically
         def convert(coord: Tuple[int, int]) -> Tuple[int, int]:
             row, col = coord
             return 100 + col * 100, 100 + (4 - row) * 100
@@ -135,8 +139,8 @@ class FanoronaState:
         def end_turn():
             self.turn_to_play = self.turn_to_play.other()
             self.last_dir = Direction.X
-            self.visited.fill(0) # reset visited ndarray
-            self.half_moves += 1   
+            self.visited.fill(0)  # reset visited ndarray
+            self.half_moves += 1
 
         if not move.end_turn and move.capture_type != MoveType.PAIKA:
             if move.capture_type == MoveType.APPROACH:  # approach
@@ -165,7 +169,7 @@ class FanoronaState:
                 end_turn()
 
         else:  # end turn/paika move
-             end_turn()
+            end_turn()
 
     def is_game_over(self) -> bool:
         """
@@ -195,7 +199,7 @@ class FanoronaState:
         a) One side has no pieces left to move (loss for the side which has no pieces to move)
         b) The number of half-moves exceeds the limit (draw)
         """
-        assert(self.is_game_over())
+        assert self.is_game_over()
 
         if self.half_moves // 2 >= MOVE_LIMIT:
             return 0
@@ -212,6 +216,7 @@ class FanoronaState:
     def set_from_board_str(self, board_string: str) -> None:
         """Set the state object to a new state represented by a board string.
         """
+
         def process_board_state_str(self, board_state_str: str):
             row_strings = board_state_str.split("/")
             board_state_chars = [list(row) for row in row_strings]
@@ -248,14 +253,16 @@ class FanoronaState:
         self.turn_to_play = Piece.WHITE if turn_to_play_str == "W" else Piece.BLACK
         self.last_dir = Direction[last_dir_str] if last_dir_str != "-" else Direction.X
         process_visited_pos_str(self, visited_pos_str)
-        self.half_moves = int(half_moves_str)     
+        self.half_moves = int(half_moves_str)
 
     @staticmethod
     def get_observation(self, agent):
         "Return NN-style observation based on the current board state and requesting agent"
         pass
 
-    def is_valid(self, move: FanoronaMove) -> bool: # TODO: fix this; split it according to move type - paika, fresh capture, capture from capturing sequence
+    def is_valid(
+        self, move: FanoronaMove
+    ) -> bool:  # TODO: fix this; split it according to move type - paika, fresh capture, capture from capturing sequence
         """Check if a given move is valid from the current board state.
 
         Assumes the following about the input move -
@@ -281,7 +288,7 @@ class FanoronaState:
             if move.position == to:
                 return False
             return True
-        
+
         def check_valid_dir() -> bool:
             """Checking that _dir is permitted from given board position"""
             return move.direction in move.position.get_valid_dirs()
@@ -355,7 +362,7 @@ class FanoronaState:
         if self.last_dir != Direction.X:
             # TODO: check for captures involving last moved piece only
 
-            # add end turn 
+            # add end turn
             end_turn_action = FanoronaMove(Position((0, 0)), Direction.X, 0, True)
             legal_captures.append(end_turn_action)
 
@@ -372,12 +379,12 @@ class FanoronaState:
         if not legal_captures:
             for pos in Position.pos_range():
                 if self.get_piece(pos) == self.turn_to_play:
-                    for direction in Direction:    
+                    for direction in Direction:
                         paika = FanoronaMove(pos, direction, 0, False)
                         if self.is_valid(paika):
                             legal_paikas.append(paika.to_action())
 
-        if legal_captures: # capture has to be made if available
+        if legal_captures:  # capture has to be made if available
             return legal_captures
         else:
             return legal_paikas
