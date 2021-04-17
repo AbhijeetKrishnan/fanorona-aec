@@ -1,7 +1,6 @@
 from typing import Tuple, Optional, List
 
 import numpy as np
-import numpy.typing as npt
 
 from .utils import MOVE_LIMIT, BOARD_COLS, BOARD_ROWS, Direction, Piece, Position
 from .move import FanoronaMove, MoveType, END_TURN
@@ -9,12 +8,12 @@ from .move import FanoronaMove, MoveType, END_TURN
 
 class FanoronaState:
     def __init__(self):
-        self.board_state: Optional[npt.ArrayLike] = None
+        self.board_state: Optional[np.ndarray] = None
         self.turn_to_play: Piece = Piece.EMPTY
         self.last_capture: Optional[
             Tuple[Position, Direction]
         ] = None  # TODO: remove requirement to index using 0 and 1 (NamedTuple?)
-        self.visited: Optional[npt.ArrayLike] = None
+        self.visited: Optional[np.ndarray] = None
         self.half_moves: int = 0
 
     def __repr__(self):
@@ -68,9 +67,9 @@ class FanoronaState:
             ]
         )
 
-    def to_svg(
-        self, svg_w: int = 1000, svg_h: int = 600
-    ) -> str:  # TODO: adjust output svg size dynamically
+    def to_svg(self, svg_w: int = 1000, svg_h: int = 600) -> str:
+        # TODO: adjust output svg size dynamically
+        # TODO: represent other aspects of state on the output svg (turn to play, last capture, visited etc.)
         def convert(coord: Tuple[int, int]) -> Tuple[int, int]:
             row, col = coord
             return 100 + col * 100, 100 + (4 - row) * 100
@@ -206,7 +205,7 @@ class FanoronaState:
         a) One side has no pieces left to move (loss for the side which has no pieces to move)
         b) The number of half-moves exceeds the limit (draw)
         """
-        assert self.is_game_over()
+        assert self.is_game_over()  # TODO: make done a state property instead?
 
         if self.half_moves // 2 >= MOVE_LIMIT:
             return 0

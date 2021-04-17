@@ -1,330 +1,185 @@
 from fanorona_aec.utils import Position, Direction
 
+import pytest
 
-def test_convert_coords_to_human():
+POS = (
+    (0, 0),
+    (0, 1),
+    (0, 2),
+    (0, 3),
+    (0, 4),
+    (0, 5),
+    (0, 6),
+    (0, 7),
+    (0, 8),
+    (1, 0),
+    (1, 1),
+    (1, 2),
+    (1, 3),
+    (1, 4),
+    (1, 5),
+    (1, 6),
+    (1, 7),
+    (1, 8),
+    (2, 0),
+    (2, 1),
+    (2, 2),
+    (2, 3),
+    (2, 4),
+    (2, 5),
+    (2, 6),
+    (2, 7),
+    (2, 8),
+    (3, 0),
+    (3, 1),
+    (3, 2),
+    (3, 3),
+    (3, 4),
+    (3, 5),
+    (3, 6),
+    (3, 7),
+    (3, 8),
+    (4, 0),
+    (4, 1),
+    (4, 2),
+    (4, 3),
+    (4, 4),
+    (4, 5),
+    (4, 6),
+    (4, 7),
+    (4, 8),
+)
+
+HUMAN = (
+    "A1",
+    "B1",
+    "C1",
+    "D1",
+    "E1",
+    "F1",
+    "G1",
+    "H1",
+    "I1",
+    "A2",
+    "B2",
+    "C2",
+    "D2",
+    "E2",
+    "F2",
+    "G2",
+    "H2",
+    "I2",
+    "A3",
+    "B3",
+    "C3",
+    "D3",
+    "E3",
+    "F3",
+    "G3",
+    "H3",
+    "I3",
+    "A4",
+    "B4",
+    "C4",
+    "D4",
+    "E4",
+    "F4",
+    "G4",
+    "H4",
+    "I4",
+    "A5",
+    "B5",
+    "C5",
+    "D5",
+    "E5",
+    "F5",
+    "G5",
+    "H5",
+    "I5",
+)
+
+
+@pytest.mark.parametrize("test_input,expected", zip(POS, HUMAN))
+def test_convert_coords_to_human(test_input, expected):
     """Test that converting to human-readable coords upon initialization using row-col coords returns 
-    the correct values for all valid board coords"""
-    answer = {
-        (0, 0): "A1",
-        (0, 1): "B1",
-        (0, 2): "C1",
-        (0, 3): "D1",
-        (0, 4): "E1",
-        (0, 5): "F1",
-        (0, 6): "G1",
-        (0, 7): "H1",
-        (0, 8): "I1",
-        (1, 0): "A2",
-        (1, 1): "B2",
-        (1, 2): "C2",
-        (1, 3): "D2",
-        (1, 4): "E2",
-        (1, 5): "F2",
-        (1, 6): "G2",
-        (1, 7): "H2",
-        (1, 8): "I2",
-        (2, 0): "A3",
-        (2, 1): "B3",
-        (2, 2): "C3",
-        (2, 3): "D3",
-        (2, 4): "E3",
-        (2, 5): "F3",
-        (2, 6): "G3",
-        (2, 7): "H3",
-        (2, 8): "I3",
-        (3, 0): "A4",
-        (3, 1): "B4",
-        (3, 2): "C4",
-        (3, 3): "D4",
-        (3, 4): "E4",
-        (3, 5): "F4",
-        (3, 6): "G4",
-        (3, 7): "H4",
-        (3, 8): "I4",
-        (4, 0): "A5",
-        (4, 1): "B5",
-        (4, 2): "C5",
-        (4, 3): "D5",
-        (4, 4): "E5",
-        (4, 5): "F5",
-        (4, 6): "G5",
-        (4, 7): "H5",
-        (4, 8): "I5",
-    }
-    for row, col in Position.coord_range():
-        assert Position((row, col)).to_human() == answer[(row, col)]
-
-
-def test_convert_human_to_coords():
+    the correct values for all valid board coords
     """
-    Test that converting to coords upon initialization using human-reaable coords returns the 
+    assert Position(test_input).to_human() == expected
+
+
+@pytest.mark.parametrize("test_input,expected", zip(HUMAN, POS))
+def test_convert_human_to_coords(test_input, expected):
+    """Test that converting to coords upon initialization using human-readable coords returns the 
     correct values for all valid board coords
     """
-    answer = {
-        "A1": (0, 0),
-        "B1": (0, 1),
-        "C1": (0, 2),
-        "D1": (0, 3),
-        "E1": (0, 4),
-        "F1": (0, 5),
-        "G1": (0, 6),
-        "H1": (0, 7),
-        "I1": (0, 8),
-        "A2": (1, 0),
-        "B2": (1, 1),
-        "C2": (1, 2),
-        "D2": (1, 3),
-        "E2": (1, 4),
-        "F2": (1, 5),
-        "G2": (1, 6),
-        "H2": (1, 7),
-        "I2": (1, 8),
-        "A3": (2, 0),
-        "B3": (2, 1),
-        "C3": (2, 2),
-        "D3": (2, 3),
-        "E3": (2, 4),
-        "F3": (2, 5),
-        "G3": (2, 6),
-        "H3": (2, 7),
-        "I3": (2, 8),
-        "A4": (3, 0),
-        "B4": (3, 1),
-        "C4": (3, 2),
-        "D4": (3, 3),
-        "E4": (3, 4),
-        "F4": (3, 5),
-        "G4": (3, 6),
-        "H4": (3, 7),
-        "I4": (3, 8),
-        "A5": (4, 0),
-        "B5": (4, 1),
-        "C5": (4, 2),
-        "D5": (4, 3),
-        "E5": (4, 4),
-        "F5": (4, 5),
-        "G5": (4, 6),
-        "H5": (4, 7),
-        "I5": (4, 8),
-    }
-    for human in Position.human_range():
-        assert Position(human).to_coords() == answer[human]
+    assert Position(test_input).to_coords() == expected
 
 
-def test_convert_coords_to_pos():
+@pytest.mark.parametrize("test_input,expected", zip(POS, range(45)))
+def test_convert_coords_to_pos(test_input, expected):
     "Test that initializing using coords returns the correct values for all valid board coords"
-    answer = {
-        (0, 0): 0,
-        (0, 1): 1,
-        (0, 2): 2,
-        (0, 3): 3,
-        (0, 4): 4,
-        (0, 5): 5,
-        (0, 6): 6,
-        (0, 7): 7,
-        (0, 8): 8,
-        (1, 0): 9,
-        (1, 1): 10,
-        (1, 2): 11,
-        (1, 3): 12,
-        (1, 4): 13,
-        (1, 5): 14,
-        (1, 6): 15,
-        (1, 7): 16,
-        (1, 8): 17,
-        (2, 0): 18,
-        (2, 1): 19,
-        (2, 2): 20,
-        (2, 3): 21,
-        (2, 4): 22,
-        (2, 5): 23,
-        (2, 6): 24,
-        (2, 7): 25,
-        (2, 8): 26,
-        (3, 0): 27,
-        (3, 1): 28,
-        (3, 2): 29,
-        (3, 3): 30,
-        (3, 4): 31,
-        (3, 5): 32,
-        (3, 6): 33,
-        (3, 7): 34,
-        (3, 8): 35,
-        (4, 0): 36,
-        (4, 1): 37,
-        (4, 2): 38,
-        (4, 3): 39,
-        (4, 4): 40,
-        (4, 5): 41,
-        (4, 6): 42,
-        (4, 7): 43,
-        (4, 8): 44,
-    }
-    for row, col in Position.coord_range():
-        assert Position((row, col)).to_pos() == answer[(row, col)]
+    assert Position(test_input).to_pos() == expected
 
 
-def test_convert_pos_to_coords():
+@pytest.mark.parametrize("test_input,expected", zip(range(45), POS))
+def test_convert_pos_to_coords(test_input, expected):
     """
     Test that converting to coords upon initialization using pos returns the correct values for 
     all valid board positions
     """
-    answer = {
-        (0, 0): 0,
-        (0, 1): 1,
-        (0, 2): 2,
-        (0, 3): 3,
-        (0, 4): 4,
-        (0, 5): 5,
-        (0, 6): 6,
-        (0, 7): 7,
-        (0, 8): 8,
-        (1, 0): 9,
-        (1, 1): 10,
-        (1, 2): 11,
-        (1, 3): 12,
-        (1, 4): 13,
-        (1, 5): 14,
-        (1, 6): 15,
-        (1, 7): 16,
-        (1, 8): 17,
-        (2, 0): 18,
-        (2, 1): 19,
-        (2, 2): 20,
-        (2, 3): 21,
-        (2, 4): 22,
-        (2, 5): 23,
-        (2, 6): 24,
-        (2, 7): 25,
-        (2, 8): 26,
-        (3, 0): 27,
-        (3, 1): 28,
-        (3, 2): 29,
-        (3, 3): 30,
-        (3, 4): 31,
-        (3, 5): 32,
-        (3, 6): 33,
-        (3, 7): 34,
-        (3, 8): 35,
-        (4, 0): 36,
-        (4, 1): 37,
-        (4, 2): 38,
-        (4, 3): 39,
-        (4, 4): 40,
-        (4, 5): 41,
-        (4, 6): 42,
-        (4, 7): 43,
-        (4, 8): 44,
-    }
-    answer = {
-        value: key for key, value in answer.items()
-    }  # inverting the dictionary created in the previous test
-    for pos in Position.pos_range():
-        assert pos.to_coords() == answer[pos.to_pos()]
+    assert Position(test_input).to_coords() == expected
 
 
-def test_get_valid_dirs():
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        ((0, 0), [Direction.N, Direction.NE, Direction.E]),
+        ((2, 0), [Direction.S, Direction.SE, Direction.E, Direction.NE, Direction.N,]),
+        ((4, 0), [Direction.S, Direction.SE, Direction.E]),
+        ((0, 8), [Direction.W, Direction.NW, Direction.N]),
+        ((2, 8), [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N,]),
+        ((4, 8), [Direction.S, Direction.SW, Direction.W]),
+        ((0, 1), [Direction.W, Direction.N, Direction.E]),
+        ((0, 2), [Direction.W, Direction.NW, Direction.N, Direction.NE, Direction.E,]),
+        ((4, 1), [Direction.W, Direction.N, Direction.E]),
+        ((4, 2), [Direction.W, Direction.SW, Direction.S, Direction.SE, Direction.E,]),
+        ((1, 0), [Direction.S, Direction.E, Direction.N]),
+        ((1, 8), [Direction.S, Direction.W, Direction.N]),
+        (
+            (1, 1),
+            [
+                Direction.S,
+                Direction.SW,
+                Direction.W,
+                Direction.NW,
+                Direction.N,
+                Direction.NE,
+                Direction.E,
+                Direction.SE,
+            ],
+        ),
+        ((1, 2), [Direction.S, Direction.W, Direction.N, Direction.E]),
+    ],
+)
+def test_get_valid_dirs(test_input, expected):
     "Verify that Position.get_valid_dirs() returns the right directions for all possible types of positions"
-
-    pos = Position((0, 0))
-    result = [Direction.N, Direction.NE, Direction.E]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((2, 0))
-    result = [
-        Direction.S,
-        Direction.SE,
-        Direction.E,
-        Direction.NE,
-        Direction.N,
-    ]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((4, 0))
-    result = [Direction.S, Direction.SE, Direction.E]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((0, 8))
-    result = [Direction.W, Direction.NW, Direction.N]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((2, 8))
-    result = [
-        Direction.S,
-        Direction.SW,
-        Direction.W,
-        Direction.NW,
-        Direction.N,
-    ]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((4, 8))
-    result = [Direction.S, Direction.SW, Direction.W]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((0, 1))
-    result = [Direction.W, Direction.N, Direction.E]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((0, 2))
-    result = [
-        Direction.W,
-        Direction.NW,
-        Direction.N,
-        Direction.NE,
-        Direction.E,
-    ]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((4, 1))
-    result = [Direction.W, Direction.S, Direction.E]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((4, 2))
-    result = [
-        Direction.W,
-        Direction.SW,
-        Direction.S,
-        Direction.SE,
-        Direction.E,
-    ]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((1, 0))
-    result = [Direction.S, Direction.E, Direction.N]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((1, 8))
-    result = [Direction.S, Direction.W, Direction.N]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((1, 1))
-    result = [
-        Direction.S,
-        Direction.SW,
-        Direction.W,
-        Direction.NW,
-        Direction.N,
-        Direction.NE,
-        Direction.E,
-        Direction.SE,
-    ]
-    assert pos.get_valid_dirs() == result
-
-    pos = Position((1, 2))
-    result = [Direction.S, Direction.W, Direction.N, Direction.E]
-    assert pos.get_valid_dirs() == result
+    assert Position(test_input).get_valid_dirs() == expected
 
 
-def test_displace():
+@pytest.mark.parameterize(
+    "test_input,expected",
+    [
+        (1, (-1, -1)),
+        (2, (-1, 0)),
+        (3, (-1, 1)),
+        (4, (0, -1)),
+        (5, (0, 0)),
+        (6, (0, 1)),
+        (7, (1, -1)),
+        (8, (1, 0)),
+        (9, (1, 1)),
+    ],
+)
+def test_displace(test_input, expected):
     "Test that displace() returns the right result for all possible directions from a position"
-    pos = Position((0, 0))
-    assert pos.displace(Direction.SW) == Position((-1, -1))
-    assert pos.displace(Direction.S) == Position((-1, 0))
-    assert pos.displace(Direction.SE) == Position((-1, 1))
-    assert pos.displace(Direction.W) == Position((0, -1))
-    assert pos.displace(Direction.X) == Position((0, 0))
-    assert pos.displace(Direction.E) == Position((0, 1))
-    assert pos.displace(Direction.NW) == Position((1, -1))
-    assert pos.displace(Direction.N) == Position((1, 0))
-    assert pos.displace(Direction.NE) == Position((1, 1))
+    assert Position((0, 0)).displace(Direction(test_input)) == Position(expected)

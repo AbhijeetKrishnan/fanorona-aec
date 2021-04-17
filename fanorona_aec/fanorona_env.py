@@ -40,7 +40,7 @@ class raw_env(AECEnv):
         Game ends in a win, draw, loss or illegal move
     """
 
-    metadata = {"render.modes": ["human", "svg"], "name": "fanorona_v1"}
+    metadata = {"render.modes": ["human", "svg"], "name": "fanorona_v0"}
 
     def __init__(self):
         self.possible_agents = ["player_" + str(r) for r in range(2)]
@@ -128,7 +128,7 @@ class raw_env(AECEnv):
             for i, name in enumerate(self.agents):
                 self.dones[name] = True
                 result_coeff = 1 if i == 0 else -1
-                self.rewards[name] = result[i] * result_coeff
+                self.rewards[name] = result * result_coeff
                 self.infos[name] = {"legal_moves": []}
 
         self._accumulate_rewards()

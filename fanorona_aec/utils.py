@@ -33,6 +33,8 @@ class Piece(IntEnum):
 
 
 class Direction(IntEnum):
+    "Uses numpad coordinates to represent directions"
+
     def __str__(self):
         if self.value == 4:
             return "-"
@@ -41,22 +43,22 @@ class Direction(IntEnum):
 
     def opposite(self) -> "Direction":
         "Return the direction of opposite orientation to the current one e.g. NE.opposite() == SW"
-        return Direction(8 - self.value)
+        return Direction(10 - self.value)
 
     @staticmethod
     def dir_range():
         for i in range(9):
             yield Direction(i)
 
-    SW = 0
-    S = 1
-    SE = 2
-    W = 3
-    X = 4  # No direction
-    E = 5
-    NW = 6
-    N = 7
-    NE = 8
+    SW = 1
+    S = 2
+    SE = 3
+    W = 4
+    X = 5  # No direction
+    E = 6
+    NW = 7
+    N = 8
+    NE = 9
 
 
 class Position:
@@ -73,11 +75,15 @@ class Position:
             self.col = pos % BOARD_COLS
             self.row = (pos - self.col) // BOARD_COLS
         else:
-            raise Exception(f"Object of type {type(pos)} was passed")
+            raise Exception(
+                f"Cannot create a Position object from an object of type {type(pos)}"
+            )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Position):
-            raise NotImplementedError
+            raise NotImplementedError(
+                f"Cannot compare {type(self)} with object of type {type(other)}"
+            )
         return self.row == other.row and self.col == other.col
 
     def __repr__(self):
