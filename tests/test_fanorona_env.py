@@ -1,6 +1,5 @@
-import random
-
 import pettingzoo
+import pettingzoo.test
 import pytest
 from fanorona_aec import fanorona_v0
 from fanorona_aec.move import FanoronaMove, MoveType

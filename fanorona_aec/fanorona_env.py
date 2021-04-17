@@ -80,7 +80,7 @@ class raw_env(AECEnv):
                     ),  # ideally should be np.int8
                 }
             )
-            for name in self.agents
+            for name in self.possible_agents
         }
         self.state = FanoronaState()
 

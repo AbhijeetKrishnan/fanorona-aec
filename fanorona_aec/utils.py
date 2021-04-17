@@ -7,18 +7,6 @@ MOVE_LIMIT = 45
 
 BOARD_SQUARES = BOARD_ROWS * BOARD_COLS
 
-DISPLACEMENT_VECTORS = {
-    0: (-1, -1),  # SW
-    1: (-1, 0),  # S
-    2: (-1, 1),  # SE
-    3: (0, -1),  # W
-    4: (0, 0),  # -
-    5: (0, 1),  # E
-    6: (1, -1),  # NW
-    7: (1, 0),  # N
-    8: (1, 1),  # NE
-}
-
 
 class Piece(IntEnum):
     def __str__(self):
@@ -36,7 +24,7 @@ class Direction(IntEnum):
     "Uses numpad coordinates to represent directions"
 
     def __str__(self):
-        if self.value == 4:
+        if self.name[0] == "X":
             return "-"
         else:
             return self.name
@@ -44,6 +32,21 @@ class Direction(IntEnum):
     def opposite(self) -> "Direction":
         "Return the direction of opposite orientation to the current one e.g. NE.opposite() == SW"
         return Direction(10 - self.value)
+
+    def as_vector(self) -> Tuple:
+        "Return the unit vector representation of the direction (with tail assumed at (0, 0))"
+        DISPLACEMENT_VECTORS = {
+            1: (-1, -1),
+            2: (-1, 0),
+            3: (-1, 1),
+            4: (0, -1),
+            5: (0, 0),
+            6: (0, 1),
+            7: (1, -1),
+            8: (1, 0),
+            9: (1, 1),
+        }
+        return DISPLACEMENT_VECTORS[self.value]
 
     @staticmethod
     def dir_range():
@@ -121,7 +124,7 @@ class Position:
 
     def displace(self, direction: Direction) -> "Position":
         """Returns the resultant position obtained from adding a given unit direction vector (given by 'direction') to pos."""
-        del_row, del_col = DISPLACEMENT_VECTORS[direction]
+        del_row, del_col = direction.as_vector()
         res = (self.row + del_row, self.col + del_col)
         return Position(res)
 

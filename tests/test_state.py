@@ -41,7 +41,7 @@ def test_to_svg():
 )
 def test_get_piece(start_state, test_input, expected):
     "Verify that state.get_piece() works correctly"
-    assert start_state.get_piece(test_input) == expected
+    assert start_state.get_piece(Position(test_input)) == expected
 
 
 @pytest.mark.parametrize(
@@ -49,7 +49,7 @@ def test_get_piece(start_state, test_input, expected):
     [
         (FanoronaState().reset(), Piece.WHITE),
         (FanoronaState().reset(), Piece.BLACK),
-        (FanoronaState().reset().Piece.EMPTY),
+        (FanoronaState().reset(), Piece.EMPTY),
         (FanoronaState().set_from_board_str("9/4W4/9/9/9 W - - - 30"), Piece.WHITE),
         pytest.param(
             FanoronaState().set_from_board_str("9/4W4/9/9/9 W - - - 30"),
@@ -88,11 +88,12 @@ def test_reset():
     pass
 
 
-def test_set_state_from_board_str(env):
+# TODO: add more test states
+def test_set_state_from_board_str(start_state):
     "Verify that set_state_from_board_str() sets the state correctly"
     for board_str in TEST_STATES:
-        env.state = FanoronaState.set_from_board_str(board_str)
-        assert env.state.get_board_str() == board_str
+        start_state.set_from_board_str(board_str)
+        assert str(start_state) == board_str
 
 
 def test_get_observation():

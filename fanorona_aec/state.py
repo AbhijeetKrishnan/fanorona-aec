@@ -226,10 +226,15 @@ class FanoronaState:
         def process_board_state_str(self, board_state_str: str):
             row_strings = board_state_str.split("/")
             board_state_chars = [list(row) for row in row_strings]
-            self.board_state.fill(0)
+            if self.board_state:
+                self.board_state.fill(0)
+            else:
+                self.board_state = np.zeros(
+                    shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32
+                )
             for row, row_content in enumerate(board_state_chars):
                 col_board = 0
-                for cell in row_content:
+                for cell in row_content:  # TODO: any way to speed this up?
                     if cell == "W":
                         self.board_state[row][col_board] = Piece.WHITE
                     elif cell == "B":
@@ -240,10 +245,13 @@ class FanoronaState:
                     col_board += 1
 
         def process_visited_pos_str(self, visited_pos_str: str):
-            self.visited.fill(0)
+            if self.visited:
+                self.visited.fill(0)
+            else:
+                self.visited = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32)
             if visited_pos_str != "-":
                 visited_pos_list = visited_pos_str.split(",")
-                for human_pos in visited_pos_list:
+                for human_pos in visited_pos_list:  # TODO: any way to speed this up?
                     row, col = Position(human_pos).to_coords()
                     self.visited[row][col] = True
 

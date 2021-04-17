@@ -72,6 +72,12 @@ def test_action_to_move(test_input, expected):
     assert FanoronaMove.action_to_move(test_input) == expected
 
 
+@pytest.mark.parametrize("test_input", range(5 * 9 * 8 * 3 + 1))
+def test_all_action_encodings(test_input):
+    "Test that all actions decode and encode back to the same integer"
+    assert FanoronaMove.action_to_move(test_input).to_action() == test_input
+
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [

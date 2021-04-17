@@ -24,13 +24,21 @@ class FanoronaMove:
         self.end_turn = end_turn
 
     def __repr__(self):
-        return f"<FanoronaMove: pos={str(self.position.to_human())}, \
-            dir={str(self.direction)},                              \
-            type={self.move_type.name},                        \
-            end?={self.end_turn}>"
+        return f"<FanoronaMove: pos={str(self.position.to_human())}, dir={str(self.direction)}, type={self.move_type.name}, end?={self.end_turn}>"
 
     def __str__(self):
         return f"{self.position.to_human()}{self.direction.value}{self.move_type.value}{int(self.end_turn)}"
+
+    def __eq__(self, obj: "FanoronaMove") -> bool:
+        if (
+            self.position == obj.position
+            and self.direction == obj.direction
+            and self.move_type == obj.move_type
+            and self.end_turn == obj.end_turn
+        ):
+            return True
+        else:
+            return False
 
     def to_action(self) -> int:
         "Return integer encoding of FanoronaMove object"
@@ -47,7 +55,7 @@ class FanoronaMove:
     @staticmethod
     def action_to_move(action: int) -> "FanoronaMove":
         "Converts integer-encoded action to a FanoronaMove object"
-        result = FanoronaMove(Position((4, 8)), Direction(7), MoveType(2), True)
+        result = FanoronaMove(Position("I5"), Direction.NE, MoveType.WITHDRAWAL, True)
         if action != 5 * 9 * 8 * 3:
             result.end_turn = False
             move_type_int = action % 3
@@ -86,11 +94,11 @@ class FanoronaMove:
             ret_val = FanoronaMove(
                 Position(match.group("from")),
                 Direction(int(match.group("direction"))),
-                MoveType(match.group("move_type")),
+                MoveType(int(match.group("move_type"))),
                 bool(int(match.group("end_turn"))),
             )
         return ret_val
 
 
 # End turn move needs to encode to a value of 5 * 9 * 8 * 3
-END_TURN = FanoronaMove(Position("I5"), Direction(9), MoveType(2), True)
+END_TURN = FanoronaMove(Position("I5"), Direction.NE, MoveType.WITHDRAWAL, True)
