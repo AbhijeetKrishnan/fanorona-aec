@@ -73,7 +73,7 @@ class raw_env(AECEnv):
             name: spaces.Dict(
                 {
                     "observation": spaces.Box(
-                        low=0, high=1, shape=(5, 9, 5), dtype=np.int32
+                        low=0, high=1, shape=(5, 9, 7), dtype=np.int32
                     ),  # ideally should be np.bool
                     "action_mask": spaces.Box(
                         low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int32
@@ -91,8 +91,8 @@ class raw_env(AECEnv):
             print(self.board_state.to_svg())
 
     def observe(self, agent: str):
-        observation = FanoronaState.get_observation(
-            self.board_state, self.possible_agents.index(agent)
+        observation = self.board_state.get_observation(
+            self.possible_agents.index(agent)
         )
         legal_moves = (
             self.board_state.legal_moves if agent == self.agent_selection else []

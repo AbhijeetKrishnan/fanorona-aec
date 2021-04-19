@@ -274,10 +274,14 @@ class FanoronaState:
         self.half_moves = int(half_moves_str)
         return self
 
-    @staticmethod
     def get_observation(self, agent):
-        "Return NN-style observation based on the current board state and requesting agent"
-        pass
+        """Return NN-style observation based on the current board state and requesting agent. Board
+        state is from the perspective of the agent, with their color at the bottom.
+        """
+        obs = np.zeros(shape=(5, 9, 7), dtype=np.int32)
+        # TODO: complete this
+        # TODO: how to handle different observations from different sides? Specifically, how would actions change?
+        return obs
 
     def is_valid(self, move: FanoronaMove) -> bool:
         """Check if a given move is valid from the current board state.
