@@ -82,21 +82,23 @@ class raw_env(AECEnv):
             )
             for name in self.possible_agents
         }
-        self.state = FanoronaState()
+        self.board_state = FanoronaState()
 
     def render(self, mode: str = "human"):
         if mode == "human":
-            print(str(self.state))
+            print(str(self.board_state))
         elif mode == "svg":
-            print(self.state.to_svg())
+            print(self.board_state.to_svg())
 
     def observe(self, agent: str):
         observation = FanoronaState.get_observation(
-            self.state, self.possible_agents.index(agent)
+            self.board_state, self.possible_agents.index(agent)
         )
-        legal_moves = self.state.legal_moves if agent == self.agent_selection else []
+        legal_moves = (
+            self.board_state.legal_moves if agent == self.agent_selection else []
+        )
 
-        action_mask = np.zeros(45 * 8 * 3 + 1, int)
+        action_mask = np.zeros(45 * 8 * 3 + 1, np.int32)
         for i in legal_moves:
             action_mask[i] = 1
 
@@ -104,6 +106,9 @@ class raw_env(AECEnv):
 
     def close(self):
         pass
+
+    def state(self):
+        return self.board_state
 
     def reset(self):
         self.agents = self.possible_agents[:]
@@ -115,16 +120,16 @@ class raw_env(AECEnv):
         self._agent_selector = agent_selector(self.agents)
         self.agent_selection = self._agent_selector.next()
 
-        self.state.reset()
+        self.board_state.reset()
 
     def step(self, action: int):
         if self.dones[self.agent_selection]:
             return self._was_done_step(action)
 
         chosen_move = FanoronaMove.action_to_move(action)
-        self.state.push(chosen_move)
-        if self.state.is_game_over():
-            result = self.state.get_result()
+        self.board_state.push(chosen_move)
+        if self.board_state.is_game_over():
+            result = self.board_state.get_result()
             for i, name in enumerate(self.agents):
                 self.dones[name] = True
                 result_coeff = 1 if i == 0 else -1

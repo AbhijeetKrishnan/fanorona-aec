@@ -55,6 +55,7 @@ class FanoronaMove:
     @staticmethod
     def action_to_move(action: int) -> "FanoronaMove":
         "Converts integer-encoded action to a FanoronaMove object"
+        action = int(action)  # to handle np.int type actions
         result = FanoronaMove(Position("I5"), Direction.NE, MoveType.WITHDRAWAL, True)
         if action != 5 * 9 * 8 * 3:
             result.end_turn = False

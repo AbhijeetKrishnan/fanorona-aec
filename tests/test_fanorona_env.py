@@ -33,8 +33,8 @@ def test_reset(env):
 def test_reset_starting(env):
     "Verify that reset() sets the board state to the correct starting position"
     assert (
-        env.state.get_board_str()
-        == "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0"
+        str(env.state())
+        == "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0"
     )  # starting position
 
 

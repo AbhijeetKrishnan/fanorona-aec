@@ -8,7 +8,7 @@ from .move import FanoronaMove, MoveType, END_TURN
 
 class FanoronaState:
     def __init__(self):
-        self.board_state: Optional[np.ndarray] = None
+        self.board: Optional[np.ndarray] = None
         self.turn_to_play: Piece = Piece.EMPTY
         self.last_capture: Optional[
             Tuple[Position, Direction]
@@ -22,7 +22,7 @@ class FanoronaState:
     def __str__(self):
         board_string = ""
         count = 0
-        for row in self.board_state:
+        for row in self.board:
             for col in row:
                 col_str = str(Piece(col))
                 if col == Piece.EMPTY:
@@ -101,9 +101,9 @@ class FanoronaState:
         board_pieces = []
         for pos in Position.pos_range():
             row, col = pos.to_coords()
-            if self.board_state[row][col] == Piece.WHITE:
+            if self.board[row][col] == Piece.WHITE:
                 board_pieces.append(white_piece.format(convert((row, col))))
-            elif self.board_state[row][col] == Piece.BLACK:
+            elif self.board[row][col] == Piece.BLACK:
                 board_pieces.append(black_piece.format(convert((row, col))))
         svg_lines = "\n\t".join(board_lines + board_pieces)
         svg = f"""
@@ -115,7 +115,7 @@ class FanoronaState:
 
     def get_piece(self, position: Position) -> Piece:
         """Return type of piece at given position (specified in integer coordinates)."""
-        return Piece(self.board_state[position.row][position.col])
+        return Piece(self.board[position.row][position.col])
 
     def piece_exists(self, piece: Piece) -> bool:
         """Checks whether an instance of a piece exists on the game board."""
@@ -139,8 +139,8 @@ class FanoronaState:
         # wrapper
 
         from_piece = self.get_piece(move.position)
-        self.board_state[from_row][from_col] = Piece.EMPTY
-        self.board_state[to_row][to_col] = from_piece
+        self.board[from_row][from_col] = Piece.EMPTY
+        self.board[to_row][to_col] = from_piece
 
         def end_turn():
             self.turn_to_play = self.turn_to_play.other()
@@ -148,8 +148,8 @@ class FanoronaState:
             self.visited.fill(0)  # reset visited ndarray
             self.half_moves += 1
 
-        if not move.end_turn and move.capture_type != MoveType.PAIKA:
-            if move.capture_type == MoveType.APPROACH:  # approach
+        if not move.end_turn and move.move_type != MoveType.PAIKA:
+            if move.move_type == MoveType.APPROACH:  # approach
                 capture_pos = to.displace(move.direction)
                 capture_dir = move.direction
             else:  # withdraw
@@ -158,10 +158,9 @@ class FanoronaState:
             capture_row, capture_col = capture_pos.to_coords()
             while (
                 capture_pos.is_valid()
-                and self.board_state[capture_row][capture_col]
-                == self.turn_to_play.other()
+                and self.board[capture_row][capture_col] == self.turn_to_play.other()
             ):
-                self.board_state[capture_row][capture_col] = Piece.EMPTY
+                self.board[capture_row][capture_col] = Piece.EMPTY
                 capture_pos = capture_pos.displace(capture_dir)
                 capture_row, capture_col = capture_pos.to_coords()
 
@@ -219,33 +218,31 @@ class FanoronaState:
         START_STATE_STR = "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0"
         self.set_from_board_str(START_STATE_STR)
 
-    def set_from_board_str(self, board_string: str) -> None:
+    def set_from_board_str(self, board_string: str) -> "FanoronaState":
         """Set the state object to a new state represented by a board string.
         """
 
         def process_board_state_str(self, board_state_str: str):
             row_strings = board_state_str.split("/")
             board_state_chars = [list(row) for row in row_strings]
-            if self.board_state:
-                self.board_state.fill(0)
+            if self.board is not None:
+                self.board.fill(0)
             else:
-                self.board_state = np.zeros(
-                    shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32
-                )
+                self.board = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32)
             for row, row_content in enumerate(board_state_chars):
                 col_board = 0
                 for cell in row_content:  # TODO: any way to speed this up?
                     if cell == "W":
-                        self.board_state[row][col_board] = Piece.WHITE
+                        self.board[row][col_board] = Piece.WHITE
                     elif cell == "B":
-                        self.board_state[row][col_board] = Piece.BLACK
+                        self.board[row][col_board] = Piece.BLACK
                     else:
                         for col_board in range(col_board, col_board + int(cell)):
-                            self.board_state[row][col_board] = Piece.EMPTY
+                            self.board[row][col_board] = Piece.EMPTY
                     col_board += 1
 
         def process_visited_pos_str(self, visited_pos_str: str):
-            if self.visited:
+            if self.visited is not None:
                 self.visited.fill(0)
             else:
                 self.visited = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32)
@@ -275,6 +272,7 @@ class FanoronaState:
             self.last_capture = None
         process_visited_pos_str(self, visited_pos_str)
         self.half_moves = int(half_moves_str)
+        return self
 
     @staticmethod
     def get_observation(self, agent):
@@ -290,38 +288,39 @@ class FanoronaState:
         3. the move is not an end turn
         """
         to = move.position.displace(move.direction)
-        if move.capture_type == 1:  # approach
+        if move.move_type == MoveType.APPROACH:
             capture = to.displace(move.direction)
-        else:  # withdraw
+        elif move.move_type == MoveType.WITHDRAWAL:
             capture = move.position.displace(move.direction.opposite())
+        else:
+            capture = Position(
+                "A1"
+            )  # dummy position to ensure capture.is_valid() is True
 
-        def check_bounds(pos_list: Tuple[Position]) -> bool:
+        def check_bounds() -> bool:
             """Bounds checking on positions"""
-            return all(map(lambda pos: pos.is_valid(), pos_list))
+            return all(map(lambda pos: pos.is_valid(), (move.position, to, capture)))
 
         def check_valid_dir() -> bool:
-            """Checking that _dir is permitted from given board position"""
+            """Checking that move direction is permitted from given board position"""
             return move.direction in move.position.get_valid_dirs()
 
         def check_move_to_empty() -> bool:
             """Checking that piece is being moved to empty location"""
-            if (
-                self.get_piece(to) != Piece.EMPTY
-            ):  # piece must be played to an empty location
+            if self.get_piece(to) != Piece.EMPTY:
                 return False
             return True
 
         def check_opposite_color_capture() -> bool:
             """Checking that piece being captured is of opposite color"""
             if (
-                move.capture_type != 0
-                and capture.is_valid()
+                capture.is_valid()
                 and self.get_piece(capture) != self.turn_to_play.other()
             ):  # capturing line must start with opponent color stone
                 return False
             return True
 
-        def move_only_capturing_piece() -> bool:
+        def check_move_only_capturing_piece() -> bool:
             """If in a capturing sequence, check that capturing piece is the one being moved, and 
             not some other piece
             """
@@ -342,35 +341,33 @@ class FanoronaState:
             """
             return move.direction != self.last_capture[1]
 
-        if move.capture_type == 0:  # paika
+        if move.move_type == MoveType.PAIKA:
             valid = all(
-                [
-                    check_bounds((move.position, to)),
-                    check_valid_dir(),
-                    check_move_to_empty(),
-                ]
+                test() for test in [check_bounds, check_valid_dir, check_move_to_empty,]
             )
         elif (
-            move.capture_type != 0 and not move.last_capture
+            move.move_type != MoveType.PAIKA and self.last_capture is None
         ):  # beginning of capturing sequence
             valid = all(
-                [
-                    check_bounds((move.position, to, capture)),
-                    check_valid_dir(),
-                    check_move_to_empty(),
-                    check_opposite_color_capture(),
+                test()
+                for test in [
+                    check_bounds,
+                    check_valid_dir,
+                    check_move_to_empty,
+                    check_opposite_color_capture,
                 ]
             )
         else:  # in capturing sequence
             valid = all(
-                [
-                    check_bounds((move.position, to, capture)),
-                    check_valid_dir(),
-                    check_move_to_empty(),
-                    check_opposite_color_capture(),
-                    move_only_capturing_piece(),
-                    check_no_overlap(),
-                    check_no_same_dir(),
+                test()
+                for test in [
+                    check_bounds,
+                    check_valid_dir,
+                    check_move_to_empty,
+                    check_opposite_color_capture,
+                    check_move_only_capturing_piece,
+                    check_no_overlap,
+                    check_no_same_dir,
                 ]
             )
         return valid
@@ -380,8 +377,8 @@ class FanoronaState:
         """Return a list of legal actions allowed from the current state. Actions are in their
         integer encoding
         """
-        legal_captures: List[int] = []
-        legal_paikas: List[int] = []
+        legal_captures: List[FanoronaMove] = []
+        legal_paikas: List[FanoronaMove] = []
 
         # check for captures involving last moved piece only if in capturing sequence
         if self.last_capture:
@@ -390,7 +387,7 @@ class FanoronaState:
                 for capture_type in [MoveType.APPROACH, MoveType.WITHDRAWAL]:
                     capture = FanoronaMove(pos, direction, capture_type, False)
                     if self.is_valid(capture):
-                        legal_captures.append(capture.to_action())
+                        legal_captures.append(capture)
 
             # add end turn
             legal_captures.append(END_TURN)
@@ -402,18 +399,18 @@ class FanoronaState:
                     for capture_type in [MoveType.APPROACH, MoveType.WITHDRAWAL]:
                         capture = FanoronaMove(pos, direction, capture_type, False)
                         if self.is_valid(capture):
-                            legal_captures.append(capture.to_action())
+                            legal_captures.append(capture)
 
         # only check for paikas if no captures exist
         if not legal_captures:
             for pos in Position.pos_range():
                 if self.get_piece(pos) == self.turn_to_play:
                     for direction in Direction:
-                        paika = FanoronaMove(pos, direction, 0, False)
+                        paika = FanoronaMove(pos, direction, MoveType.PAIKA, False)
                         if self.is_valid(paika):
-                            legal_paikas.append(paika.to_action())
+                            legal_paikas.append(paika)
 
         if legal_captures:  # capture has to be made if available
-            return legal_captures
+            return list(map(lambda move: move.to_action(), legal_captures))
         else:
-            return legal_paikas
+            return list(map(lambda move: move.to_action(), legal_paikas))

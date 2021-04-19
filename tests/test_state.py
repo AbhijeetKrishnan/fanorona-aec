@@ -45,22 +45,19 @@ def test_get_piece(start_state, test_input, expected):
 
 
 @pytest.mark.parametrize(
-    "state,piece",
+    "state_str,piece",
     [
-        (FanoronaState().reset(), Piece.WHITE),
-        (FanoronaState().reset(), Piece.BLACK),
-        (FanoronaState().reset(), Piece.EMPTY),
-        (FanoronaState().set_from_board_str("9/4W4/9/9/9 W - - - 30"), Piece.WHITE),
-        pytest.param(
-            FanoronaState().set_from_board_str("9/4W4/9/9/9 W - - - 30"),
-            Piece.BLACK,
-            marks=pytest.mark.xfail,
-        ),
+        ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.WHITE),
+        ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.BLACK),
+        ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.EMPTY),
+        ("9/4W4/9/9/9 W - - - 30", Piece.WHITE),
+        pytest.param("9/4W4/9/9/9 W - - - 30", Piece.BLACK, marks=pytest.mark.xfail,),
     ],
 )
-def test_piece_exists(state, piece):
+def test_piece_exists(state_str, piece):
     "Verify that state.piece_exists() works correctly"
-    assert state.get_piece(piece)
+    state = FanoronaState().set_from_board_str(state_str)
+    assert state.piece_exists(piece)
 
 
 def test_push():
