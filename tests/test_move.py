@@ -48,7 +48,7 @@ def test_str(test_input, expected):
     "test_input,expected",
     [
         (FanoronaMove(Position("A1"), Direction.SW, MoveType.PAIKA, False), 0),
-        (FanoronaMove(Position("C3"), Direction.W, MoveType.APPROACH, False), 487),
+        (FanoronaMove(Position("C3"), Direction.W, MoveType.APPROACH, False), 490),
         (FanoronaMove(Position("G5"), Direction.N, MoveType.WITHDRAWAL, False), 1028),
         (END_TURN, 5 * 9 * 8 * 3),
     ],
@@ -62,7 +62,7 @@ def test_to_action(test_input, expected):
     "test_input,expected",
     [
         (0, FanoronaMove(Position("A1"), Direction.SW, MoveType.PAIKA, False)),
-        (487, FanoronaMove(Position("C3"), Direction.W, MoveType.APPROACH, False)),
+        (490, FanoronaMove(Position("C3"), Direction.W, MoveType.APPROACH, False)),
         (1028, FanoronaMove(Position("G5"), Direction.N, MoveType.WITHDRAWAL, False)),
         (5 * 9 * 8 * 3, END_TURN),
     ],

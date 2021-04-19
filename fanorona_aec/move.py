@@ -47,7 +47,7 @@ class FanoronaMove:
         else:
             pos_int: int = self.position.to_pos()
             dir_int: int = self.direction.value - 1 - (
-                1 if self.direction.value >= 4 else 0
+                1 if self.direction.value >= 5 else 0
             )  # to account for Direction.X
             move_type_int: int = self.move_type.value
             return pos_int * 8 * 3 + dir_int * 3 + move_type_int
