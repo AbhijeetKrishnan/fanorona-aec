@@ -67,6 +67,9 @@ class FanoronaState:
             ]
         )
 
+    def __eq__(self, obj: "FanoronaState") -> bool:
+        return str(self) == str(obj)
+
     def to_svg(self, svg_w: int = 1000, svg_h: int = 600) -> str:
         # TODO: adjust output svg size dynamically
         # TODO: represent other aspects of state on the output svg (turn to play, last capture, visited etc.)

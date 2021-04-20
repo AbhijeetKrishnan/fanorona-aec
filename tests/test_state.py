@@ -1,19 +1,23 @@
-from fanorona_aec.move import FanoronaMove, MoveType
 from fanorona_aec.state import FanoronaState
 from fanorona_aec.utils import (
     Position,
-    Direction,
     Piece,
 )
 import pytest
 
-TEST_STATES = [
+TEST_STATE_STRS = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",  # start state
     "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - - 1",  # capturing seq after D2->E3 approach
     "9/9/3W1B3/9/9 W - - - 49",  # random endgame state
+    "9/4W4/9/9/9 W - - - 30",  # terminal state
 ]
 
-# TODO: investigate using fixtures to initialize states dynamically for use as parameters to test functions
+
+@pytest.fixture(scope="function")
+def test_state_list():
+    yield map(
+        lambda board_str: FanoronaState().set_from_board_str(board_str), TEST_STATE_STRS
+    )
 
 
 @pytest.fixture(scope="function")
@@ -23,16 +27,16 @@ def start_state():
     yield state
 
 
-# TODO: write test
-def test_str():
+def test_str(test_state_list):
     "Test that state has correct string representation"
-    pass
+    for test_state, expected_str in zip(test_state_list, TEST_STATE_STRS):
+        assert str(test_state) == expected_str
 
 
-# TODO: write test
-def test_to_svg():
+def test_to_svg(test_state_list):
     "Test that state is correctly output as an svg file"
-    pass
+    for test_state in test_state_list:
+        test_state.to_svg()
 
 
 @pytest.mark.parametrize(
@@ -60,49 +64,50 @@ def test_piece_exists(state_str, piece):
     assert state.piece_exists(piece)
 
 
+@pytest.mark.skip(reason="Not implemented")
 def test_push():
     "Test that state moves to correct successor state upon calling push() with a move"
     pass
 
 
-# TODO: rewrite this using a parametrized test
-def test_is_game_over(start_state):
-    "Test that is_done method is correctly identifying end of game states."
-    board_str = "9/9/3W1B3/9/9 W - - - 30"
-    start_state.set_from_board_str(board_str)
-    move = FanoronaMove(Position("D3"), Direction["E"], MoveType.APPROACH, False)
-    start_state.push(move)
-    assert start_state.is_game_over()
+def test_is_game_over(test_state_list, expected_list=[False, False, False, True]):
+    "Test that is_game_over method is correctly identifying end of game states."
+    for test_state, expected in zip(test_state_list, expected_list):
+        assert test_state.is_game_over() == expected
 
 
+@pytest.mark.skip(reason="Not implemented")
 def test_get_result():
     "Test that the correct result is returned for done games"
     pass
 
 
-def test_reset():
+def test_reset(test_state_list, start_state):
     "Test that reset() correctly resets the state to the start position"
-    pass
+    for test_state in test_state_list:
+        test_state.reset()
+        assert test_state == start_state
 
 
-# TODO: add more test states
-def test_set_state_from_board_str(start_state):
-    "Verify that set_state_from_board_str() sets the state correctly"
-    for board_str in TEST_STATES:
-        start_state.set_from_board_str(board_str)
-        assert str(start_state) == board_str
+def test_set_from_board_str(test_state_list, test_board_str_list=TEST_STATE_STRS):
+    "Verify that set_from_board_str() sets the state correctly"
+    for test_str, expected in zip(test_board_str_list, test_state_list):
+        assert FanoronaState().set_from_board_str(test_str) == expected
 
 
+@pytest.mark.skip(reason="get_observation() not implemented")
 def test_get_observation():
     "Test that the correct observation is returned which represents the state"
     pass
 
 
+@pytest.mark.skip(reason="Not implemented")
 def test_is_valid():
     "Test that moves are correctly validated with respect to the current state"
     pass
 
 
+@pytest.mark.skip(reason="Not implemented")
 def test_legal_moves():
     "Test that state.legal_moves correctly represents the list of legal moves available from the state"
     pass
