@@ -35,17 +35,19 @@ class Direction(IntEnum):
 
     def as_vector(self) -> Tuple:
         "Return the unit vector representation of the direction (with tail assumed at (0, 0))"
+        # fmt: off
         DISPLACEMENT_VECTORS = {
             1: (-1, -1),
-            2: (-1, 0),
-            3: (-1, 1),
-            4: (0, -1),
-            5: (0, 0),
-            6: (0, 1),
-            7: (1, -1),
-            8: (1, 0),
-            9: (1, 1),
+            2: (-1,  0),
+            3: (-1,  1),
+            4: ( 0, -1),
+            5: ( 0,  0),
+            6: ( 0,  1),
+            7: ( 1, -1),
+            8: ( 1,  0),
+            9: ( 1,  1),
         }
+        # fmt: on
         return DISPLACEMENT_VECTORS[self.value]
 
     @staticmethod
@@ -53,15 +55,17 @@ class Direction(IntEnum):
         for i in range(9):
             yield Direction(i)
 
+    # fmt: off
     SW = 1
-    S = 2
+    S  = 2
     SE = 3
-    W = 4
-    X = 5  # No direction
-    E = 6
+    W  = 4
+    X  = 5  # No direction
+    E  = 6
     NW = 7
-    N = 8
+    N  = 8
     NE = 9
+    # fmt: on
 
 
 class Position:
