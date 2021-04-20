@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, cast
 
 import numpy as np
 
@@ -67,8 +67,10 @@ class FanoronaState:
             ]
         )
 
-    def __eq__(self, obj: "FanoronaState") -> bool:
-        return str(self) == str(obj)
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, FanoronaState):
+            return NotImplemented
+        return str(self) == str(other)
 
     def to_svg(self, svg_w: int = 1000, svg_h: int = 600) -> str:
         # TODO: adjust output svg size dynamically
@@ -76,6 +78,9 @@ class FanoronaState:
         def convert(coord: Tuple[int, int]) -> Tuple[int, int]:
             row, col = coord
             return 100 + col * 100, 100 + (4 - row) * 100
+
+        if self.board is None or self.visited is None:
+            raise Exception('render(mode="svg") called without calling reset()')
 
         black_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="black" />'
         white_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="white" />'
@@ -118,7 +123,10 @@ class FanoronaState:
 
     def get_piece(self, position: Position) -> Piece:
         """Return type of piece at given position (specified in integer coordinates)."""
-        return Piece(self.board[position.row][position.col])
+        if self.board is not None:
+            return Piece(self.board[position.row][position.col])
+        else:
+            raise Exception("Called get_piece() without calling reset()")
 
     def piece_exists(self, piece: Piece) -> bool:
         """Checks whether an instance of a piece exists on the game board."""
@@ -131,6 +139,9 @@ class FanoronaState:
         """Implement the rules of Fanorona and make the desired move on the board. Returns flags and
         status codes depending on game over or draw
         """
+        if self.board is None or self.visited is None:
+            raise Exception("Called push() without calling reset()")
+
         # Direction.X is not part of the action space and is an internal implementation detail
         if move.end_turn:
             move.direction = Direction.X
@@ -294,6 +305,9 @@ class FanoronaState:
         2. the square being moved from contains a piece of that colour
         3. the move is not an end turn
         """
+        if self.board is None or self.visited is None:
+            raise Exception(f"Called is_valid({str(move)}) without calling reset()")
+
         to = move.position.displace(move.direction)
         if move.move_type == MoveType.APPROACH:
             capture = to.displace(move.direction)
@@ -331,6 +345,7 @@ class FanoronaState:
             """If in a capturing sequence, check that capturing piece is the one being moved, and 
             not some other piece
             """
+            assert self.last_capture is not None
             if self.last_capture[0] != move.position:
                 return False
             return True
@@ -338,6 +353,7 @@ class FanoronaState:
         def check_no_overlap() -> bool:
             """Check that capturing piece is not visiting previously visited pos in capturing path
             """
+            assert self.visited is not None
             _to_row, _to_col = to.to_coords()
             if self.visited[_to_row][_to_col] == 1:
                 return False
@@ -346,6 +362,7 @@ class FanoronaState:
         def check_no_same_dir() -> bool:
             """Check that capturing piece is not moving twice in the same direction
             """
+            assert self.last_capture is not None
             return move.direction != self.last_capture[1]
 
         if move.move_type == MoveType.PAIKA:

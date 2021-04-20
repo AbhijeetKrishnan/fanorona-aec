@@ -29,12 +29,14 @@ class FanoronaMove:
     def __str__(self):
         return f"{self.position.to_human()}{self.direction.value}{self.move_type.value}{int(self.end_turn)}"
 
-    def __eq__(self, obj: "FanoronaMove") -> bool:
-        if (
-            self.position == obj.position
-            and self.direction == obj.direction
-            and self.move_type == obj.move_type
-            and self.end_turn == obj.end_turn
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, FanoronaMove):
+            return NotImplemented
+        elif (
+            self.position == other.position
+            and self.direction == other.direction
+            and self.move_type == other.move_type
+            and self.end_turn == other.end_turn
         ):
             return True
         else:
