@@ -60,20 +60,22 @@ class raw_env(AECEnv):
         # The main observation space is a 5x9 space representing the board. It has 7 channels
         # representing -
         #   Channel 1: whose turn to play (all 0s for white, all 1s for black)
-        #   Channel 2: move counter counting up to 45 moves. Represented by a single channel where
+        #   Channel 2: move counter counting up to 44 moves. Represented by a single channel where
         #              the n^th element in the flattened channel is set if there has been n moves.
         #   Channel 3: positions used (1 in the squares whose positions have been used in a
         #              capturing sequence)
-        #   Channel 4: last direction used (all 1s in the nth row if the nth direction was last
-        #              used. Direction index is determined by a canonical order)
-        #   Channel 5: all 1s to help neural networks find board edges in padded convolutions
-        #   Channel 6: white piece positions (1 if a piece exists in the corresponding index)
-        #   Channel 7: black piece positions
+        #   Channel 4: last capture position (1 in the position to which captured piece was moved
+        #              else 0)
+        #   Channel 5: last direction used (all 1s in the nth row if the nth direction was last
+        #              used else 0. Direction index is determined by a canonical order)
+        #   Channel 6: all 1s to help neural networks find board edges in padded convolutions
+        #   Channel 7: white piece positions (1 if a piece exists in the corresponding index)
+        #   Channel 8: black piece positions
         self.observation_spaces = {
             name: spaces.Dict(
                 {
                     "observation": spaces.Box(
-                        low=0, high=1, shape=(5, 9, 7), dtype=np.int32
+                        low=0, high=1, shape=(5, 9, 8), dtype=np.int32
                     ),  # ideally should be np.bool
                     "action_mask": spaces.Box(
                         low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int32

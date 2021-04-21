@@ -3,7 +3,7 @@ from typing import Iterator, List, Tuple, Union
 
 BOARD_ROWS = 5
 BOARD_COLS = 9
-MOVE_LIMIT = 45
+MOVE_LIMIT = 44
 
 BOARD_SQUARES = BOARD_ROWS * BOARD_COLS
 

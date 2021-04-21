@@ -8,7 +8,7 @@ import pytest
 TEST_STATE_STRS = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",  # start state
     "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - - 1",  # capturing seq after D2->E3 approach
-    "9/9/3W1B3/9/9 W - - - 49",  # random endgame state
+    "9/9/3W1B3/9/9 W - - - 44",  # random endgame state
     "9/4W4/9/9/9 W - - - 30",  # terminal state
 ]
 
@@ -70,7 +70,7 @@ def test_push():
     pass
 
 
-def test_is_game_over(test_state_list, expected_list=[False, False, False, True]):
+def test_is_game_over(test_state_list, expected_list=[False, False, True, True]):
     "Test that is_game_over method is correctly identifying end of game states."
     for test_state, expected in zip(test_state_list, expected_list):
         assert test_state.is_game_over() == expected
@@ -95,10 +95,11 @@ def test_set_from_board_str(test_state_list, test_board_str_list=TEST_STATE_STRS
         assert FanoronaState().set_from_board_str(test_str) == expected
 
 
-@pytest.mark.skip(reason="get_observation() not implemented")
-def test_get_observation():
+def test_get_observation(test_state_list):
     "Test that the correct observation is returned which represents the state"
-    pass
+    for state in test_state_list:
+        obs = state.get_observation(0)
+        obs = state.get_observation(1)
 
 
 @pytest.mark.skip(reason="Not implemented")
