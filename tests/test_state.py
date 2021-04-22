@@ -1,9 +1,11 @@
 from fanorona_aec.state import FanoronaState
+from fanorona_aec.move import FanoronaMove
 from fanorona_aec.utils import (
     Position,
     Piece,
 )
 import pytest
+import numpy as np
 
 TEST_STATE_STRS = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",  # start state
@@ -64,10 +66,15 @@ def test_piece_exists(state_str, piece):
     assert state.piece_exists(piece)
 
 
-@pytest.mark.skip(reason="Not implemented")
-def test_push():
-    "Test that state moves to correct successor state upon calling push() with a move"
-    pass
+def test_push(test_state_list):
+    """Test that state moves to a valid successor state upon calling push() with a move until end of
+    the game
+    """
+    for state in test_state_list:
+        while not state.is_game_over():
+            action = np.random.default_rng(seed=0).choice(state.legal_moves)
+            move = FanoronaMove.action_to_move(action)
+            state.push(move)
 
 
 def test_is_game_over(test_state_list, expected_list=[False, False, True, True]):

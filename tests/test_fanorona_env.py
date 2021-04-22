@@ -54,7 +54,9 @@ def test_render_svg(env):
     env.render(mode="svg")
 
 
-# TODO: parameterize test_step() with different moves from different initial states
+@pytest.mark.skip(
+    reason="possibly subsumed by api_test unless I have important corner cases"
+)
 def test_step(env):
     "Test step() with a variety of moves from different initial states"
     pass
