@@ -1,5 +1,6 @@
 # Fanorona AEC Environment
 
+[![PyPI v1.0.0](https://img.shields.io/pypi/v/fanorona-aec)](https://pypi.org/project/fanorona-aec/1.0.0/)
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 

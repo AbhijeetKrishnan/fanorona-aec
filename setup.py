@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="fanorona-aec",
-    version="0.0.1",
+    version="1.0.0",
     description="A PettingZoo AECEnv implementation of the Fanorona board game.",
     url="https://github.com/AbhijeetKrishnan/fanorona-aec",
     author="Abhijeet Krishnan",
@@ -15,9 +15,11 @@ setup(
     long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    packages=["fanorona_aec"],
     python_requires=">=3.8",
     install_requires=["pettingzoo"],
     tests_require=["pytest"],
