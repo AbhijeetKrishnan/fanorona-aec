@@ -6,10 +6,18 @@
 
 This is an implementation of the Fanorona board game as a [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) [AEC](https://arxiv.org/abs/2009.13051) game.
 The rules have been sourced from [here](https://www.mindsports.nl/index.php/the-pit/528-fanorona).
-An additional rule where games exceeding 45 moves end in a draw has been implemented, since the
+An additional rule where games exceeding 44 moves end in a draw has been implemented, since the
 original rules do not have explicit draw conditions.
 
 ## Installation
+
+### Using pip (recommended)
+
+```bash
+pip install fanorona-aec
+```
+
+### Local
 
 ```bash
 git clone https://github.com/AbhijeetKrishnan/fanorona-aec.git
@@ -34,5 +42,7 @@ env = fanorona_v0.env()
 We use [pytest](http://doc.pytest.org/) for tests. You can run them via:
 
 ```bash
+git clone https://github.com/AbhijeetKrishnan/fanorona-aec.git
+cd fanorona-aec
 pytest
 ```
