@@ -33,7 +33,7 @@ In a Python shell, run the following:
 
 ```python
 import pettingzoo
-import fanorona_aec
+from fanorona_aec import fanorona_v0
 env = fanorona_v0.env()
 ```
 
