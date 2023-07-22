@@ -46,13 +46,13 @@ def test_render(env):
 
 def test_render_human(env):
     "Verify that render() executes without error for human-readable output"
-    env.render_mode = 'human'
+    env.render_mode = "human"
     env.render()
 
 
 def test_render_svg(env):
     "Verify that render() executes without error for svg"
-    env.render_mode = 'svg'
+    env.render_mode = "svg"
     env.render()
 
 

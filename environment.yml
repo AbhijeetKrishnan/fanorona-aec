@@ -9,3 +9,5 @@ dependencies:
   - pip:
     - pettingzoo
     - black
+    - build
+    - twine
