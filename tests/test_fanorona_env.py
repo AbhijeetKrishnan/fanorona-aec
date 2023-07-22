@@ -1,9 +1,9 @@
 import pettingzoo
 import pettingzoo.test
 import pytest
-from fanorona_aec import fanorona_v0
-from fanorona_aec.move import FanoronaMove, MoveType
-from fanorona_aec.utils import Position, Direction
+from fanorona_aec import fanorona_v1
+from fanorona_aec.env.move import FanoronaMove, MoveType
+from fanorona_aec.env.utils import Position, Direction
 
 TEST_STATES = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0",  # start state
@@ -14,7 +14,7 @@ TEST_STATES = [
 
 @pytest.fixture(scope="function")
 def env():
-    env = fanorona_v0.env()
+    env = fanorona_v1.env()
     env.reset()
     yield env
     env.close()
@@ -46,12 +46,14 @@ def test_render(env):
 
 def test_render_human(env):
     "Verify that render() executes without error for human-readable output"
-    env.render(mode="human")
+    env.render_mode = 'human'
+    env.render()
 
 
 def test_render_svg(env):
     "Verify that render() executes without error for svg"
-    env.render(mode="svg")
+    env.render_mode = 'svg'
+    env.render()
 
 
 @pytest.mark.skip(

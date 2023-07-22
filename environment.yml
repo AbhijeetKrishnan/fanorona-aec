@@ -2,51 +2,10 @@ name: fanorona-aec
 channels:
   - defaults
 dependencies:
-  - _libgcc_mutex=0.1=main
-  - appdirs=1.4.4=py_0
-  - attrs=20.3.0=pyhd3eb1b0_0
-  - black=19.10b0=py_0
-  - ca-certificates=2021.4.13=h06a4308_1
-  - certifi=2020.12.5=py38h06a4308_0
-  - click=7.1.2=pyhd3eb1b0_0
-  - iniconfig=1.1.1=pyhd3eb1b0_0
-  - ld_impl_linux-64=2.33.1=h53a641e_7
-  - libffi=3.3=he6710b0_2
-  - libgcc-ng=9.1.0=hdf63c60_0
-  - libstdcxx-ng=9.1.0=hdf63c60_0
-  - more-itertools=8.7.0=pyhd3eb1b0_0
-  - mypy=0.812=pyhd3eb1b0_0
-  - mypy_extensions=0.4.3=py38_0
-  - ncurses=6.2=he6710b0_1
-  - openssl=1.1.1k=h27cfd23_0
-  - packaging=20.9=pyhd3eb1b0_0
-  - pathspec=0.7.0=py_0
-  - pip=21.0.1=py38h06a4308_0
-  - pluggy=0.13.1=py38h06a4308_0
-  - psutil=5.8.0=py38h27cfd23_1
-  - py=1.10.0=pyhd3eb1b0_0
-  - pyparsing=2.4.7=pyhd3eb1b0_0
-  - pytest=6.2.3=py38h06a4308_2
-  - python=3.8.8=hdb3f193_5
-  - readline=8.1=h27cfd23_0
-  - regex=2021.4.4=py38h27cfd23_0
-  - setuptools=52.0.0=py38h06a4308_0
-  - six=1.15.0=py38h06a4308_0
-  - sqlite=3.35.4=hdfb4753_0
-  - tk=8.6.10=hbc83047_0
-  - toml=0.10.2=pyhd3eb1b0_0
-  - typed-ast=1.4.2=py38h27cfd23_1
-  - typing_extensions=3.7.4.3=pyha847dfd_0
-  - wheel=0.36.2=pyhd3eb1b0_0
-  - xz=5.2.5=h7b6447c_0
-  - zlib=1.2.11=h7b6447c_3
+  - python >= 3.8
+  - pytest
+  - mypy
+  - pip
   - pip:
-    - cloudpickle==1.6.0
-    - future==0.18.2
-    - gym==0.18.0
-    - numpy==1.20.2
-    - pettingzoo==1.8.1
-    - pillow==7.2.0
-    - pyglet==1.5.0
-    - scipy==1.6.2
-prefix: /home/akrish13/miniconda3/envs/fanorona-aec
+    - pettingzoo
+    - black

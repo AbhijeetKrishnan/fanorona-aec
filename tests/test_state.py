@@ -1,6 +1,6 @@
-from fanorona_aec.state import FanoronaState
-from fanorona_aec.move import FanoronaMove
-from fanorona_aec.utils import (
+from fanorona_aec.env.state import FanoronaState
+from fanorona_aec.env.move import FanoronaMove
+from fanorona_aec.env.utils import (
     Position,
     Piece,
 )
@@ -43,7 +43,11 @@ def test_to_svg(test_state_list):
 
 @pytest.mark.parametrize(
     "test_input,expected",
-    [("A1", Piece.WHITE), ("A5", Piece.BLACK), ("E3", Piece.EMPTY),],
+    [
+        ("A1", Piece.WHITE),
+        ("A5", Piece.BLACK),
+        ("E3", Piece.EMPTY),
+    ],
 )
 def test_get_piece(start_state, test_input, expected):
     "Verify that state.get_piece() works correctly"
@@ -57,7 +61,11 @@ def test_get_piece(start_state, test_input, expected):
         ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.BLACK),
         ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.EMPTY),
         ("9/4W4/9/9/9 W - - - 30", Piece.WHITE),
-        pytest.param("9/4W4/9/9/9 W - - - 30", Piece.BLACK, marks=pytest.mark.xfail,),
+        pytest.param(
+            "9/4W4/9/9/9 W - - - 30",
+            Piece.BLACK,
+            marks=pytest.mark.xfail,
+        ),
     ],
 )
 def test_piece_exists(state_str, piece):

@@ -1,4 +1,4 @@
-from fanorona_aec.utils import Position, Direction
+from fanorona_aec.env.utils import Position, Direction
 
 import pytest
 
@@ -23,7 +23,7 @@ HUMAN = (
 
 @pytest.mark.parametrize("test_input,expected", zip(POS, HUMAN))
 def test_convert_coords_to_human(test_input, expected):
-    """Test that converting to human-readable coords upon initialization using row-col coords returns 
+    """Test that converting to human-readable coords upon initialization using row-col coords returns
     the correct values for all valid board coords
     """
     assert Position(test_input).to_human() == expected
@@ -31,7 +31,7 @@ def test_convert_coords_to_human(test_input, expected):
 
 @pytest.mark.parametrize("test_input,expected", zip(HUMAN, POS))
 def test_convert_human_to_coords(test_input, expected):
-    """Test that converting to coords upon initialization using human-readable coords returns the 
+    """Test that converting to coords upon initialization using human-readable coords returns the
     correct values for all valid board coords
     """
     assert Position(test_input).to_coords() == expected
@@ -46,7 +46,7 @@ def test_convert_coords_to_pos(test_input, expected):
 @pytest.mark.parametrize("test_input,expected", zip(range(45), POS))
 def test_convert_pos_to_coords(test_input, expected):
     """
-    Test that converting to coords upon initialization using pos returns the correct values for 
+    Test that converting to coords upon initialization using pos returns the correct values for
     all valid board positions
     """
     assert Position(test_input).to_coords() == expected
@@ -56,17 +56,53 @@ def test_convert_pos_to_coords(test_input, expected):
     "test_input,expected",
     [
         ((0, 0), [Direction.N, Direction.NE, Direction.E]),
-        ((2, 0), [Direction.S, Direction.SE, Direction.E, Direction.NE, Direction.N,]),
+        (
+            (2, 0),
+            [
+                Direction.S,
+                Direction.SE,
+                Direction.E,
+                Direction.NE,
+                Direction.N,
+            ],
+        ),
         ((4, 0), [Direction.S, Direction.SE, Direction.E]),
         ((0, 8), [Direction.W, Direction.NW, Direction.N]),
-        ((2, 8), [Direction.S, Direction.SW, Direction.W, Direction.NW, Direction.N,]),
+        (
+            (2, 8),
+            [
+                Direction.S,
+                Direction.SW,
+                Direction.W,
+                Direction.NW,
+                Direction.N,
+            ],
+        ),
         ((4, 8), [Direction.S, Direction.SW, Direction.W]),
         ((0, 1), [Direction.W, Direction.N, Direction.E]),
-        ((0, 2), [Direction.W, Direction.NW, Direction.N, Direction.NE, Direction.E,]),
+        (
+            (0, 2),
+            [
+                Direction.W,
+                Direction.NW,
+                Direction.N,
+                Direction.NE,
+                Direction.E,
+            ],
+        ),
         pytest.param(
             (4, 1), [Direction.W, Direction.N, Direction.E], marks=pytest.mark.xfail
         ),
-        ((4, 2), [Direction.W, Direction.SW, Direction.S, Direction.SE, Direction.E,]),
+        (
+            (4, 2),
+            [
+                Direction.W,
+                Direction.SW,
+                Direction.S,
+                Direction.SE,
+                Direction.E,
+            ],
+        ),
         ((1, 0), [Direction.S, Direction.E, Direction.N]),
         ((1, 8), [Direction.S, Direction.W, Direction.N]),
         (

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="fanorona-aec",
-    version="1.0.0",
+    version="2.0.0",
     description="A PettingZoo AECEnv implementation of the Fanorona board game.",
     url="https://github.com/AbhijeetKrishnan/fanorona-aec",
     author="Abhijeet Krishnan",

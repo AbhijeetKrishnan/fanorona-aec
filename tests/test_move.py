@@ -1,5 +1,5 @@
-from fanorona_aec.move import FanoronaMove, MoveType, END_TURN
-from fanorona_aec.utils import Position, Direction
+from fanorona_aec.env.move import FanoronaMove, MoveType, END_TURN
+from fanorona_aec.env.utils import Position, Direction
 
 import pytest
 
