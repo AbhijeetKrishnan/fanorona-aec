@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, List, TypeAlias
 
 import gymnasium.spaces
 import numpy as np
@@ -9,8 +9,11 @@ from pettingzoo.utils import agent_selector, wrappers
 from .move import FanoronaMove
 from .state import FanoronaState
 
+AgentId: TypeAlias = str
+RenderMode: TypeAlias = str
 
-def env(render_mode: Optional[str] = None) -> AECEnv:
+
+def env(render_mode: RenderMode | None = None) -> AECEnv:
     internal_render_mode = render_mode if render_mode != "ansi" else "human"
     env = raw_env(render_mode=internal_render_mode)
     if render_mode == "ansi":
@@ -44,10 +47,10 @@ class raw_env(AECEnv):
         Game ends in a win, draw, loss or illegal move
     """
 
-    metadata = {"render_mode": ["human", "svg"], "name": "fanorona_v1"}
+    metadata = {"render_mode": ["human", "svg"], "name": "fanorona_v2"}
 
-    def __init__(self, render_mode: Optional[str] = "human"):
-        self.possible_agents = [f"player_{str(r)}" for r in range(2)]
+    def __init__(self, render_mode: RenderMode | None = "human"):
+        self.possible_agents: List[AgentId] = [f"player_{str(r)}" for r in range(2)]
         self.agent_name_mapping = dict(
             zip(self.possible_agents, list(range(len(self.possible_agents))))
         )
@@ -121,14 +124,14 @@ class raw_env(AECEnv):
     def action_space(self, agent: str) -> gymnasium.spaces.Space:
         return self.action_spaces[agent]
 
-    def reset(self, seed: Optional[int] = None, options: Optional[dict] = None) -> None:
+    def reset(self, seed: int | None = None, options: dict | None = None) -> None:
         self.agents = self.possible_agents[:]
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.terminations = {agent: False for agent in self.agents}
         self.truncations = {agent: False for agent in self.agents}
         self.infos: Dict[str, dict] = {agent: {} for agent in self.agents}
-        self.observations: Dict[str, Optional[FanoronaState]] = {
+        self.observations: Dict[str, FanoronaState | None] = {
             agent: None for agent in self.agents
         }
         self.num_moves = 0
