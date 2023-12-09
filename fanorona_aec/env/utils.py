@@ -13,7 +13,13 @@ class Piece(IntEnum):
         return str(self.name)[0]  # just the first letter
 
     def other(self) -> "Piece":
-        return Piece(self.value ^ 1)
+        match self:
+            case Piece.WHITE:
+                return Piece.BLACK
+            case Piece.BLACK:
+                return Piece.WHITE
+            case _:
+                raise ValueError(f"Cannot define `other()` for {str(self)}")
 
     WHITE = 0
     BLACK = 1

@@ -1,17 +1,17 @@
-from fanorona_aec.env.state import FanoronaState
-from fanorona_aec.env.move import FanoronaMove
-from fanorona_aec.env.utils import (
-    Position,
-    Piece,
-)
-import pytest
 import numpy as np
+import pytest
+
+from fanorona_aec.env.move import FanoronaMove
+from fanorona_aec.env.state import FanoronaState
+from fanorona_aec.env.utils import Piece, Position
 
 TEST_STATE_STRS = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",  # start state
-    "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - - 1",  # capturing seq after D2->E3 approach
+    # capturing seq after D2->E3 approach
+    "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - - 1",
     "9/9/3W1B3/9/9 W - - - 44",  # random endgame state
     "9/4W4/9/9/9 W - - - 30",  # terminal state
+    "3W1WW2/5W3/7WW/2W6/9 B - - - 17",  # pathologic endgame state
 ]
 
 
@@ -85,7 +85,7 @@ def test_push(test_state_list):
             state.push(move)
 
 
-def test_is_game_over(test_state_list, expected_list=[False, False, True, True]):
+def test_is_game_over(test_state_list, expected_list=[False, False, True, True, True]):
     "Test that is_game_over method is correctly identifying end of game states."
     for test_state, expected in zip(test_state_list, expected_list):
         assert test_state.is_game_over() == expected
