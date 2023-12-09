@@ -4,7 +4,18 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-![Fanorona board](/assets/1920px-Fanorona-1.svg.png)
+```
+  a b c d e f g h i
+5 ●─●─●─●─●─●─●─●─●
+  │╲│╱│╲│╱│╲│╱│╲│╱│
+4 ●─●─●─●─●─●─●─●─●
+  │╱│╲│╱│╲│╱│╲│╱│╲│
+3 ●─○─●─○─·─●─○─●─○
+  │╲│╱│╲│╱│╲│╱│╲│╱│
+2 ○─○─○─○─○─○─○─○─○
+  │╱│╲│╱│╲│╱│╲│╱│╲│
+1 ○─○─○─○─○─○─○─○─○
+```
 
 This is an implementation of the Fanorona board game as a [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) [AEC](https://arxiv.org/abs/2009.13051) game.
 The rules have been sourced from [here](https://www.mindsports.nl/index.php/the-pit/528-fanorona).
