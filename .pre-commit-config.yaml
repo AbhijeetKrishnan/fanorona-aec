@@ -1,0 +1,29 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+-   repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 23.11.0
+    hooks:
+    -   id: black
+        language_version: python3.12
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.1
+    hooks:
+    -   id: mypy
+-   repo: local
+    hooks:
+    -   id: pytest-check
+        stages: [push]
+        types: [python]
+        name: pytest-check
+        entry: python -m pytest -v tests/
+        language: system
+        pass_filenames: false
+        always_run: true

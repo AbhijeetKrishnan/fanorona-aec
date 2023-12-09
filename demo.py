@@ -1,6 +1,6 @@
-from fanorona_aec import fanorona_v1
+from fanorona_aec import fanorona_v2
 
-env = fanorona_v1.env()
+env = fanorona_v2.env()
 env.reset()
 
 for agent in env.agent_iter():

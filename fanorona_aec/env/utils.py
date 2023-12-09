@@ -29,6 +29,16 @@ class Direction(IntEnum):
         else:
             return self.name
 
+    @staticmethod
+    def str_to_direction(dir_str: str) -> "Direction":
+        try:
+            if dir_str == "-":
+                return Direction.X
+            else:
+                return Direction[dir_str]
+        except KeyError:
+            raise ValueError(f"Invalid direction: {dir_str}")
+
     def opposite(self) -> "Direction":
         "Return the direction of opposite orientation to the current one e.g. NE.opposite() == SW"
         return Direction(10 - self.value)
@@ -83,13 +93,15 @@ class Position:
             self.row = (pos - self.col) // BOARD_COLS
         else:
             raise Exception(
-                f"Cannot create a Position object from an object of type {type(pos)}"
+                f"Cannot create a Position object from an object of type \
+                    {type(pos)}"
             )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Position):
             raise NotImplementedError(
-                f"Cannot compare {type(self)} with object of type {type(other)}"
+                f"Cannot compare {type(self)} with object of type \
+                    {type(other)}"
             )
         return self.row == other.row and self.col == other.col
 

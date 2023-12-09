@@ -1,5 +1,5 @@
-from typing import Optional
 from enum import IntEnum
+from typing import Optional
 
 from .utils import Direction, Position
 
@@ -23,10 +23,10 @@ class FanoronaMove:
         self.move_type = move_type
         self.end_turn = end_turn
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<FanoronaMove: pos={str(self.position.to_human())}, dir={str(self.direction)}, type={self.move_type.name}, end?={self.end_turn}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.position.to_human()}{self.direction.value}{self.move_type.value}{int(self.end_turn)}"
 
     def __eq__(self, other: object) -> bool:

@@ -1,15 +1,16 @@
-from gymnasium import spaces
+from typing import Dict, Optional
+
 import gymnasium.spaces
 import numpy as np
+from gymnasium import spaces
 from pettingzoo import AECEnv
-from pettingzoo.utils import agent_selector
-from pettingzoo.utils import wrappers
+from pettingzoo.utils import agent_selector, wrappers
 
 from .move import FanoronaMove
 from .state import FanoronaState
 
 
-def env(render_mode=None):
+def env(render_mode: Optional[str] = None) -> AECEnv:
     internal_render_mode = render_mode if render_mode != "ansi" else "human"
     env = raw_env(render_mode=internal_render_mode)
     if render_mode == "ansi":
@@ -45,8 +46,8 @@ class raw_env(AECEnv):
 
     metadata = {"render_mode": ["human", "svg"], "name": "fanorona_v1"}
 
-    def __init__(self, render_mode="human"):
-        self.possible_agents = [f"player_{str(r)}" for r in range(2)]
+    def __init__(self, render_mode: Optional[str] = "human"):
+        self.possible_agents = tuple(f"player_{str(r)}" for r in range(2))
         self.agent_name_mapping = dict(
             zip(self.possible_agents, list(range(len(self.possible_agents))))
         )
@@ -78,11 +79,11 @@ class raw_env(AECEnv):
             name: spaces.Dict(
                 {
                     "observation": spaces.Box(
-                        low=0, high=1, shape=(5, 9, 8), dtype=np.int32
-                    ),  # ideally should be np.bool
+                        low=0, high=1, shape=(5, 9, 8), dtype=np.int8
+                    ),
                     "action_mask": spaces.Box(
-                        low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int32
-                    ),  # ideally should be np.int8
+                        low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int8
+                    ),
                 }
             )
             for name in self.possible_agents
@@ -90,19 +91,17 @@ class raw_env(AECEnv):
         self.board_state = FanoronaState()
         self.render_mode = render_mode
 
-    def state(self):
+    def state(self) -> FanoronaState:
         return self.board_state
 
-    def render(self):
+    def render(self) -> None:
         if self.render_mode == "human":
             print(str(self.board_state))
         elif self.render_mode == "svg":
             print(self.board_state.to_svg())
 
-    def observe(self, agent: str):
-        observation = self.board_state.get_observation(
-            self.possible_agents.index(agent)
-        )
+    def observe(self, agent: str) -> dict:
+        observation = self.board_state.get_observation(agent)
         legal_moves = (
             self.board_state.legal_moves if agent == self.agent_selection else []
         )
@@ -113,7 +112,7 @@ class raw_env(AECEnv):
 
         return {"observation": observation, "action_mask": action_mask}
 
-    def close(self):
+    def close(self) -> None:
         pass
 
     def observation_space(self, agent: str) -> gymnasium.spaces.Space:
@@ -122,14 +121,16 @@ class raw_env(AECEnv):
     def action_space(self, agent: str) -> gymnasium.spaces.Space:
         return self._action_spaces[agent]
 
-    def reset(self, seed=None, options=None):
+    def reset(self, seed: Optional[int] = None, options: Optional[dict] = None) -> None:
         self.agents = self.possible_agents[:]
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.terminations = {agent: False for agent in self.agents}
         self.truncations = {agent: False for agent in self.agents}
-        self.infos = {agent: {} for agent in self.agents}
-        self.observations = {agent: None for agent in self.agents}
+        self.infos: Dict[str, dict] = {agent: {} for agent in self.agents}
+        self.observations: Dict[str, Optional[FanoronaState]] = {
+            agent: None for agent in self.agents
+        }
         self.num_moves = 0
 
         self._agent_selector = agent_selector(self.agents)
@@ -137,7 +138,7 @@ class raw_env(AECEnv):
 
         self.board_state.reset()
 
-    def step(self, action: int):
+    def step(self, action: int) -> None:
         if (
             self.terminations[self.agent_selection]
             or self.truncations[self.agent_selection]

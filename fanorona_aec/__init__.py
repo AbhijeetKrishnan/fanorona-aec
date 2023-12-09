@@ -1,1 +1,1 @@
-from . import fanorona_v1
+from . import fanorona_v2

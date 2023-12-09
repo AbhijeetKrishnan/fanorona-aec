@@ -1,20 +1,22 @@
 import pettingzoo
 import pettingzoo.test
 import pytest
-from fanorona_aec import fanorona_v1
+
+from fanorona_aec import fanorona_v2
 from fanorona_aec.env.move import FanoronaMove, MoveType
-from fanorona_aec.env.utils import Position, Direction
+from fanorona_aec.env.utils import Direction, Position
 
 TEST_STATES = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0",  # start state
-    "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - 1",  # capturing seq after D2->E3 approach
+    # capturing seq after D2->E3 approach
+    "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - 1",
     "9/9/3W1B3/9/9 W - - 49",  # random endgame state
 ]
 
 
 @pytest.fixture(scope="function")
 def env():
-    env = fanorona_v1.env()
+    env = fanorona_v2.env()
     env.reset()
     yield env
     env.close()
@@ -46,13 +48,13 @@ def test_render(env):
 
 def test_render_human(env):
     "Verify that render() executes without error for human-readable output"
-    env.render_mode = 'human'
+    env.render_mode = "human"
     env.render()
 
 
 def test_render_svg(env):
     "Verify that render() executes without error for svg"
-    env.render_mode = 'svg'
+    env.render_mode = "svg"
     env.render()
 
 

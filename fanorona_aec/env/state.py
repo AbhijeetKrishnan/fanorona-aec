@@ -1,27 +1,30 @@
-from typing import Tuple, Optional, List, cast
+from typing import List, Optional, Tuple, cast
 
 import numpy as np
 
-from .utils import MOVE_LIMIT, BOARD_COLS, BOARD_ROWS, Direction, Piece, Position
-from .move import FanoronaMove, MoveType, END_TURN
+from .move import END_TURN, FanoronaMove, MoveType
+from .utils import BOARD_COLS, BOARD_ROWS, MOVE_LIMIT, Direction, Piece, Position
 
 
 class FanoronaState:
-    def __init__(self):
+    def __init__(self) -> None:
         self.board: Optional[np.ndarray] = None
         self.turn_to_play: Piece = Piece.EMPTY
         self.last_capture: Optional[
             Tuple[Position, Direction]
-        ] = None  # TODO: remove requirement to index using 0 and 1 (NamedTuple?)
+            # TODO: remove requirement to index using 0 and 1 (NamedTuple?)
+        ] = None
         self.visited: Optional[np.ndarray] = None
         self.half_moves: int = 0
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<FanoronaState: {str(self)}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         board_string = ""
         count = 0
+        if self.board is None:
+            return board_string
         for row in self.board:
             for col in row:
                 col_str = str(Piece(col))
@@ -42,13 +45,13 @@ class FanoronaState:
 
         turn_to_play_str = str(Piece(self.turn_to_play))
         if self.last_capture:
-            last_capture_str = (
-                f"{self.last_capture[0].to_human()} {str(self.last_capture[1])}"
-            )
+            last_capture_str = f"{self.last_capture[0].to_human()} \
+                    {str(self.last_capture[1])}"
         else:
             last_capture_str = f"- -"
 
         visited_pos_list = []
+        assert self.visited is not None
         for row_idx, row in enumerate(self.visited):
             for col_idx, col in enumerate(row):
                 if col:
@@ -135,7 +138,7 @@ class FanoronaState:
                 return True
         return False
 
-    def push(self, move: FanoronaMove):
+    def push(self, move: FanoronaMove) -> None:
         """Implement the rules of Fanorona and make the desired move on the board. Returns flags and
         status codes depending on game over or draw
         """
@@ -156,9 +159,10 @@ class FanoronaState:
         self.board[from_row][from_col] = Piece.EMPTY
         self.board[to_row][to_col] = from_piece
 
-        def end_turn():
+        def end_turn() -> None:
             self.turn_to_play = self.turn_to_play.other()
             self.last_capture = None
+            assert self.visited is not None
             self.visited.fill(0)  # reset visited ndarray
             self.half_moves += 1
 
@@ -279,7 +283,7 @@ class FanoronaState:
         if last_capture_pos != "-" and last_capture_dir != "-":
             self.last_capture = (
                 Position(last_capture_pos),
-                Direction(last_capture_dir),
+                Direction(Direction.str_to_direction(last_capture_dir)),
             )
         else:
             self.last_capture = None
@@ -287,7 +291,7 @@ class FanoronaState:
         self.half_moves = int(half_moves_str)
         return self
 
-    def get_observation(self, agent):
+    def get_observation(self, agent: str) -> np.ndarray:
         """Return NN-style observation based on the current board state and requesting agent. Board
         state is from the perspective of the agent, with their color at the bottom.
         """
