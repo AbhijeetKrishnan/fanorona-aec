@@ -1,9 +1,11 @@
-from typing import List, Optional, Tuple, cast
+from typing import List, Optional, Tuple, TypeAlias
 
 import numpy as np
 
-from .move import END_TURN, FanoronaMove, MoveType
+from .fanorona_move import END_TURN, FanoronaMove, MoveType
 from .utils import BOARD_COLS, BOARD_ROWS, MOVE_LIMIT, Direction, Piece, Position
+
+AgentId: TypeAlias = str
 
 
 class FanoronaState:
@@ -291,7 +293,7 @@ class FanoronaState:
         self.half_moves = int(half_moves_str)
         return self
 
-    def get_observation(self, agent: str) -> np.ndarray:
+    def get_observation(self, agent: AgentId) -> np.ndarray:
         """Return NN-style observation based on the current board state and requesting agent. Board
         state is from the perspective of the agent, with their color at the bottom.
         """

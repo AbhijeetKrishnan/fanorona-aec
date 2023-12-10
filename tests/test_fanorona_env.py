@@ -3,7 +3,7 @@ import pettingzoo.test
 import pytest
 
 from fanorona_aec import fanorona_v2
-from fanorona_aec.env.move import FanoronaMove, MoveType
+from fanorona_aec.env.fanorona_move import FanoronaMove, MoveType
 from fanorona_aec.env.utils import Direction, Position
 
 TEST_STATES = [

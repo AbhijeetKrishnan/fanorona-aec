@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from fanorona_aec.env.move import FanoronaMove
-from fanorona_aec.env.state import FanoronaState
+from fanorona_aec.env.fanorona_move import FanoronaMove
+from fanorona_aec.env.fanorona_state import FanoronaState
 from fanorona_aec.env.utils import Piece, Position
 
 TEST_STATE_STRS = [

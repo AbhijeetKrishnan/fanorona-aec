@@ -1,4 +1,5 @@
-from typing import Dict, List, TypeAlias
+import functools
+from typing import Dict, List, TypeAlias, TypedDict
 
 import gymnasium.spaces
 import numpy as np
@@ -6,11 +7,23 @@ from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 
-from .move import FanoronaMove
-from .state import FanoronaState
+from .fanorona_move import FanoronaMove
+from .fanorona_state import AgentId, FanoronaState
 
-AgentId: TypeAlias = str
 RenderMode: TypeAlias = str
+ActionType: TypeAlias = int
+
+
+class Metadata(TypedDict):
+    render_modes: List[RenderMode]
+    name: str
+    is_parallelizable: bool
+    render_fps: int
+
+
+class Observation(TypedDict):
+    observation: np.ndarray
+    action_mask: np.ndarray
 
 
 def env(render_mode: RenderMode | None = None) -> AECEnv:
@@ -47,13 +60,22 @@ class raw_env(AECEnv):
         Game ends in a win, draw, loss or illegal move
     """
 
-    metadata = {"render_mode": ["human", "svg"], "name": "fanorona_v2"}
+    metadata: Metadata = {
+        "render_modes": ["human", "svg"],
+        "name": "fanorona_v2",
+        "is_parallelizable": False,
+        "render_fps": 2,
+    }
 
     def __init__(self, render_mode: RenderMode | None = "human"):
-        self.possible_agents: List[AgentId] = [f"player_{str(r)}" for r in range(2)]
-        self.agent_name_mapping = dict(
-            zip(self.possible_agents, list(range(len(self.possible_agents))))
-        )
+        super().__init__()
+
+        self.board_state = FanoronaState()
+
+        self.agents: List[AgentId] = [f"player_{str(r)}" for r in range(2)]
+        self.possible_agents = self.agents[:]
+
+        self._agent_selector = agent_selector(self.agents)
 
         # The action space is a (5x9x8x3+1)-dimensional array. Each of the 5x9 positions identifies
         # the square from which to "pick up" the piece. 8 planes encode the possible directions
@@ -78,11 +100,15 @@ class raw_env(AECEnv):
         #   Channel 6: all 1s to help neural networks find board edges in padded convolutions
         #   Channel 7: white piece positions (1 if a piece exists in the corresponding index)
         #   Channel 8: black piece positions
-        self.observation_spaces = {
+        self.observation_spaces: Dict[AgentId, spaces.Dict] = {
             name: spaces.Dict(
                 {
                     "observation": spaces.Box(
-                        low=0, high=1, shape=(5, 9, 8), dtype=np.int32
+                        # TODO: how to set dtype=bool?
+                        low=0,
+                        high=1,
+                        shape=(5, 9, 8),
+                        dtype=np.int32,
                     ),
                     "action_mask": spaces.Box(
                         low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int8
@@ -91,11 +117,24 @@ class raw_env(AECEnv):
             )
             for name in self.possible_agents
         }
-        self.board_state = FanoronaState()
+
+        self.rewards: Dict[AgentId, int] = {agent: 0 for agent in self.agents}
+        self.infos: Dict[AgentId, dict | None] = {agent: None for agent in self.agents}
+        self.terminations = {agent: False for agent in self.agents}
+        self.truncations = {agent: False for agent in self.agents}
+
+        self.agent_selection: AgentId | None = None
+
+        assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
-    def state(self) -> FanoronaState:
-        return self.board_state
+    @functools.lru_cache(maxsize=None)
+    def observation_space(self, agent: AgentId) -> gymnasium.spaces.Space:
+        return self.observation_spaces[agent]
+
+    @functools.lru_cache(maxsize=None)
+    def action_space(self, agent: AgentId) -> gymnasium.spaces.Space:
+        return self.action_spaces[agent]
 
     def render(self) -> None:
         if self.render_mode == "human":
@@ -103,7 +142,9 @@ class raw_env(AECEnv):
         elif self.render_mode == "svg":
             print(self.board_state.to_svg())
 
-    def observe(self, agent: str) -> dict:
+    def observe(self, agent: AgentId) -> Observation:
+        current_index = self.possible_agents.index(agent)
+
         observation = self.board_state.get_observation(agent)
         legal_moves = (
             self.board_state.legal_moves if agent == self.agent_selection else []
@@ -118,30 +159,32 @@ class raw_env(AECEnv):
     def close(self) -> None:
         pass
 
-    def observation_space(self, agent: str) -> gymnasium.spaces.Space:
-        return self.observation_spaces[agent]
-
-    def action_space(self, agent: str) -> gymnasium.spaces.Space:
-        return self.action_spaces[agent]
-
     def reset(self, seed: int | None = None, options: dict | None = None) -> None:
         self.agents = self.possible_agents[:]
+
+        self.board_state = FanoronaState()
+
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.terminations = {agent: False for agent in self.agents}
         self.truncations = {agent: False for agent in self.agents}
-        self.infos: Dict[str, dict] = {agent: {} for agent in self.agents}
-        self.observations: Dict[str, FanoronaState | None] = {
+        self.infos = {agent: None for agent in self.agents}
+        self._state: Dict[AgentId, ActionType | None] = {
+            agent: None for agent in self.agents
+        }
+        self.observations: Dict[AgentId, FanoronaState | None] = {
             agent: None for agent in self.agents
         }
         self.num_moves = 0
 
         self._agent_selector = agent_selector(self.agents)
-        self.agent_selection = self._agent_selector.next()
+        self.agent_selection = self._agent_selector.reset()
 
-        self.board_state.reset()
+        if self.render_mode == "human":
+            self.render()
 
-    def step(self, action: int) -> None:
+    def step(self, action: ActionType) -> None:
+        assert self.agent_selection is not None
         if (
             self.terminations[self.agent_selection]
             or self.truncations[self.agent_selection]
@@ -149,45 +192,42 @@ class raw_env(AECEnv):
             self._was_dead_step(action)
             return
 
-        agent = self.agent_selection
-        self._cumulative_rewards[agent] = 0
+        current_agent = self.agent_selection
+        current_index = self.agents.index(current_agent)
+
+        self._cumulative_rewards[current_agent] = 0
+
+        self._state[self.agent_selection] = action
 
         chosen_move = FanoronaMove.action_to_move(action)
+        legal_moves = list(self.board_state.legal_moves)
+        assert chosen_move in legal_moves
         self.board_state.push(chosen_move)
-        result = None
 
         if game_over := self.board_state.is_game_over():
             result = self.board_state.get_result()
+            (
+                self.rewards[self.agents[0]],
+                self.rewards[self.agents[1]],
+            ) = (
+                result,
+                -result,
+            )
+        else:
+            self.rewards[self.agents[0]], self.rewards[self.agents[1]] = 0, 0
 
         self.terminations = {agent: game_over for agent in self.agents}
         # no cause for external episode end
         self.truncations = {agent: False for agent in self.agents}
-        if result is not None:
-            (
-                self.rewards[self.agents[0]],
-                self.rewards[self.agents[1]],
-            ) = result * 1, result * (-1)
-            self.infos[self.agents[0]], self.infos[self.agents[1]] = {
-                "legal_moves": []
-            }, {"legal_moves": []}
-        else:
-            self.rewards[self.agents[0]], self.rewards[self.agents[1]] = 0, 0
 
         # observe the current state
-        for agent in self.agents:
-            self.observations[agent] = self.board_state
+        self.observations[current_agent] = self.board_state
+        self.infos[current_agent] = {"legal_moves": legal_moves}
 
         # selects the next agent
         self.agent_selection = self._agent_selector.next()
         # Adds rewards to _cumulative_rewards
         self._accumulate_rewards()
 
-        obs, _, termination, truncation, _ = self.last(observe=True)
-        if np.flatnonzero(obs["action_mask"]).tolist() == [] and not (
-            termination or truncation
-        ):
-            print(
-                self.board_state,
-                np.flatnonzero(obs["action_mask"]).tolist(),
-                termination,
-            )
+        if self.render_mode == "human":
+            self.render()

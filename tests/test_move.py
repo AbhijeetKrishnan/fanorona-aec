@@ -1,7 +1,7 @@
-from fanorona_aec.env.move import FanoronaMove, MoveType, END_TURN
-from fanorona_aec.env.utils import Position, Direction
-
 import pytest
+
+from fanorona_aec.env.fanorona_move import END_TURN, FanoronaMove, MoveType
+from fanorona_aec.env.utils import Direction, Position
 
 
 @pytest.mark.parametrize(
