@@ -36,7 +36,7 @@ class Direction(IntEnum):
             return self.name
 
     @staticmethod
-    def str_to_direction(dir_str: str) -> "Direction":
+    def from_str(dir_str: str) -> "Direction":
         try:
             if dir_str == "-":
                 return Direction.X
@@ -67,7 +67,7 @@ class Direction(IntEnum):
         return DISPLACEMENT_VECTORS[self.value]
 
     @staticmethod
-    def dir_range():
+    def dir_range() -> Iterator["Direction"]:
         for i in range(9):
             yield Direction(i)
 
@@ -145,74 +145,95 @@ class Position:
         return 0 <= self.row < BOARD_ROWS and 0 <= self.col < BOARD_COLS
 
     def displace(self, direction: Direction) -> "Position":
-        """Returns the resultant position obtained from adding a given unit direction vector (given by 'direction') to pos."""
+        """
+        Returns the resultant position obtained from adding a given unit
+        direction vector (given by 'direction') to pos.
+
+        Parameters:
+            direction (Direction): The direction in which to displace the position.
+
+        Returns:
+            Position: The resultant position after displacement.
+        """
         del_row, del_col = direction.as_vector()
         res = (self.row + del_row, self.col + del_col)
         return Position(res)
 
     def get_valid_dirs(self) -> List[Direction]:
-        """Get list of valid directions available from a given board position."""
-        assert self.is_valid()
+        """Get list of valid directions available from a given board position.
+
+        Returns:
+            List[Direction]: A list of valid directions available from the current board position.
+
+        Raises:
+            ValueError: If unexpected coordinates are encountered.
+        """
         row, col = self.row, self.col
-        if row == 0 and col == 0:  # bottom-left corner
-            dir_list = [Direction.N, Direction.NE, Direction.E]
-        elif row == 2 and col == 0:  # middle-left
-            dir_list = [
-                Direction.S,
-                Direction.SE,
-                Direction.E,
-                Direction.NE,
-                Direction.N,
-            ]
-        elif row == 4 and col == 0:  # top-left corner
-            dir_list = [Direction.S, Direction.SE, Direction.E]
-        elif row == 0 and col == 8:  # bottom-right corner
-            dir_list = [Direction.W, Direction.NW, Direction.N]
-        elif row == 2 and col == 8:  # middle-right
-            dir_list = [
-                Direction.S,
-                Direction.SW,
-                Direction.W,
-                Direction.NW,
-                Direction.N,
-            ]
-        elif row == 4 and col == 8:  # top-right corner
-            dir_list = [Direction.S, Direction.SW, Direction.W]
-        elif row == 0 and col % 2 == 1:  # bottom edge 1
-            dir_list = [Direction.W, Direction.N, Direction.E]
-        elif row == 0 and col % 2 == 0:  # bottom edge 2
-            dir_list = [
-                Direction.W,
-                Direction.NW,
-                Direction.N,
-                Direction.NE,
-                Direction.E,
-            ]
-        elif row == 4 and col % 2 == 1:  # top edge 1
-            dir_list = [Direction.W, Direction.S, Direction.E]
-        elif row == 4 and col % 2 == 0:  # top edge 2
-            dir_list = [
-                Direction.W,
-                Direction.SW,
-                Direction.S,
-                Direction.SE,
-                Direction.E,
-            ]
-        elif col == 0:  # left edge
-            dir_list = [Direction.S, Direction.E, Direction.N]
-        elif col == 8:  # right edge
-            dir_list = [Direction.S, Direction.W, Direction.N]
-        elif (row + col) % 2 == 0:  # 8-point
-            dir_list = [
-                Direction.S,
-                Direction.SW,
-                Direction.W,
-                Direction.NW,
-                Direction.N,
-                Direction.NE,
-                Direction.E,
-                Direction.SE,
-            ]
-        elif (row + col) % 2 == 1:  # 4-point
-            dir_list = [Direction.S, Direction.W, Direction.N, Direction.E]
+        match (row, col):
+            case (0, 0):  # bottom-left corner
+                dir_list = [Direction.N, Direction.NE, Direction.E]
+            case (2, 0):  # middle-left
+                dir_list = [
+                    Direction.S,
+                    Direction.SE,
+                    Direction.E,
+                    Direction.NE,
+                    Direction.N,
+                ]
+            case (4, 0):  # top-left corner
+                dir_list = [Direction.S, Direction.SE, Direction.E]
+            case (0, 8):  # bottom-right corner
+                dir_list = [Direction.W, Direction.NW, Direction.N]
+            case (2, 8):  # middle-right
+                dir_list = [
+                    Direction.S,
+                    Direction.SW,
+                    Direction.W,
+                    Direction.NW,
+                    Direction.N,
+                ]
+            case (4, 8):  # top-right corner
+                dir_list = [Direction.S, Direction.SW, Direction.W]
+            case (0, col) if col % 2 == 1:  # bottom edge 1
+                dir_list = [Direction.W, Direction.N, Direction.E]
+            case (0, col) if col % 2 == 0:  # bottom edge 2
+                dir_list = [
+                    Direction.W,
+                    Direction.NW,
+                    Direction.N,
+                    Direction.NE,
+                    Direction.E,
+                ]
+            case (4, col) if col % 2 == 1:  # top edge 1
+                dir_list = [Direction.W, Direction.S, Direction.E]
+            case (4, col) if col % 2 == 0:  # top edge 2
+                dir_list = [
+                    Direction.W,
+                    Direction.SW,
+                    Direction.S,
+                    Direction.SE,
+                    Direction.E,
+                ]
+            case (_, 0):  # left edge
+                dir_list = [Direction.S, Direction.E, Direction.N]
+            case (_, 8):  # right edge
+                dir_list = [Direction.S, Direction.W, Direction.N]
+            case (row, col) if (row + col) % 2 == 0:  # 8-point
+                dir_list = [
+                    Direction.S,
+                    Direction.SW,
+                    Direction.W,
+                    Direction.NW,
+                    Direction.N,
+                    Direction.NE,
+                    Direction.E,
+                    Direction.SE,
+                ]
+            case (row, col) if (row + col) % 2 == 1:  # 4-point
+                dir_list = [Direction.S, Direction.W, Direction.N, Direction.E]
+            case _:
+                raise ValueError(
+                    f"Unexpected coords encountered: row=\
+                                 {row}, col={col}"
+                )
         return dir_list

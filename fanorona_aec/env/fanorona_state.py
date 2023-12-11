@@ -326,7 +326,7 @@ class FanoronaState:
         if last_capture_pos != "-" and last_capture_dir != "-":
             self.last_capture = (
                 Position(last_capture_pos),
-                Direction(Direction.str_to_direction(last_capture_dir)),
+                Direction(Direction.from_str(last_capture_dir)),
             )
         else:
             self.last_capture = None
