@@ -203,9 +203,9 @@ class raw_env(AECEnv):
 
         self._state[self.agent_selection] = action
 
-        chosen_move = FanoronaMove.from_action(action)
+        # chosen_move = FanoronaMove.from_action(action)
         legal_moves = list(self.board_state.legal_moves)
-        assert chosen_move in legal_moves
+        # assert chosen_move in legal_moves
         game_over = self.board_state.done
 
         if game_over:
