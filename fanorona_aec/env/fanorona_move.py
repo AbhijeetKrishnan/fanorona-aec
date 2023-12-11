@@ -1,7 +1,15 @@
+import re
 from enum import IntEnum
-from typing import Optional
+from typing import Optional, TypeAlias
 
 from .utils import Direction, Position
+
+ActionType: TypeAlias = int
+
+END_TURN_ACTION: ActionType = 5 * 9 * 8 * 3  # end turn action encoding
+ACTION_PATTERN = re.compile(
+    r"(?P<from>[a-iA-I][1-5])(?P<direction>[1-9])(?P<move_type>[0-2])(?P<end_turn>[01])"
+)
 
 
 class MoveType(IntEnum):
@@ -17,19 +25,59 @@ class FanoronaMove:
         direction: Direction,
         move_type: MoveType,
         end_turn: bool,
-    ):
+    ) -> None:
+        """
+        Initialize a Fanorona move object.
+
+        Args:
+            position (Position): The position of the move.
+            direction (Direction): The direction of the move.
+            move_type (MoveType): The type of the move.
+            end_turn (bool): Indicates whether the move ends the turn.
+
+        Returns:
+            None
+        """
+
         self.position = position
         self.direction = direction
         self.move_type = move_type
         self.end_turn = end_turn
 
     def __repr__(self) -> str:
+        """
+        Returns a string representation of the FanoronaMove object.
+
+        The string includes the position, direction, move type, and whether it ends the turn.
+
+        Returns:
+            str: A string representation of the FanoronaMove object.
+        """
+
         return f"<FanoronaMove: pos={str(self.position.to_human())}, dir={str(self.direction)}, type={self.move_type.name}, end?={self.end_turn}>"
 
     def __str__(self) -> str:
+        """
+        Returns a string representation of the FanoronaMove object.
+
+        The string representation includes the position, direction, move type, and end turn information.
+
+        Returns:
+            str: The string representation of the FanoronaMove object.
+        """
+
         return f"{self.position.to_human()}{self.direction.value}{self.move_type.value}{int(self.end_turn)}"
 
     def __eq__(self, other: object) -> bool:
+        """
+        Check if two FanoronaMove objects are equal.
+
+        Args:
+            other (object): The object to compare with.
+
+        Returns:
+            bool: True if the objects are equal, False otherwise.
+        """
         if not isinstance(other, FanoronaMove):
             return NotImplemented
         elif (
@@ -42,25 +90,37 @@ class FanoronaMove:
         else:
             return False
 
-    def to_action(self) -> int:
-        "Return integer encoding of FanoronaMove object"
+    def to_action(self) -> ActionType:
+        """
+        Return integer encoding of FanoronaMove object.
+
+        Returns:
+            int: The integer encoding of the FanoronaMove object.
+        """
         if self.end_turn:
-            return 5 * 9 * 8 * 3
+            return END_TURN_ACTION
         else:
-            pos_int: int = self.position.to_pos()
-            dir_int: int = (
+            pos_int = self.position.to_pos()
+            dir_int = (
                 self.direction.value - 1 - (1 if self.direction.value >= 5 else 0)
             )  # to account for Direction.X
             move_type_int: int = self.move_type.value
             return pos_int * 8 * 3 + dir_int * 3 + move_type_int
 
     @staticmethod
-    def action_to_move(action: int) -> "FanoronaMove":
-        "Converts integer-encoded action to a FanoronaMove object"
+    def from_action(action: ActionType) -> "FanoronaMove":
+        """
+        Converts integer-encoded action to a FanoronaMove object.
+
+        Args:
+            action (int): The integer-encoded action.
+
+        Returns:
+            FanoronaMove: The corresponding FanoronaMove object.
+        """
         action = int(action)  # to handle np.int type actions
-        result = FanoronaMove(Position("I5"), Direction.NE, MoveType.WITHDRAWAL, True)
-        if action != 5 * 9 * 8 * 3:
-            result.end_turn = False
+        if action != END_TURN_ACTION:
+            end_turn = False
             move_type_int = action % 3
             action = (action - move_type_int) // 3
             dir_int = action % 8
@@ -69,28 +129,36 @@ class FanoronaMove:
                 dir_int += 1  # to account for Direction.X
             dir_int += 1  # Direction enum starts from 1
             pos_int = action
-            result.position = Position(pos_int)
-            result.direction = Direction(dir_int)
-            result.move_type = MoveType(move_type_int)
+            position = Position(pos_int)
+            direction = Direction(dir_int)
+            move_type = MoveType(move_type_int)
+        else:
+            end_turn = True
+            position = Position("I5")
+            direction = Direction.NE
+            move_type = MoveType.WITHDRAWAL
+        result = FanoronaMove(position, direction, move_type, end_turn)
         return result
 
     @staticmethod
-    def str_to_move(action_string: str) -> Optional["FanoronaMove"]:
+    def from_str(action_string: str) -> Optional["FanoronaMove"]:
         """
         Return FanoronaMove object from string representation of move.
 
-        Move is represented by 'FFDCE', where
+        Move is represented by `FFDCE`, where
             FF - initial position of piece to be moved in human-readable coordinates e.g. A3, G4 (case-insensitive)
             D  - direction in which piece is moved
             C  - move type (paika (0), approach (1) or withdrawal (2))
             E  - end turn (yes (1) or no (0))
-        """
-        import re
 
-        action_pattern = re.compile(
-            r"(?P<from>[a-iA-I][1-5])(?P<direction>[1-9])(?P<move_type>[0-2])(?P<end_turn>[01])"
-        )
-        match = action_pattern.match(action_string)
+        Args:
+            action_string (str): The string representation of the move.
+
+        Returns:
+            Optional["FanoronaMove"]: The FanoronaMove object created from the string representation.
+        """
+
+        match = ACTION_PATTERN.match(action_string)
         if not match:
             ret_val = None
         else:

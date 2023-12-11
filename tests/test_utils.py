@@ -1,6 +1,6 @@
-from fanorona_aec.env.utils import Position, Direction
-
 import pytest
+
+from fanorona_aec.env.utils import Direction, Position
 
 # fmt: off
 POS = (

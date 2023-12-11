@@ -2,9 +2,7 @@ import pettingzoo
 import pettingzoo.test
 import pytest
 
-from fanorona_aec import fanorona_v2
-from fanorona_aec.env.fanorona_move import FanoronaMove, MoveType
-from fanorona_aec.env.utils import Direction, Position
+from fanorona_aec import fanorona_v3
 
 TEST_STATES = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0",  # start state
@@ -16,7 +14,7 @@ TEST_STATES = [
 
 @pytest.fixture(scope="function")
 def env():
-    env = fanorona_v2.env()
+    env = fanorona_v3.env()
     env.reset()
     yield env
     env.close()

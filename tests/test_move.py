@@ -67,15 +67,15 @@ def test_to_action(test_input, expected):
         (5 * 9 * 8 * 3, END_TURN),
     ],
 )
-def test_action_to_move(test_input, expected):
+def test_from_action(test_input, expected):
     "Test that input integer is correctly returned as a FanoronaMove object"
-    assert FanoronaMove.action_to_move(test_input) == expected
+    assert FanoronaMove.from_action(test_input) == expected
 
 
 @pytest.mark.parametrize("test_input", range(5 * 9 * 8 * 3 + 1))
 def test_all_action_encodings(test_input):
     "Test that all actions decode and encode back to the same integer"
-    assert FanoronaMove.action_to_move(test_input).to_action() == test_input
+    assert FanoronaMove.from_action(test_input).to_action() == test_input
 
 
 @pytest.mark.parametrize(
@@ -90,6 +90,6 @@ def test_all_action_encodings(test_input):
         ("I5921", END_TURN),
     ],
 )
-def test_str_to_move(test_input, expected):
+def test_from_str(test_input, expected):
     "Test that input string generates the correct move object"
-    assert FanoronaMove.str_to_move(test_input) == expected
+    assert FanoronaMove.from_str(test_input) == expected

@@ -79,22 +79,16 @@ def test_push(test_state_list):
     the game
     """
     for state in test_state_list:
-        while not state.is_game_over():
+        while not state.done:
             action = np.random.default_rng(seed=0).choice(state.legal_moves)
-            move = FanoronaMove.action_to_move(action)
+            move = FanoronaMove.from_action(action)
             state.push(move)
 
 
-def test_is_game_over(test_state_list, expected_list=[False, False, True, True, True]):
-    "Test that is_game_over method is correctly identifying end of game states."
+def test_done(test_state_list, expected_list=[False, False, True, True, True]):
+    "Test that done property is correctly identifying end of game states."
     for test_state, expected in zip(test_state_list, expected_list):
-        assert test_state.is_game_over() == expected
-
-
-@pytest.mark.skip(reason="Not implemented")
-def test_get_result():
-    "Test that the correct result is returned for done games"
-    pass
+        assert test_state.done == expected
 
 
 def test_reset(test_state_list, start_state):

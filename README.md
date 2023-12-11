@@ -1,6 +1,6 @@
 # Fanorona AEC Environment
 
-[![PyPI v2.0.1](https://img.shields.io/pypi/v/fanorona-aec)](https://pypi.org/project/fanorona-aec/2.0.0/)
+[![PyPI v3.0.0](https://img.shields.io/pypi/v/fanorona-aec)](https://pypi.org/project/fanorona-aec/3.0.0/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -46,7 +46,7 @@ In a Python shell, run the following:
 
 ```python
 import fanorona_aec
-env = fanorona_v2.env()
+env = fanorona_v3.env()
 ```
 
 See [`demo.py`](./demo.py) for a script that implements a simple random policy to interact with the environment.

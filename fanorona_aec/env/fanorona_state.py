@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple, TypeAlias
 
 import numpy as np
 
-from .fanorona_move import END_TURN, FanoronaMove, MoveType
+from .fanorona_move import END_TURN, ActionType, FanoronaMove, MoveType
 from .utils import BOARD_COLS, BOARD_ROWS, MOVE_LIMIT, Direction, Piece, Position
 
 AgentId: TypeAlias = str
@@ -10,19 +10,40 @@ AgentId: TypeAlias = str
 
 class FanoronaState:
     def __init__(self) -> None:
-        self.board: Optional[np.ndarray] = None
+        """
+        Initializes the Fanorona state.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+
+        self.board: np.ndarray | None = None
         self.turn_to_play: Piece = Piece.EMPTY
-        self.last_capture: Optional[
-            Tuple[Position, Direction]
-            # TODO: remove requirement to index using 0 and 1 (NamedTuple?)
-        ] = None
-        self.visited: Optional[np.ndarray] = None
+        # TODO: remove requirement to index using 0 and 1 (NamedTuple?)
+        self.last_capture: Tuple[Position, Direction] | None = None
+        self.visited: np.ndarray | None = None
         self.half_moves: int = 0
 
     def __repr__(self) -> str:
+        """
+        Returns a string representation of the FanoronaState object.
+
+        Returns:
+            str: A string representation of the FanoronaState object.
+        """
         return f"<FanoronaState: {str(self)}>"
 
     def __str__(self) -> str:
+        """
+        Returns a string representation of the Fanorona game state in a FEN-like
+        notation
+
+        Returns:
+            str: A string representation of the Fanorona game state.
+        """
         board_string = ""
         count = 0
         if self.board is None:
@@ -78,8 +99,24 @@ class FanoronaState:
         return str(self) == str(other)
 
     def to_svg(self, svg_w: int = 1000, svg_h: int = 600) -> str:
-        # TODO: adjust output svg size dynamically
-        # TODO: represent other aspects of state on the output svg (turn to play, last capture, visited etc.)
+        """
+        Converts the current state of the Fanorona game board to an SVG format.
+
+        Args:
+            svg_w (int): The width of the SVG output (default is 1000).
+            svg_h (int): The height of the SVG output (default is 600).
+
+        Returns:
+            str: The SVG representation of the game board.
+
+        Raises:
+            Exception: If the board or visited state is None.
+
+        TODO:
+            - Adjust output SVG size dynamically.
+            - Represent other aspects of state on the output SVG (turn to play, last capture, visited, etc.).
+        """
+
         def convert(coord: Tuple[int, int]) -> Tuple[int, int]:
             row, col = coord
             return 100 + col * 100, 100 + (4 - row) * 100
@@ -196,13 +233,18 @@ class FanoronaState:
         else:  # end turn/paika move
             end_turn()
 
-    def is_game_over(self) -> bool:
+    @property
+    def done(self) -> bool:
         """
         Check whether the game is over (i.e. the current state is a terminal state).
 
         The game is over when -
         a) One side has no pieces left to move (loss for the side which has no pieces to move)
         b) The number of half-moves exceeds the limit (draw)
+
+        Returns:
+            A tuple containing a boolean value indicating whether the game is over,
+            and the piece that has won the game or an empty piece if the game is not over yet.
         """
         if self.half_moves >= MOVE_LIMIT:
             return True
@@ -211,30 +253,29 @@ class FanoronaState:
             other_piece_exists = self.piece_exists(self.turn_to_play.other())
             # Conjecture: cannot have a situation in Fanorona where a piece exists but there are no
             # valid moves
-            if own_piece_exists and other_piece_exists:
-                return False
+            return not (own_piece_exists and other_piece_exists)
+
+    @property
+    def winner(self) -> Piece | None:
+        if self.done:
+            if self.half_moves >= MOVE_LIMIT:
+                return None  # draw by half-move rule
             else:
-                return True
-
-    def get_result(self) -> int:
-        """Return result of the current game state. Returns 1 for white win, -1 for black win, and 0
-        for draw. Assumes game is done.
-
-        The game is done when -
-        a) One side has no pieces left to move (loss for the side which has no pieces to move)
-        b) The number of half-moves exceeds the limit (draw)
-        """
-        assert self.is_game_over()  # TODO: make done a state property instead?
-
-        if self.half_moves >= MOVE_LIMIT:
-            return 0
-        elif self.piece_exists(Piece.WHITE):
-            return 1
+                own_piece_exists = self.piece_exists(self.turn_to_play)
+                other_piece_exists = self.piece_exists(self.turn_to_play.other())
+                if own_piece_exists and other_piece_exists:
+                    return None  # game not over
+                else:
+                    return self.turn_to_play
         else:
-            return -1
+            return None  # game not over
 
     def reset(self) -> None:
-        "Reset to the start state"
+        """
+        Reset the state of the Fanorona game to the start state.
+
+        This method sets the state of the game board to the initial configuration.
+        """
         START_STATE_STR = "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0"
         self.set_from_board_str(START_STATE_STR)
 
@@ -448,10 +489,8 @@ class FanoronaState:
         return valid
 
     @property
-    def legal_moves(self) -> List[int]:
-        """Return a list of legal actions allowed from the current state. Actions are in their
-        integer encoding
-        """
+    def legal_moves(self) -> List[ActionType]:
+        """Return a list of legal actions allowed from the current state."""
         legal_captures: List[FanoronaMove] = []
         legal_paikas: List[FanoronaMove] = []
 

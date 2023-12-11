@@ -7,11 +7,11 @@ from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 
-from .fanorona_move import FanoronaMove
+from .fanorona_move import END_TURN_ACTION, ActionType, FanoronaMove
 from .fanorona_state import AgentId, FanoronaState
+from .utils import Piece
 
 RenderMode: TypeAlias = str
-ActionType: TypeAlias = int
 
 
 class Metadata(TypedDict):
@@ -62,7 +62,7 @@ class raw_env(AECEnv):
 
     metadata: Metadata = {
         "render_modes": ["human", "svg"],
-        "name": "fanorona_v2",
+        "name": "fanorona_v3",
         "is_parallelizable": False,
         "render_fps": 2,
     }
@@ -83,7 +83,7 @@ class raw_env(AECEnv):
         # capture type of the move (paika, approach, withdrawal). The last action denotes a manual
         # end turn.
         self.action_spaces = {
-            agent: spaces.Discrete(45 * 8 * 3 + 1) for agent in self.possible_agents
+            agent: spaces.Discrete(END_TURN_ACTION) for agent in self.possible_agents
         }
 
         # The main observation space is a 5x9 space representing the board. It has 7 channels
@@ -111,7 +111,7 @@ class raw_env(AECEnv):
                         dtype=np.int32,
                     ),
                     "action_mask": spaces.Box(
-                        low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int8
+                        low=0, high=1, shape=(END_TURN_ACTION,), dtype=np.int8
                     ),
                 }
             )
@@ -150,7 +150,7 @@ class raw_env(AECEnv):
             self.board_state.legal_moves if agent == self.agent_selection else []
         )
 
-        action_mask = np.zeros(45 * 8 * 3 + 1, np.int8)
+        action_mask = np.zeros(END_TURN_ACTION, np.int8)
         for i in legal_moves:
             action_mask[i] = 1
 
@@ -159,16 +159,20 @@ class raw_env(AECEnv):
     def close(self) -> None:
         pass
 
+    def state(self) -> FanoronaState:
+        return self.board_state
+
     def reset(self, seed: int | None = None, options: dict | None = None) -> None:
         self.agents = self.possible_agents[:]
 
         self.board_state = FanoronaState()
+        self.board_state.reset()
 
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.terminations = {agent: False for agent in self.agents}
         self.truncations = {agent: False for agent in self.agents}
-        self.infos = {agent: None for agent in self.agents}
+        self.infos = {agent: {} for agent in self.agents}
         self._state: Dict[AgentId, ActionType | None] = {
             agent: None for agent in self.agents
         }
@@ -199,13 +203,13 @@ class raw_env(AECEnv):
 
         self._state[self.agent_selection] = action
 
-        chosen_move = FanoronaMove.action_to_move(action)
+        chosen_move = FanoronaMove.from_action(action)
         legal_moves = list(self.board_state.legal_moves)
         assert chosen_move in legal_moves
-        self.board_state.push(chosen_move)
+        game_over = self.board_state.done
 
-        if game_over := self.board_state.is_game_over():
-            result = self.board_state.get_result()
+        if game_over:
+            result = 1 if self.board_state.winner == Piece.WHITE else -1
             (
                 self.rewards[self.agents[0]],
                 self.rewards[self.agents[1]],
