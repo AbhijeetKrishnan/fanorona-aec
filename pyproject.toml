@@ -33,6 +33,15 @@ dev = [
     "mypy"
 ]
 
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests"
+]
+console_output_style = "progress"
+
+
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true
@@ -45,3 +54,11 @@ files = [
     "tests/*.py"
 ]
 ignore_missing_imports = true
+
+[tool.black]
+line-length = 79
+target-version = ["py312"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"

@@ -1,5 +1,6 @@
 -r requirements.txt
+pre-commit
 pytest
 mypy
-pre-commit
 black
+isort

@@ -1,9 +1,16 @@
-from typing import List, Optional, Tuple, TypeAlias
+from typing import List, Tuple, TypeAlias
 
 import numpy as np
 
 from .fanorona_move import END_TURN, ActionType, FanoronaMove, MoveType
-from .utils import BOARD_COLS, BOARD_ROWS, MOVE_LIMIT, Direction, Piece, Position
+from .utils import (
+    BOARD_COLS,
+    BOARD_ROWS,
+    MOVE_LIMIT,
+    Direction,
+    Piece,
+    Position,
+)
 
 AgentId: TypeAlias = str
 
@@ -78,7 +85,9 @@ class FanoronaState:
         for row_idx, row in enumerate(self.visited):
             for col_idx, col in enumerate(row):
                 if col:
-                    visited_pos_list.append(Position((row_idx, col_idx)).to_human())
+                    visited_pos_list.append(
+                        Position((row_idx, col_idx)).to_human()
+                    )
         visited_pos_str = ",".join(visited_pos_list)
         if not visited_pos_list:
             visited_pos_str = "-"
@@ -122,7 +131,9 @@ class FanoronaState:
             return 100 + col * 100, 100 + (4 - row) * 100
 
         if self.board is None or self.visited is None:
-            raise Exception('render(mode="svg") called without calling reset()')
+            raise Exception(
+                'render(mode="svg") called without calling reset()'
+            )
 
         black_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="black" />'
         white_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="white" />'
@@ -140,13 +151,19 @@ class FanoronaState:
             _from_df = [(2, 0), (0, 0), (0, 2), (0, 4), (0, 6)]
             _to_df = [(4, 2), (4, 4), (4, 6), (4, 8), (2, 8)]
             board_lines.extend(
-                [line.format(convert(f), convert(t)) for f, t in zip(_from_df, _to_df)]
+                [
+                    line.format(convert(f), convert(t))
+                    for f, t in zip(_from_df, _to_df)
+                ]
             )
         for _ in range(0, BOARD_COLS, 2):  # diagonal backward lines
             _from_db = [(2, 0), (4, 0), (4, 2), (4, 4), (4, 6)]
             _to_db = [(0, 2), (0, 4), (0, 6), (0, 8), (2, 8)]
             board_lines.extend(
-                [line.format(convert(f), convert(t)) for f, t in zip(_from_db, _to_db)]
+                [
+                    line.format(convert(f), convert(t))
+                    for f, t in zip(_from_db, _to_db)
+                ]
             )
         board_pieces = []
         for pos in Position.pos_range():
@@ -215,7 +232,8 @@ class FanoronaState:
             capture_row, capture_col = capture_pos.to_coords()
             while (
                 capture_pos.is_valid()
-                and self.board[capture_row][capture_col] == self.turn_to_play.other()
+                and self.board[capture_row][capture_col]
+                == self.turn_to_play.other()
             ):
                 self.board[capture_row][capture_col] = Piece.EMPTY
                 capture_pos = capture_pos.displace(capture_dir)
@@ -262,7 +280,9 @@ class FanoronaState:
                 return None  # draw by half-move rule
             else:
                 own_piece_exists = self.piece_exists(self.turn_to_play)
-                other_piece_exists = self.piece_exists(self.turn_to_play.other())
+                other_piece_exists = self.piece_exists(
+                    self.turn_to_play.other()
+                )
                 if own_piece_exists and other_piece_exists:
                     return None  # game not over
                 else:
@@ -276,7 +296,9 @@ class FanoronaState:
 
         This method sets the state of the game board to the initial configuration.
         """
-        START_STATE_STR = "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0"
+        START_STATE_STR = (
+            "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0"
+        )
         self.set_from_board_str(START_STATE_STR)
 
     def set_from_board_str(self, board_string: str) -> "FanoronaState":
@@ -288,7 +310,9 @@ class FanoronaState:
             if self.board is not None:
                 self.board.fill(0)
             else:
-                self.board = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32)
+                self.board = np.zeros(
+                    shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32
+                )
             for row, row_content in enumerate(board_state_chars):
                 col_board = 0
                 for cell in row_content:  # TODO: any way to speed this up?
@@ -297,7 +321,9 @@ class FanoronaState:
                     elif cell == "B":
                         self.board[row][col_board] = Piece.BLACK
                     else:
-                        for col_board in range(col_board, col_board + int(cell)):
+                        for col_board in range(
+                            col_board, col_board + int(cell)
+                        ):
                             self.board[row][col_board] = Piece.EMPTY
                     col_board += 1
 
@@ -305,10 +331,14 @@ class FanoronaState:
             if self.visited is not None:
                 self.visited.fill(0)
             else:
-                self.visited = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32)
+                self.visited = np.zeros(
+                    shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32
+                )
             if visited_pos_str != "-":
                 visited_pos_list = visited_pos_str.split(",")
-                for human_pos in visited_pos_list:  # TODO: any way to speed this up?
+                for (
+                    human_pos
+                ) in visited_pos_list:  # TODO: any way to speed this up?
                     row, col = Position(human_pos).to_coords()
                     self.visited[row][col] = True
 
@@ -322,7 +352,9 @@ class FanoronaState:
         ) = board_string.split()
 
         process_board_state_str(self, board_state_str)
-        self.turn_to_play = Piece.WHITE if turn_to_play_str == "W" else Piece.BLACK
+        self.turn_to_play = (
+            Piece.WHITE if turn_to_play_str == "W" else Piece.BLACK
+        )
         if last_capture_pos != "-" and last_capture_dir != "-":
             self.last_capture = (
                 Position(last_capture_pos),
@@ -395,7 +427,9 @@ class FanoronaState:
         3. the move is not an end turn
         """
         if self.board is None or self.visited is None:
-            raise Exception(f"Called is_valid({str(move)}) without calling reset()")
+            raise Exception(
+                f"Called is_valid({str(move)}) without calling reset()"
+            )
 
         to = move.position.displace(move.direction)
         if move.move_type == MoveType.APPROACH:
@@ -409,7 +443,9 @@ class FanoronaState:
 
         def check_bounds() -> bool:
             """Bounds checking on positions"""
-            return all(map(lambda pos: pos.is_valid(), (move.position, to, capture)))
+            return all(
+                map(lambda pos: pos.is_valid(), (move.position, to, capture))
+            )
 
         def check_valid_dir() -> bool:
             """Checking that move direction is permitted from given board position"""
@@ -510,8 +546,13 @@ class FanoronaState:
         for pos in Position.pos_range():
             if self.get_piece(pos) == self.turn_to_play:
                 for direction in Direction:
-                    for capture_type in [MoveType.APPROACH, MoveType.WITHDRAWAL]:
-                        capture = FanoronaMove(pos, direction, capture_type, False)
+                    for capture_type in [
+                        MoveType.APPROACH,
+                        MoveType.WITHDRAWAL,
+                    ]:
+                        capture = FanoronaMove(
+                            pos, direction, capture_type, False
+                        )
                         if self.is_valid(capture):
                             legal_captures.append(capture)
 
@@ -520,7 +561,9 @@ class FanoronaState:
             for pos in Position.pos_range():
                 if self.get_piece(pos) == self.turn_to_play:
                     for direction in Direction:
-                        paika = FanoronaMove(pos, direction, MoveType.PAIKA, False)
+                        paika = FanoronaMove(
+                            pos, direction, MoveType.PAIKA, False
+                        )
                         if self.is_valid(paika):
                             legal_paikas.append(paika)
 

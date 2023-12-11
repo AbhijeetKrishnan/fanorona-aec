@@ -38,10 +38,11 @@ def test_reset_starting(env):
     )  # starting position
 
 
-@pytest.mark.skip(reason="render_test does not support render.mode='svg'")
-def test_render(env):
+# @pytest.mark.skip(reason="render_test does not support render.mode='svg'")
+def test_render():
     "Verify that render() executes without error for human-readable output"
-    pettingzoo.test.render_test(env)
+    env_fn = fanorona_v3.env
+    pettingzoo.test.render_test(env_fn, {"svg": lambda res: True})
 
 
 def test_render_human(env):
