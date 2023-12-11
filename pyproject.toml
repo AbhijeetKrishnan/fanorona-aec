@@ -27,10 +27,8 @@ Repository = "https://github.com/AbhijeetKrishnan/fanorona-aec"
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "black",
     "pre-commit",
-    "mypy"
+    "pytest",
 ]
 
 [tool.pytest.ini_options]
