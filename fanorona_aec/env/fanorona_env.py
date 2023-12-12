@@ -7,7 +7,7 @@ from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 
-from .fanorona_move import END_TURN_ACTION, ActionType
+from .fanorona_move import END_TURN_ACTION, ActionType, FanoronaMove
 from .fanorona_state import AgentId, FanoronaState
 from .utils import Piece
 
@@ -25,7 +25,9 @@ class Observation(TypedDict):
     observation: np.ndarray[
         Tuple[Literal[5], Literal[9], Literal[8]], np.dtype[np.int8]
     ]
-    action_mask: np.ndarray[Literal[1080], np.dtype[np.int8]]  # 5 * 9 * 8 * 3
+    action_mask: np.ndarray[
+        Literal[1081], np.dtype[np.int8]
+    ]  # 5 * 9 * 8 * 3 + 1
 
 
 def env(render_mode: RenderMode | None = None) -> AECEnv:
@@ -63,7 +65,7 @@ class raw_env(AECEnv):
     """
 
     metadata: Metadata = {
-        "render_modes": ["human", "svg"],
+        "render_modes": ["human", "fen", "svg"],
         "name": "fanorona_v3",
         "is_parallelizable": False,
         "render_fps": 2,
@@ -85,7 +87,7 @@ class raw_env(AECEnv):
         # capture type of the move (paika, approach, withdrawal). The last action denotes a manual
         # end turn.
         self.action_spaces = {
-            agent: spaces.Discrete(END_TURN_ACTION)
+            agent: spaces.Discrete(END_TURN_ACTION + 1)
             for agent in self.possible_agents
         }
 
@@ -107,7 +109,7 @@ class raw_env(AECEnv):
             name: spaces.Dict(
                 {
                     "observation": spaces.MultiBinary((5, 9, 8)),
-                    "action_mask": spaces.MultiBinary(END_TURN_ACTION),
+                    "action_mask": spaces.MultiBinary(END_TURN_ACTION + 1),
                 }
             )
             for name in self.possible_agents
@@ -136,10 +138,13 @@ class raw_env(AECEnv):
         return self.action_spaces[agent]
 
     def render(self) -> None:
-        if self.render_mode == "human":
-            print(str(self.board_state))
-        elif self.render_mode == "svg":
-            print(self.board_state.to_svg())
+        match self.render_mode:
+            case "fen":
+                print(str(self.board_state))
+            case "svg":
+                print(self.board_state.to_svg())
+            case "human" | _:
+                print(self.board_state.as_rich_board())
 
     def observe(self, agent: AgentId) -> Observation:
         current_index = self.possible_agents.index(agent)
@@ -151,7 +156,7 @@ class raw_env(AECEnv):
             else []
         )
 
-        action_mask = np.zeros(END_TURN_ACTION, np.int8)
+        action_mask = np.zeros(END_TURN_ACTION + 1, np.int8)
         for i in legal_moves:
             action_mask[i] = 1
 
@@ -212,9 +217,10 @@ class raw_env(AECEnv):
 
         self._state[self.agent_selection] = action
 
-        # chosen_move = FanoronaMove.from_action(action)
+        chosen_move = FanoronaMove.from_action(action)
         legal_moves = list(self.board_state.legal_moves)
         # assert chosen_move in legal_moves
+        self.board_state.push(chosen_move)
         game_over = self.board_state.done
 
         if game_over:

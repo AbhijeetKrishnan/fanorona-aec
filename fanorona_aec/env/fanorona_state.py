@@ -19,6 +19,12 @@ class LastCapture(NamedTuple):
     position: Position
     direction: Direction
 
+    def __repr__(self) -> str:
+        return f"<LastCapture: {str(self)}>"
+
+    def __str__(self) -> str:
+        return f"{self.position.to_human()} {str(self.direction)}"
+
 
 class FanoronaState:
     def __init__(self) -> None:
@@ -41,6 +47,17 @@ class FanoronaState:
             Tuple[Literal[5], Literal[9]], np.dtype[np.bool_]
         ] | None = None
         self.half_moves: int = 0
+
+    @property
+    def visited_pos(self) -> List[Position]:
+        if self.visited is not None:
+            visited_pos_list = [
+                Position(int(visited_pos))
+                for visited_pos in np.flatnonzero(self.visited)
+            ]
+        else:
+            visited_pos_list = []
+        return visited_pos_list
 
     def __repr__(self) -> str:
         """
@@ -84,16 +101,13 @@ class FanoronaState:
 
         turn_to_play_str = str(Piece(self.turn_to_play))
 
-        if self.last_capture is not None:
-            last_capture_str = f"{self.last_capture.position.to_human()} \
-                    {str(self.last_capture.direction)}"
-        else:
-            last_capture_str = f"- -"
+        last_capture_str = (
+            str(self.last_capture) if self.last_capture else "- -"
+        )
 
         assert self.visited is not None
         visited_pos_list = [
-            Position(visited_pos).to_human()
-            for visited_pos in np.flatnonzero(self.visited)
+            visited_pos.to_human() for visited_pos in self.visited_pos
         ]
         if len(visited_pos_list) == 0:
             visited_pos_str = "-"
@@ -101,6 +115,41 @@ class FanoronaState:
             visited_pos_str = ",".join(visited_pos_list)
 
         return f"{board_pieces_str} {turn_to_play_str} {last_capture_str} {visited_pos_str} {str(self.half_moves)}"
+
+    def as_rich_board(self) -> str:
+        """
+        Returns the current state of the Fanorona game board as a rich board.
+
+        Returns:
+            str: The rich board representation of the game board.
+
+        Raises:
+            Exception: If the board is None.
+        """
+        ELE_MAP = {Piece.WHITE: "○", Piece.BLACK: "●", Piece.EMPTY: "."}
+        if self.board is None:
+            raise Exception(
+                'render(mode="human") called without calling reset()'
+            )
+        rich_board = np.vectorize(ELE_MAP.get)(self.board)
+        template = f"""  A B C D E F G H I
+{5} {'─'.join(rich_board[4])}
+  │╲│╱│╲│╱│╲│╱│╲│╱│
+{4} {'─'.join(rich_board[3])}
+  │╱│╲│╱│╲│╱│╲│╱│╲│
+{3} {'─'.join(rich_board[2])}
+  │╲│╱│╲│╱│╲│╱│╲│╱│
+{2} {'─'.join(rich_board[1])}
+  │╱│╲│╱│╲│╱│╲│╱│╲│
+{1} {'─'.join(rich_board[0])}
+
+{self.turn_to_play} to play
+Last capture: {str(self.last_capture) if self.last_capture else "- -"}
+Visited: {', '.join([pos.to_human()
+                     for pos in self.visited_pos])}
+Half-moves: {self.half_moves}
+"""
+        return template
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, FanoronaState):
