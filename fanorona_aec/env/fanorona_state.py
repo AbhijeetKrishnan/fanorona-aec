@@ -1,4 +1,4 @@
-from typing import List, Tuple, TypeAlias
+from typing import List, NamedTuple, Tuple, TypeAlias, Union
 
 import numpy as np
 
@@ -15,6 +15,11 @@ from .utils import (
 AgentId: TypeAlias = str
 
 
+class LastCapture(NamedTuple):
+    position: Position
+    direction: Direction
+
+
 class FanoronaState:
     def __init__(self) -> None:
         """
@@ -29,8 +34,7 @@ class FanoronaState:
 
         self.board: np.ndarray | None = None
         self.turn_to_play: Piece = Piece.EMPTY
-        # TODO: remove requirement to index using 0 and 1 (NamedTuple?)
-        self.last_capture: Tuple[Position, Direction] | None = None
+        self.last_capture: LastCapture | None = None
         self.visited: np.ndarray | None = None
         self.half_moves: int = 0
 
@@ -51,56 +55,48 @@ class FanoronaState:
         Returns:
             str: A string representation of the Fanorona game state.
         """
-        board_string = ""
-        count = 0
         if self.board is None:
-            return board_string
-        for row in self.board:
+            return ""
+
+        def row_str(row: np.ndarray) -> str:
+            "String for each row"
+            row_ele: List[Union[int, Piece]] = []
             for col in row:
-                col_str = str(Piece(col))
-                if col == Piece.EMPTY:
-                    count += 1
+                if (
+                    len(row_ele) > 0
+                    and not isinstance(row_ele[-1], Piece)
+                    and col == Piece.EMPTY
+                ):
+                    row_ele[-1] += 1
                 else:
-                    if count > 0:
-                        board_string += str(count)
-                        count = 0
-                    board_string += col_str
-            if count > 0:
-                board_string += str(count)
-                count = 0
-            board_string += "/"
-        board_string = board_string.rstrip("/")
-        if count > 0:
-            board_string += str(count)
+                    if col == Piece.EMPTY:
+                        row_ele.append(1)
+                    else:
+                        row_ele.append(Piece(col))
+            row_str = "".join([str(ele) for ele in row_ele])
+            return row_str
+
+        board_pieces_str = "/".join([row_str(row) for row in self.board])
 
         turn_to_play_str = str(Piece(self.turn_to_play))
-        if self.last_capture:
-            last_capture_str = f"{self.last_capture[0].to_human()} \
-                    {str(self.last_capture[1])}"
+
+        if self.last_capture is not None:
+            last_capture_str = f"{self.last_capture.position.to_human()} \
+                    {str(self.last_capture.direction)}"
         else:
             last_capture_str = f"- -"
 
-        visited_pos_list = []
         assert self.visited is not None
-        for row_idx, row in enumerate(self.visited):
-            for col_idx, col in enumerate(row):
-                if col:
-                    visited_pos_list.append(
-                        Position((row_idx, col_idx)).to_human()
-                    )
-        visited_pos_str = ",".join(visited_pos_list)
-        if not visited_pos_list:
+        visited_pos_list = [
+            Position(visited_pos).to_human()
+            for visited_pos in np.flatnonzero(self.visited)
+        ]
+        if len(visited_pos_list) == 0:
             visited_pos_str = "-"
+        else:
+            visited_pos_str = ",".join(visited_pos_list)
 
-        return " ".join(
-            [
-                board_string,
-                turn_to_play_str,
-                last_capture_str,
-                visited_pos_str,
-                str(self.half_moves),
-            ]
-        )
+        return f"{board_pieces_str} {turn_to_play_str} {last_capture_str} {visited_pos_str} {str(self.half_moves)}"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, FanoronaState):
@@ -239,7 +235,9 @@ class FanoronaState:
                 capture_pos = capture_pos.displace(capture_dir)
                 capture_row, capture_col = capture_pos.to_coords()
 
-            self.last_capture = (to, move.direction)
+            self.last_capture = LastCapture(
+                position=to, direction=move.direction
+            )
             self.visited[from_row][from_col] = 1
             self.visited[to_row][to_col] = 1
 
@@ -356,9 +354,9 @@ class FanoronaState:
             Piece.WHITE if turn_to_play_str == "W" else Piece.BLACK
         )
         if last_capture_pos != "-" and last_capture_dir != "-":
-            self.last_capture = (
-                Position(last_capture_pos),
-                Direction(Direction.from_str(last_capture_dir)),
+            self.last_capture = LastCapture(
+                position=Position(last_capture_pos),
+                direction=Direction.from_str(last_capture_dir),
             )
         else:
             self.last_capture = None

@@ -39,7 +39,6 @@ testpaths = [
 ]
 console_output_style = "progress"
 
-
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true
@@ -59,4 +58,6 @@ target-version = ["py312"]
 include = '\.pyi?$'
 
 [tool.isort]
+py_version = 312
 profile = "black"
+line_length = 79

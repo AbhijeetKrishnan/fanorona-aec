@@ -83,7 +83,8 @@ class raw_env(AECEnv):
         # capture type of the move (paika, approach, withdrawal). The last action denotes a manual
         # end turn.
         self.action_spaces = {
-            agent: spaces.Discrete(END_TURN_ACTION) for agent in self.possible_agents
+            agent: spaces.Discrete(END_TURN_ACTION)
+            for agent in self.possible_agents
         }
 
         # The main observation space is a 5x9 space representing the board. It has 7 channels
@@ -119,13 +120,17 @@ class raw_env(AECEnv):
         }
 
         self.rewards: Dict[AgentId, int] = {agent: 0 for agent in self.agents}
-        self.infos: Dict[AgentId, dict | None] = {agent: None for agent in self.agents}
+        self.infos: Dict[AgentId, dict | None] = {
+            agent: None for agent in self.agents
+        }
         self.terminations = {agent: False for agent in self.agents}
         self.truncations = {agent: False for agent in self.agents}
 
         self.agent_selection: AgentId | None = None
 
-        assert render_mode is None or render_mode in self.metadata["render_modes"]
+        assert (
+            render_mode is None or render_mode in self.metadata["render_modes"]
+        )
         self.render_mode = render_mode
 
     @functools.lru_cache(maxsize=None)
@@ -147,7 +152,9 @@ class raw_env(AECEnv):
 
         observation = self.board_state.get_observation(agent)
         legal_moves = (
-            self.board_state.legal_moves if agent == self.agent_selection else []
+            self.board_state.legal_moves
+            if agent == self.agent_selection
+            else []
         )
 
         action_mask = np.zeros(END_TURN_ACTION, np.int8)
@@ -162,7 +169,9 @@ class raw_env(AECEnv):
     def state(self) -> FanoronaState:
         return self.board_state
 
-    def reset(self, seed: int | None = None, options: dict | None = None) -> None:
+    def reset(
+        self, seed: int | None = None, options: dict | None = None
+    ) -> None:
         self.agents = self.possible_agents[:]
 
         self.board_state = FanoronaState()

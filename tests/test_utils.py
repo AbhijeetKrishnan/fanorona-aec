@@ -91,7 +91,9 @@ def test_convert_pos_to_coords(test_input, expected):
             ],
         ),
         pytest.param(
-            (4, 1), [Direction.W, Direction.N, Direction.E], marks=pytest.mark.xfail
+            (4, 1),
+            [Direction.W, Direction.N, Direction.E],
+            marks=pytest.mark.xfail,
         ),
         (
             (4, 2),
@@ -142,4 +144,6 @@ def test_get_valid_dirs(test_input, expected):
 )
 def test_displace(test_input, expected):
     "Test that displace() returns the right result for all possible directions from a position"
-    assert Position((0, 0)).displace(Direction(test_input)) == Position(expected)
+    assert Position((0, 0)).displace(Direction(test_input)) == Position(
+        expected
+    )

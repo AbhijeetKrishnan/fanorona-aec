@@ -18,7 +18,8 @@ TEST_STATE_STRS = [
 @pytest.fixture(scope="function")
 def test_state_list():
     yield map(
-        lambda board_str: FanoronaState().set_from_board_str(board_str), TEST_STATE_STRS
+        lambda board_str: FanoronaState().set_from_board_str(board_str),
+        TEST_STATE_STRS,
     )
 
 
@@ -57,9 +58,18 @@ def test_get_piece(start_state, test_input, expected):
 @pytest.mark.parametrize(
     "state_str,piece",
     [
-        ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.WHITE),
-        ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.BLACK),
-        ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.EMPTY),
+        (
+            "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",
+            Piece.WHITE,
+        ),
+        (
+            "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",
+            Piece.BLACK,
+        ),
+        (
+            "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",
+            Piece.EMPTY,
+        ),
         ("9/4W4/9/9/9 W - - - 30", Piece.WHITE),
         pytest.param(
             "9/4W4/9/9/9 W - - - 30",
@@ -98,7 +108,9 @@ def test_reset(test_state_list, start_state):
         assert test_state == start_state
 
 
-def test_set_from_board_str(test_state_list, test_board_str_list=TEST_STATE_STRS):
+def test_set_from_board_str(
+    test_state_list, test_board_str_list=TEST_STATE_STRS
+):
     "Verify that set_from_board_str() sets the state correctly"
     for test_str, expected in zip(test_board_str_list, test_state_list):
         assert FanoronaState().set_from_board_str(test_str) == expected

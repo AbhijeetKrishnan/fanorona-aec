@@ -12,14 +12,21 @@ from fanorona_aec.env.utils import Direction, Position
             "<FanoronaMove: pos=A1, dir=SE, type=PAIKA, end?=False>",
         ),
         (
-            FanoronaMove(Position("C3"), Direction.W, MoveType.APPROACH, False),
+            FanoronaMove(
+                Position("C3"), Direction.W, MoveType.APPROACH, False
+            ),
             "<FanoronaMove: pos=C3, dir=W, type=APPROACH, end?=False>",
         ),
         (
-            FanoronaMove(Position("G5"), Direction.N, MoveType.WITHDRAWAL, False),
+            FanoronaMove(
+                Position("G5"), Direction.N, MoveType.WITHDRAWAL, False
+            ),
             "<FanoronaMove: pos=G5, dir=N, type=WITHDRAWAL, end?=False>",
         ),
-        (END_TURN, "<FanoronaMove: pos=I5, dir=NE, type=WITHDRAWAL, end?=True>"),
+        (
+            END_TURN,
+            "<FanoronaMove: pos=I5, dir=NE, type=WITHDRAWAL, end?=True>",
+        ),
     ],
 )
 def test_repr(test_input, expected):
@@ -30,10 +37,20 @@ def test_repr(test_input, expected):
 @pytest.mark.parametrize(
     "test_input,expected",
     [
-        (FanoronaMove(Position("A1"), Direction.SE, MoveType.PAIKA, False), "A1300"),
-        (FanoronaMove(Position("C3"), Direction.W, MoveType.APPROACH, False), "C3410"),
         (
-            FanoronaMove(Position("G5"), Direction.N, MoveType.WITHDRAWAL, False),
+            FanoronaMove(Position("A1"), Direction.SE, MoveType.PAIKA, False),
+            "A1300",
+        ),
+        (
+            FanoronaMove(
+                Position("C3"), Direction.W, MoveType.APPROACH, False
+            ),
+            "C3410",
+        ),
+        (
+            FanoronaMove(
+                Position("G5"), Direction.N, MoveType.WITHDRAWAL, False
+            ),
             "G5820",
         ),
         (END_TURN, "I5921"),
@@ -48,8 +65,18 @@ def test_str(test_input, expected):
     "test_input,expected",
     [
         (FanoronaMove(Position("A1"), Direction.SW, MoveType.PAIKA, False), 0),
-        (FanoronaMove(Position("C3"), Direction.W, MoveType.APPROACH, False), 490),
-        (FanoronaMove(Position("G5"), Direction.N, MoveType.WITHDRAWAL, False), 1028),
+        (
+            FanoronaMove(
+                Position("C3"), Direction.W, MoveType.APPROACH, False
+            ),
+            490,
+        ),
+        (
+            FanoronaMove(
+                Position("G5"), Direction.N, MoveType.WITHDRAWAL, False
+            ),
+            1028,
+        ),
         (END_TURN, 5 * 9 * 8 * 3),
     ],
 )
@@ -62,8 +89,18 @@ def test_to_action(test_input, expected):
     "test_input,expected",
     [
         (0, FanoronaMove(Position("A1"), Direction.SW, MoveType.PAIKA, False)),
-        (490, FanoronaMove(Position("C3"), Direction.W, MoveType.APPROACH, False)),
-        (1028, FanoronaMove(Position("G5"), Direction.N, MoveType.WITHDRAWAL, False)),
+        (
+            490,
+            FanoronaMove(
+                Position("C3"), Direction.W, MoveType.APPROACH, False
+            ),
+        ),
+        (
+            1028,
+            FanoronaMove(
+                Position("G5"), Direction.N, MoveType.WITHDRAWAL, False
+            ),
+        ),
         (5 * 9 * 8 * 3, END_TURN),
     ],
 )
@@ -81,11 +118,21 @@ def test_all_action_encodings(test_input):
 @pytest.mark.parametrize(
     "test_input,expected",
     [
-        ("A1300", FanoronaMove(Position("A1"), Direction.SE, MoveType.PAIKA, False)),
-        ("C3410", FanoronaMove(Position("C3"), Direction.W, MoveType.APPROACH, False)),
+        (
+            "A1300",
+            FanoronaMove(Position("A1"), Direction.SE, MoveType.PAIKA, False),
+        ),
+        (
+            "C3410",
+            FanoronaMove(
+                Position("C3"), Direction.W, MoveType.APPROACH, False
+            ),
+        ),
         (
             "G5820",
-            FanoronaMove(Position("G5"), Direction.N, MoveType.WITHDRAWAL, False),
+            FanoronaMove(
+                Position("G5"), Direction.N, MoveType.WITHDRAWAL, False
+            ),
         ),
         ("I5921", END_TURN),
     ],

@@ -102,7 +102,9 @@ class FanoronaMove:
         else:
             pos_int = self.position.to_pos()
             dir_int = (
-                self.direction.value - 1 - (1 if self.direction.value >= 5 else 0)
+                self.direction.value
+                - 1
+                - (1 if self.direction.value >= 5 else 0)
             )  # to account for Direction.X
             move_type_int: int = self.move_type.value
             return pos_int * 8 * 3 + dir_int * 3 + move_type_int
@@ -172,4 +174,6 @@ class FanoronaMove:
 
 
 # End turn move needs to encode to a value of 5 * 9 * 8 * 3
-END_TURN = FanoronaMove(Position("I5"), Direction.NE, MoveType.WITHDRAWAL, True)
+END_TURN = FanoronaMove(
+    Position("I5"), Direction.NE, MoveType.WITHDRAWAL, True
+)
