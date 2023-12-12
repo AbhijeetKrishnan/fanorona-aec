@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 
 [project]
 name = "fanorona-aec"
-version = "3.0.1"
+version = "3.0.2"
 description = "A PettingZoo AECEnv implementation of the Fanorona board game."
 readme = "README.md"
 authors = [

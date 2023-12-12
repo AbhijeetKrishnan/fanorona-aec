@@ -1,6 +1,6 @@
 # Fanorona AEC Environment
 
-[![PyPI v3.0.1](https://img.shields.io/pypi/v/fanorona-aec)](https://pypi.org/project/fanorona-aec/3.0.1/)
+[![PyPI v3.0.2](https://img.shields.io/pypi/v/fanorona-aec)](https://pypi.org/project/fanorona-aec/3.0.2/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
@@ -12,11 +12,16 @@
   │╲│╱│╲│╱│╲│╱│╲│╱│
 4 ●─●─●─●─●─●─●─●─●
   │╱│╲│╱│╲│╱│╲│╱│╲│
-3 ●─○─●─○─·─●─○─●─○
+3 ●─○─●─.─○─.─○─●─○
   │╲│╱│╲│╱│╲│╱│╲│╱│
 2 ○─○─○─○─○─○─○─○─○
   │╱│╲│╱│╲│╱│╲│╱│╲│
 1 ○─○─○─○─○─○─○─○─○
+
+W to play
+Last capture: E3 E
+Visited: D3, E3
+Half-moves: 0
 ```
 
 This is an implementation of the Fanorona board game as a [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) [AEC](https://arxiv.org/abs/2009.13051) game.
@@ -47,7 +52,7 @@ python -m pip install .
 In a Python shell, run the following:
 
 ```python
-import fanorona_aec
+from fanorona_aec import fanorona_v3
 env = fanorona_v3.env()
 ```
 
