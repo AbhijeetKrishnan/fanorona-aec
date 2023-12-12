@@ -1,9 +1,9 @@
 from enum import IntEnum
 from typing import Iterator, List, Tuple, Union
 
-BOARD_ROWS = 5
-BOARD_COLS = 9
-MOVE_LIMIT = 44
+BOARD_ROWS: int = 5
+BOARD_COLS: int = 9
+MOVE_LIMIT: int = 44
 
 BOARD_SQUARES = BOARD_ROWS * BOARD_COLS
 

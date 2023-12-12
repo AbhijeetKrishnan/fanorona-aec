@@ -1,5 +1,5 @@
 import functools
-from typing import Dict, List, TypeAlias, TypedDict
+from typing import Dict, List, Literal, Tuple, TypeAlias, TypedDict
 
 import gymnasium.spaces
 import numpy as np
@@ -7,7 +7,7 @@ from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 
-from .fanorona_move import END_TURN_ACTION, ActionType, FanoronaMove
+from .fanorona_move import END_TURN_ACTION, ActionType
 from .fanorona_state import AgentId, FanoronaState
 from .utils import Piece
 
@@ -22,8 +22,10 @@ class Metadata(TypedDict):
 
 
 class Observation(TypedDict):
-    observation: np.ndarray
-    action_mask: np.ndarray
+    observation: np.ndarray[
+        Tuple[Literal[5], Literal[9], Literal[8]], np.dtype[np.int8]
+    ]
+    action_mask: np.ndarray[Literal[1080], np.dtype[np.int8]]  # 5 * 9 * 8 * 3
 
 
 def env(render_mode: RenderMode | None = None) -> AECEnv:
@@ -104,16 +106,8 @@ class raw_env(AECEnv):
         self.observation_spaces: Dict[AgentId, spaces.Dict] = {
             name: spaces.Dict(
                 {
-                    "observation": spaces.Box(
-                        # TODO: how to set dtype=bool?
-                        low=0,
-                        high=1,
-                        shape=(5, 9, 8),
-                        dtype=np.int32,
-                    ),
-                    "action_mask": spaces.Box(
-                        low=0, high=1, shape=(END_TURN_ACTION,), dtype=np.int8
-                    ),
+                    "observation": spaces.MultiBinary((5, 9, 8)),
+                    "action_mask": spaces.MultiBinary(END_TURN_ACTION),
                 }
             )
             for name in self.possible_agents
@@ -192,6 +186,12 @@ class raw_env(AECEnv):
 
         self._agent_selector = agent_selector(self.agents)
         self.agent_selection = self._agent_selector.reset()
+
+        for agent, obs_space in self.observation_spaces.items():
+            obs_space.seed(seed)
+
+        for agent, action_space in self.action_spaces.items():
+            action_space.seed(seed)
 
         if self.render_mode == "human":
             self.render()
