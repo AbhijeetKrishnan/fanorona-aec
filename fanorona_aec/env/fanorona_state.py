@@ -1,7 +1,6 @@
 from typing import List, Literal, NamedTuple, Tuple, TypeAlias, Union
 
 import numpy as np
-import numpy.typing as npt
 
 from .fanorona_move import END_TURN, ActionType, FanoronaMove, MoveType
 from .utils import (
@@ -619,6 +618,7 @@ class FanoronaState:
                             legal_paikas.append(paika)
 
         if legal_captures:  # capture has to be made if available
-            return list(map(lambda move: move.to_action(), legal_captures))
+            legal_moves = legal_captures
         else:
-            return list(map(lambda move: move.to_action(), legal_paikas))
+            legal_moves = legal_paikas
+        return list(map(lambda move: move.to_action(), legal_moves))

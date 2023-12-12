@@ -45,6 +45,14 @@ class Direction(IntEnum):
         except KeyError:
             raise ValueError(f"Invalid direction: {dir_str}")
 
+    @staticmethod
+    def from_raw_int(raw_int: int) -> "Direction":
+        "Return a Direction from the encoded direction component of an action"
+        dir_int = raw_int + 1  # Direction enums start from 1
+        if raw_int >= 4:  # to account for Direction.X
+            dir_int += 1
+        return Direction(dir_int)
+
     def opposite(self) -> "Direction":
         "Return the direction of opposite orientation to the current one e.g. NE.opposite() == SW"
         return Direction(10 - self.value)

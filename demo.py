@@ -5,6 +5,7 @@ env.reset()
 
 for agent in env.agent_iter():
     obs, reward, terminated, truncated, info = env.last()
+    assert obs is not None
 
     if terminated or truncated:
         action = None

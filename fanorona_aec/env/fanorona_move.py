@@ -115,24 +115,22 @@ class FanoronaMove:
         Converts integer-encoded action to a FanoronaMove object.
 
         Args:
-            action (int): The integer-encoded action.
+            action (ActionType): The integer-encoded action.
 
         Returns:
             FanoronaMove: The corresponding FanoronaMove object.
         """
         action = int(action)  # to handle np.int type actions
         if action != END_TURN_ACTION:
-            end_turn = False
             move_type_int = action % 3
             action = (action - move_type_int) // 3
             dir_int = action % 8
             action = (action - dir_int) // 8
-            if dir_int >= 4:
-                dir_int += 1  # to account for Direction.X
-            dir_int += 1  # Direction enum starts from 1
             pos_int = action
+
+            end_turn = False
             position = Position(pos_int)
-            direction = Direction(dir_int)
+            direction = Direction.from_raw_int(dir_int)
             move_type = MoveType(move_type_int)
         else:
             end_turn = True
