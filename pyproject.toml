@@ -47,23 +47,23 @@ console_output_style = "progress"
 
 [tool.mypy]
 python_version = "3.12"
+strict = true
 warn_return_any = true
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unreachable = true
-exclude = "build"
+pretty = true
+exclude = [
+    "build",
+    "dist",
+    "venv",
+    "tests",
+]
 files = [
-    "fanorona_aec/*.py",
-    "tests/*.py"
+    "fanorona_aec/**/*.py",
+    "demo.py",
 ]
 ignore_missing_imports = true
 
-[tool.black]
-line-length = 79
-target-version = ["py312"]
-include = '\.pyi?$'
-
-[tool.isort]
-py_version = 312
-profile = "black"
-line_length = 79
+[tool.ruff]
+target-version = "py312"

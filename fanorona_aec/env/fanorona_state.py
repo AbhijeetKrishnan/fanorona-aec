@@ -101,14 +101,10 @@ class FanoronaState:
 
         turn_to_play_str = str(Piece(self.turn_to_play))
 
-        last_capture_str = (
-            str(self.last_capture) if self.last_capture else "- -"
-        )
+        last_capture_str = str(self.last_capture) if self.last_capture else "- -"
 
         assert self.visited is not None
-        visited_pos_list = [
-            visited_pos.to_human() for visited_pos in self.visited_pos
-        ]
+        visited_pos_list = [visited_pos.to_human() for visited_pos in self.visited_pos]
         if len(visited_pos_list) == 0:
             visited_pos_str = "-"
         else:
@@ -128,9 +124,7 @@ class FanoronaState:
         """
         ELE_MAP = {Piece.WHITE: "○", Piece.BLACK: "●", Piece.EMPTY: "."}
         if self.board is None:
-            raise Exception(
-                'render(mode="human") called without calling reset()'
-            )
+            raise Exception('render(mode="human") called without calling reset()')
         rich_board = np.vectorize(ELE_MAP.get)(self.board)
         template = f"""  A B C D E F G H I
 {5} {'─'.join(rich_board[4])}
@@ -180,9 +174,7 @@ Half-moves: {self.half_moves}
             return 100 + col * 100, 100 + (4 - row) * 100
 
         if self.board is None or self.visited is None:
-            raise Exception(
-                'render(mode="svg") called without calling reset()'
-            )
+            raise Exception('render(mode="svg") called without calling reset()')
 
         black_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="black" />'
         white_piece = '<circle cx="{0[0]!s}" cy="{0[1]!s}" r="30" stroke="black" stroke-width="1.5" fill="white" />'
@@ -200,19 +192,13 @@ Half-moves: {self.half_moves}
             _from_df = [(2, 0), (0, 0), (0, 2), (0, 4), (0, 6)]
             _to_df = [(4, 2), (4, 4), (4, 6), (4, 8), (2, 8)]
             board_lines.extend(
-                [
-                    line.format(convert(f), convert(t))
-                    for f, t in zip(_from_df, _to_df)
-                ]
+                [line.format(convert(f), convert(t)) for f, t in zip(_from_df, _to_df)]
             )
         for _ in range(0, BOARD_COLS, 2):  # diagonal backward lines
             _from_db = [(2, 0), (4, 0), (4, 2), (4, 4), (4, 6)]
             _to_db = [(0, 2), (0, 4), (0, 6), (0, 8), (2, 8)]
             board_lines.extend(
-                [
-                    line.format(convert(f), convert(t))
-                    for f, t in zip(_from_db, _to_db)
-                ]
+                [line.format(convert(f), convert(t)) for f, t in zip(_from_db, _to_db)]
             )
         board_pieces = []
         for pos in Position.pos_range():
@@ -290,9 +276,7 @@ Half-moves: {self.half_moves}
                     capture_pos = to.displace(move.direction)
                     capture_dir = move.direction
                 case MoveType.WITHDRAWAL:
-                    capture_pos = move.position.displace(
-                        move.direction.opposite()
-                    )
+                    capture_pos = move.position.displace(move.direction.opposite())
                     capture_dir = move.direction.opposite()
                 case _:
                     raise ValueError(
@@ -303,16 +287,13 @@ Half-moves: {self.half_moves}
             capture_row, capture_col = capture_pos.to_coords()
             while (
                 capture_pos.is_valid()
-                and self.board[capture_row][capture_col]
-                == self.turn_to_play.other()
+                and self.board[capture_row][capture_col] == self.turn_to_play.other()
             ):
                 self.board[capture_row][capture_col] = Piece.EMPTY
                 capture_pos = capture_pos.displace(capture_dir)
                 capture_row, capture_col = capture_pos.to_coords()
 
-            self.last_capture = LastCapture(
-                position=to, direction=move.direction
-            )
+            self.last_capture = LastCapture(position=to, direction=move.direction)
             self.visited[from_row][from_col] = 1
             self.visited[to_row][to_col] = 1
 
@@ -357,9 +338,7 @@ Half-moves: {self.half_moves}
                 return None  # draw by half-move rule
             else:
                 own_piece_exists = self.piece_exists(self.turn_to_play)
-                other_piece_exists = self.piece_exists(
-                    self.turn_to_play.other()
-                )
+                other_piece_exists = self.piece_exists(self.turn_to_play.other())
                 if own_piece_exists and other_piece_exists:
                     return None  # game not over
                 else:
@@ -373,9 +352,7 @@ Half-moves: {self.half_moves}
 
         This method sets the state of the game board to the initial configuration.
         """
-        START_STATE_STR = (
-            "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0"
-        )
+        START_STATE_STR = "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0"
         self.set_from_board_str(START_STATE_STR)
 
     def set_from_board_str(self, board_string: str) -> "FanoronaState":
@@ -390,13 +367,11 @@ Half-moves: {self.half_moves}
         """
 
         def process_board_state_str(
-            self, board_state_str: str
+            self: FanoronaState, board_state_str: str
         ) -> np.ndarray[Tuple[Literal[5], Literal[9]], np.dtype[np.int8]]:
             row_strings = board_state_str.split("/")
             board_state_chars = [list(row) for row in row_strings]
-            self.board = np.zeros(
-                shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8
-            )
+            self.board = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8)
             for row, row_content in enumerate(board_state_chars):
                 col_board = 0
                 for col_content in row_content:
@@ -415,11 +390,9 @@ Half-moves: {self.half_moves}
             return self.board
 
         def process_visited_pos_str(
-            self, visited_pos_str: str
+            self: FanoronaState, visited_pos_str: str
         ) -> np.ndarray[Tuple[Literal[5], Literal[9]], np.dtype[np.bool_]]:
-            self.visited = np.zeros(
-                shape=(BOARD_ROWS, BOARD_COLS), dtype=np.bool_
-            )
+            self.visited = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.bool_)
             if visited_pos_str != "-":
                 visited_pos_list = visited_pos_str.split(",")
                 human_pos_list = list(
@@ -443,9 +416,7 @@ Half-moves: {self.half_moves}
 
         process_board_state_str(self, board_state_str)
 
-        self.turn_to_play = (
-            Piece.WHITE if turn_to_play_str == "W" else Piece.BLACK
-        )
+        self.turn_to_play = Piece.WHITE if turn_to_play_str == "W" else Piece.BLACK
 
         if last_capture_pos != "-" and last_capture_dir != "-":
             self.last_capture = LastCapture(
@@ -463,9 +434,7 @@ Half-moves: {self.half_moves}
 
     def get_observation(
         self, agent: AgentId
-    ) -> np.ndarray[
-        Tuple[Literal[5], Literal[9], Literal[8]], np.dtype[np.int8]
-    ]:
+    ) -> np.ndarray[Tuple[Literal[5], Literal[9], Literal[8]], np.dtype[np.int8]]:
         """Return NN-style observation based on the current board state and requesting agent. Board
         state is from the perspective of the agent, with their color at the bottom.
         """
@@ -526,9 +495,7 @@ Half-moves: {self.half_moves}
         3. the move is not an end turn
         """
         if self.board is None or self.visited is None:
-            raise Exception(
-                f"Called is_valid({str(move)}) without calling reset()"
-            )
+            raise Exception(f"Called is_valid({str(move)}) without calling reset()")
 
         to = move.position.displace(move.direction)
         if move.move_type == MoveType.APPROACH:
@@ -542,9 +509,7 @@ Half-moves: {self.half_moves}
 
         def check_bounds() -> bool:
             """Bounds checking on positions"""
-            return all(
-                map(lambda pos: pos.is_valid(), (move.position, to, capture))
-            )
+            return all(map(lambda pos: pos.is_valid(), (move.position, to, capture)))
 
         def check_valid_dir() -> bool:
             """Checking that move direction is permitted from given board position"""
@@ -596,9 +561,7 @@ Half-moves: {self.half_moves}
                     check_move_to_empty,
                 ]
             )
-        elif (
-            move.move_type != MoveType.PAIKA and self.last_capture is None
-        ):  # beginning of capturing sequence
+        elif self.last_capture is None:  # beginning of capturing sequence
             valid = all(
                 test()
                 for test in [
@@ -649,9 +612,7 @@ Half-moves: {self.half_moves}
                         MoveType.APPROACH,
                         MoveType.WITHDRAWAL,
                     ]:
-                        capture = FanoronaMove(
-                            pos, direction, capture_type, False
-                        )
+                        capture = FanoronaMove(pos, direction, capture_type, False)
                         if self.is_valid(capture):
                             legal_captures.append(capture)
 
@@ -660,9 +621,7 @@ Half-moves: {self.half_moves}
             for pos in Position.pos_range():
                 if self.get_piece(pos) == self.turn_to_play:
                     for direction in Direction:
-                        paika = FanoronaMove(
-                            pos, direction, MoveType.PAIKA, False
-                        )
+                        paika = FanoronaMove(pos, direction, MoveType.PAIKA, False)
                         if self.is_valid(paika):
                             legal_paikas.append(paika)
 
