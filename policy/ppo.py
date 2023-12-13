@@ -174,15 +174,15 @@ if __name__ == "__main__":
     env = ss.max_observation_v0(env, 2)
     env = ss.frame_skip_v0(env, 4)
     env = ss.clip_reward_v0(env, lower_bound=-1, upper_bound=1)
-    env = ss.color_reduction_v0(env, mode="B")
-    env = ss.resize_v1(env, x_size=84, y_size=84)
-    env = ss.frame_stack_v1(env, 4)
-    env = ss.agent_indicator_v0(env, type_only=False)
+    # env = ss.color_reduction_v0(env, mode="B")
+    # env = ss.resize_v1(env, x_size=84, y_size=84)
+    # env = ss.frame_stack_v1(env, 4)
+    # env = ss.agent_indicator_v0(env, type_only=False)
     env = ss.pettingzoo_env_to_vec_env_v1(env)
     envs = ss.concat_vec_envs_v1(
         env, args.num_envs // 2, num_cpus=0, base_class="gymnasium"
     )
-    envs.single_observation_space = envs.observation_space
+    envs.single_observation_space = envs.observation_space["observation"]
     envs.single_action_space = envs.action_space
     envs.is_vector_env = True
     if args.capture_video:
