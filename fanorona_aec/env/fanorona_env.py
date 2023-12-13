@@ -67,7 +67,7 @@ class raw_env(AECEnv):
     metadata: Metadata = {
         "render_modes": ["human", "fen", "svg"],
         "name": "fanorona_v3",
-        "is_parallelizable": False,
+        "is_parallelizable": True,
         "render_fps": 2,
     }
 

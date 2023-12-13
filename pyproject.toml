@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 
 [project]
 name = "fanorona-aec"
-version = "3.0.2"
+version = "3.0.3"
 description = "A PettingZoo AECEnv implementation of the Fanorona board game."
 readme = "README.md"
 authors = [
@@ -26,6 +26,13 @@ Repository = "https://github.com/AbhijeetKrishnan/fanorona-aec"
 "Bug Tracker" = "https://github.com/AbhijeetKrishnan/fanorona-aec/issues"
 
 [project.optional-dependencies]
+policy = [
+    "SuperSuit",
+    "torch",
+    "tensorboard",
+    "packaging",
+    "wandb"
+]
 dev = [
     "pre-commit",
     "pytest",
@@ -46,7 +53,7 @@ testpaths = [
 console_output_style = "progress"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 warn_redundant_casts = true
@@ -60,10 +67,10 @@ ignore_missing_imports = true
 
 [tool.black]
 line-length = 79
-target-version = ["py312"]
+target-version = ["py311"]
 include = '\.pyi?$'
 
 [tool.isort]
-py_version = 312
+py_version = 311
 profile = "black"
 line_length = 79

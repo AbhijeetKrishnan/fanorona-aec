@@ -1,0 +1,6 @@
+-r requirements.txt
+supersuit
+torch
+tensorboard
+packaging
+wandb

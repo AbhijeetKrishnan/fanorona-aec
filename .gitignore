@@ -2,6 +2,7 @@
 *.svg
 *.stats
 *.pickle
+policy/runs/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
