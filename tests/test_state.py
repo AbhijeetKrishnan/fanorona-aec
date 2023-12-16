@@ -108,9 +108,7 @@ def test_reset(test_state_list, start_state):
         assert test_state == start_state
 
 
-def test_set_from_board_str(
-    test_state_list, test_board_str_list=TEST_STATE_STRS
-):
+def test_set_from_board_str(test_state_list, test_board_str_list=TEST_STATE_STRS):
     "Verify that set_from_board_str() sets the state correctly"
     for test_str, expected in zip(test_board_str_list, test_state_list):
         assert FanoronaState().set_from_board_str(test_str) == expected
@@ -119,8 +117,8 @@ def test_set_from_board_str(
 def test_get_observation(test_state_list):
     "Test that the correct observation is returned which represents the state"
     for state in test_state_list:
-        obs = state.get_observation(0)
-        obs = state.get_observation(1)
+        _ = state.get_observation(0)
+        _ = state.get_observation(1)
 
 
 @pytest.mark.skip(reason="Not implemented")

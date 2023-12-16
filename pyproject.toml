@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "fanorona-aec"
@@ -16,7 +17,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 dependencies = [
     "pettingzoo"
 ]
@@ -38,11 +39,28 @@ dev = [
     "pytest",
 ]
 
-[tool.setuptools.package-data]
-"pkgname" = ["py.typed"]
+[tool.ruff]
+target-version = "py311"
 
-[tool.setuptools.packages.find]
-where = ["fanorona_aec"]
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unreachable = true
+pretty = true
+exclude = [
+    "build",
+    "dist",
+    "venv",
+    "tests",
+]
+files = [
+    "src/fanorona_aec/**/*.py",
+    "demo.py",
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -51,26 +69,3 @@ testpaths = [
     "tests"
 ]
 console_output_style = "progress"
-
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-warn_redundant_casts = true
-warn_unreachable = true
-exclude = "build"
-files = [
-    "fanorona_aec/*.py",
-    "tests/*.py"
-]
-ignore_missing_imports = true
-
-[tool.black]
-line-length = 79
-target-version = ["py311"]
-include = '\.pyi?$'
-
-[tool.isort]
-py_version = 311
-profile = "black"
-line_length = 79

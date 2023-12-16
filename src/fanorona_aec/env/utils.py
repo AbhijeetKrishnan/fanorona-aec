@@ -9,7 +9,7 @@ BOARD_SQUARES = BOARD_ROWS * BOARD_COLS
 
 
 class Piece(IntEnum):
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.name)[0]  # just the first letter
 
     def other(self) -> "Piece":
@@ -29,7 +29,7 @@ class Piece(IntEnum):
 class Direction(IntEnum):
     "Uses numpad coordinates to represent directions"
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.name[0] == "X":
             return "-"
         else:
@@ -57,7 +57,7 @@ class Direction(IntEnum):
         "Return the direction of opposite orientation to the current one e.g. NE.opposite() == SW"
         return Direction(10 - self.value)
 
-    def as_vector(self) -> Tuple:
+    def as_vector(self) -> Tuple[int, int]:
         "Return the unit vector representation of the direction (with tail assumed at (0, 0))"
         # fmt: off
         DISPLACEMENT_VECTORS = {
@@ -119,7 +119,7 @@ class Position:
             )
         return self.row == other.row and self.col == other.col
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Position: {self.to_human()}>"
 
     @staticmethod

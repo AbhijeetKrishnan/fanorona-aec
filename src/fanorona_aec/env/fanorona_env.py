@@ -1,5 +1,5 @@
 import functools
-from typing import Dict, List, Literal, Tuple, TypeAlias, TypedDict
+from typing import Any, Dict, List, Literal, Tuple, TypeAlias, TypedDict
 
 import gymnasium.spaces
 import numpy as np
@@ -25,9 +25,7 @@ class Observation(TypedDict):
     observation: np.ndarray[
         Tuple[Literal[5], Literal[9], Literal[8]], np.dtype[np.int8]
     ]
-    action_mask: np.ndarray[
-        Literal[1081], np.dtype[np.int8]
-    ]  # 5 * 9 * 8 * 3 + 1
+    action_mask: np.ndarray[Literal[1081], np.dtype[np.int8]]  # 5 * 9 * 8 * 3 + 1
 
 
 def env(render_mode: RenderMode | None = None) -> AECEnv:
@@ -41,7 +39,7 @@ def env(render_mode: RenderMode | None = None) -> AECEnv:
     return env
 
 
-class raw_env(AECEnv):
+class raw_env(AECEnv):  # type: ignore
     """
     Description:
         Implements the Fanorona board game following the 5x9 Fanoron Tsivy
@@ -86,7 +84,7 @@ class raw_env(AECEnv):
         # along which the piece will be moved (SW, S, SE, W, E, NW, N, NE). 3 planes encode the
         # capture type of the move (paika, approach, withdrawal). The last action denotes a manual
         # end turn.
-        self.action_spaces = {
+        self.action_spaces: Dict[AgentId, gymnasium.spaces.Discrete] = {
             agent: spaces.Discrete(END_TURN_ACTION + 1)
             for agent in self.possible_agents
         }
@@ -116,7 +114,7 @@ class raw_env(AECEnv):
         }
 
         self.rewards: Dict[AgentId, int] = {agent: 0 for agent in self.agents}
-        self.infos: Dict[AgentId, dict | None] = {
+        self.infos: Dict[AgentId, Dict[str, Any] | None] = {
             agent: None for agent in self.agents
         }
         self.terminations = {agent: False for agent in self.agents}
@@ -124,17 +122,15 @@ class raw_env(AECEnv):
 
         self.agent_selection: AgentId | None = None
 
-        assert (
-            render_mode is None or render_mode in self.metadata["render_modes"]
-        )
+        assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
     @functools.lru_cache(maxsize=None)
-    def observation_space(self, agent: AgentId) -> gymnasium.spaces.Space:
+    def observation_space(self, agent: AgentId) -> gymnasium.spaces.Dict:
         return self.observation_spaces[agent]
 
     @functools.lru_cache(maxsize=None)
-    def action_space(self, agent: AgentId) -> gymnasium.spaces.Space:
+    def action_space(self, agent: AgentId) -> gymnasium.spaces.Discrete:
         return self.action_spaces[agent]
 
     def render(self) -> None:
@@ -147,13 +143,9 @@ class raw_env(AECEnv):
                 print(self.board_state.as_rich_board())
 
     def observe(self, agent: AgentId) -> Observation:
-        current_index = self.possible_agents.index(agent)
-
         observation = self.board_state.get_observation(agent)
         legal_moves = (
-            self.board_state.legal_moves
-            if agent == self.agent_selection
-            else []
+            self.board_state.legal_moves if agent == self.agent_selection else []
         )
 
         action_mask = np.zeros(END_TURN_ACTION + 1, np.int8)
@@ -169,7 +161,7 @@ class raw_env(AECEnv):
         return self.board_state
 
     def reset(
-        self, seed: int | None = None, options: dict | None = None
+        self, seed: int | None = None, options: Dict[str, Any] | None = None
     ) -> None:
         self.agents = self.possible_agents[:]
 
@@ -192,10 +184,10 @@ class raw_env(AECEnv):
         self._agent_selector = agent_selector(self.agents)
         self.agent_selection = self._agent_selector.reset()
 
-        for agent, obs_space in self.observation_spaces.items():
+        for _, obs_space in self.observation_spaces.items():
             obs_space.seed(seed)
 
-        for agent, action_space in self.action_spaces.items():
+        for _, action_space in self.action_spaces.items():
             action_space.seed(seed)
 
         if self.render_mode == "human":
@@ -211,7 +203,6 @@ class raw_env(AECEnv):
             return
 
         current_agent = self.agent_selection
-        current_index = self.agents.index(current_agent)
 
         self._cumulative_rewards[current_agent] = 0
 
