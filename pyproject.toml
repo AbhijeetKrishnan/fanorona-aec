@@ -28,11 +28,9 @@ Repository = "https://github.com/AbhijeetKrishnan/fanorona-aec"
 
 [project.optional-dependencies]
 policy = [
-    "SuperSuit",
+    "supersuit",
     "torch",
     "tensorboard",
-    "packaging",
-    "wandb"
 ]
 dev = [
     "pre-commit",
