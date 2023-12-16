@@ -1,7 +1,6 @@
 import pettingzoo
 import pettingzoo.test
 import pytest
-
 from fanorona_aec import fanorona_v3
 
 TEST_STATES = [
@@ -22,7 +21,7 @@ def env():
 
 def test_api(env):
     "Test the env using PettingZoo's API test function"
-    pettingzoo.test.api_test(env, num_cycles=10, verbose_progress=False)
+    pettingzoo.test.api_test(env, num_cycles=1000, verbose_progress=False)
 
 
 def test_reset(env):
@@ -68,3 +67,8 @@ def test_step(env):
 def test_performance_benchmark(env):
     "Run PettingZoo performance benchmark on the env"
     pettingzoo.test.performance_benchmark(env)
+
+
+def test_seed():
+    "Ensure `seed_test()` passes"
+    pettingzoo.test.seed_test(fanorona_v3.env, num_cycles=10)
