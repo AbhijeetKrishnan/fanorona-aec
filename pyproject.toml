@@ -1,9 +1,10 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "fanorona-aec"
-version = "3.0.2"
+version = "3.0.3"
 description = "A PettingZoo AECEnv implementation of the Fanorona board game."
 readme = "README.md"
 authors = [
@@ -16,7 +17,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 dependencies = [
     "pettingzoo"
 ]
@@ -31,22 +32,11 @@ dev = [
     "pytest",
 ]
 
-[tool.setuptools.package-data]
-"pkgname" = ["py.typed"]
-
-[tool.setuptools.packages.find]
-where = ["fanorona_aec"]
-
-[tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
-testpaths = [
-    "tests"
-]
-console_output_style = "progress"
+[tool.ruff]
+target-version = "py311"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -60,10 +50,15 @@ exclude = [
     "tests",
 ]
 files = [
-    "fanorona_aec/**/*.py",
+    "src/fanorona_aec/**/*.py",
     "demo.py",
 ]
 ignore_missing_imports = true
 
-[tool.ruff]
-target-version = "py312"
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests"
+]
+console_output_style = "progress"
