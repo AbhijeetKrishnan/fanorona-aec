@@ -123,19 +123,19 @@ class raw_env(AECEnv):
         return self._action_spaces[agent]
 
     def reset(self, seed=None, options=None):
+        self.board_state.reset()
+
         self.agents = self.possible_agents[:]
+        self._agent_selector = agent_selector(self.agents)
+        self.agent_selection = self._agent_selector.next()
+        
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.terminations = {agent: False for agent in self.agents}
         self.truncations = {agent: False for agent in self.agents}
         self.infos = {agent: {} for agent in self.agents}
-        self.observations = {agent: None for agent in self.agents}
+        self.observations = {agent: self.observe(agent) for agent in self.agents}
         self.num_moves = 0
-
-        self._agent_selector = agent_selector(self.agents)
-        self.agent_selection = self._agent_selector.next()
-
-        self.board_state.reset()
 
     def step(self, action: int):
         if (
