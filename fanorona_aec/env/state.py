@@ -184,8 +184,8 @@ class FanoronaState:
 
             # if in capturing sequence, and no valid moves available (other than end turn), then
             # force turn to end
-            if len(self.legal_moves) == 1:
-                end_turn()
+            # if len(self.legal_moves) == 1:
+            #     end_turn()
 
         else:  # end turn/paika move
             end_turn()
@@ -205,10 +205,7 @@ class FanoronaState:
             other_piece_exists = self.piece_exists(self.turn_to_play.other())
             # Conjecture: cannot have a situation in Fanorona where a piece exists but there are no
             # valid moves
-            if own_piece_exists and other_piece_exists:
-                return False
-            else:
-                return True
+            return not own_piece_exists or not other_piece_exists
 
     def get_result(self) -> int:
         """Return result of the current game state. Returns 1 for white win, -1 for black win, and 0

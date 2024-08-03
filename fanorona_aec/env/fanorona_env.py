@@ -10,8 +10,8 @@ from .state import FanoronaState
 
 
 def env(render_mode=None):
-    internal_render_mode = render_mode if render_mode != "ansi" else "human"
-    env = raw_env(render_mode=internal_render_mode)
+    internal_render_mode = render_mode if render_mode is not None else "human"
+    env = raw_env(internal_render_mode)
     if render_mode == "ansi":
         env = wrappers.CaptureStdoutWrapper(env)
     env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
@@ -108,8 +108,7 @@ class raw_env(AECEnv):
         )
 
         action_mask = np.zeros(45 * 8 * 3 + 1, np.int8)
-        for i in legal_moves:
-            action_mask[i] = 1
+        action_mask[legal_moves] = 1
 
         return {"observation": observation, "action_mask": action_mask}
 
@@ -152,33 +151,32 @@ class raw_env(AECEnv):
             result = self.board_state.get_result()
         else:
             chosen_move = FanoronaMove.action_to_move(action)
+            prev_player = self.board_state.turn_to_play
             self.board_state.push(chosen_move)
+            curr_player = self.board_state.turn_to_play
             result = None
 
-        if self._agent_selector.is_last():
-            self.terminations = {
-                agent: (result == 1 or result == -1) for agent in self.agents
-            }
-            self.truncations = {agent: (result == 0) for agent in self.agents}
-            if result is not None:
-                (
-                    self.rewards[self.agents[0]],
-                    self.rewards[self.agents[1]],
-                ) = result * 1, result * (-1)
-                self.infos[self.agents[0]], self.infos[self.agents[1]] = {
-                    "legal_moves": []
-                }, {"legal_moves": []}
-            else:
-                self.rewards[self.agents[0]], self.rewards[self.agents[1]] = 0, 0
+        # observe the current state
+        for i in self.agents:
+            self.observations[i] = self.observe(i)
 
-            # observe the current state
-            for i in self.agents:
-                self.observations[i] = self.board_state
+        self.terminations = {
+            agent: (result == 1 or result == -1) for agent in self.agents
+        }
+        self.truncations = {agent: (result == 0) for agent in self.agents}
+        if result is not None:
+            (
+                self.rewards[self.agents[0]],
+                self.rewards[self.agents[1]],
+            ) = result * 1, result * (-1)
+            self.infos[self.agents[0]], self.infos[self.agents[1]] = {
+                "legal_moves": []
+            }, {"legal_moves": []}
         else:
-            # no rewards are allocated until both players give an action
-            self._clear_rewards()
+            self.rewards[self.agents[0]], self.rewards[self.agents[1]] = 0, 0
 
-        # selects the next agent.
-        self.agent_selection = self._agent_selector.next()
+        # selects the next agent if their turn is over.
+        if not self.board_state.is_game_over() and prev_player != curr_player:
+            self.agent_selection = self._agent_selector.next()
         # Adds .rewards to ._cumulative_rewards
         self._accumulate_rewards()
