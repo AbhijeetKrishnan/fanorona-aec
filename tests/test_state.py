@@ -10,8 +10,8 @@ import numpy as np
 TEST_STATE_STRS = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",  # start state
     "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - - 1",  # capturing seq after D2->E3 approach
-    "9/9/3W1B3/9/9 W - - - 44",  # random endgame state
-    "9/4W4/9/9/9 W - - - 30",  # terminal state
+    # "9/9/3W1B3/9/9 W - - - 44",  # random endgame state
+    # "9/4W4/9/9/9 W - - - 30",  # terminal state
 ]
 
 

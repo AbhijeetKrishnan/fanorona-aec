@@ -5,6 +5,10 @@ import numpy as np
 from .utils import MOVE_LIMIT, BOARD_COLS, BOARD_ROWS, Direction, Piece, Position
 from .move import FanoronaMove, MoveType, END_TURN
 
+DRAW = 0
+WHITE_WIN = 1
+BLACK_WIN = -1
+
 
 class FanoronaState:
     def __init__(self):
@@ -195,17 +199,16 @@ class FanoronaState:
         Check whether the game is over (i.e. the current state is a terminal state).
 
         The game is over when -
-        a) One side has no pieces left to move (loss for the side which has no pieces to move)
+        a) The player to move has no pieces left (loss for the side which has no pieces to move)
         b) The number of half-moves exceeds the limit (draw)
         """
         if self.half_moves >= MOVE_LIMIT:
             return True
         else:
             own_piece_exists = self.piece_exists(self.turn_to_play)
-            other_piece_exists = self.piece_exists(self.turn_to_play.other())
             # Conjecture: cannot have a situation in Fanorona where a piece exists but there are no
             # valid moves
-            return not own_piece_exists or not other_piece_exists
+            return not own_piece_exists
 
     def get_result(self) -> int:
         """Return result of the current game state. Returns 1 for white win, -1 for black win, and 0
@@ -218,11 +221,11 @@ class FanoronaState:
         assert self.is_game_over()  # TODO: make done a state property instead?
 
         if self.half_moves >= MOVE_LIMIT:
-            return 0
+            return DRAW
         elif self.piece_exists(Piece.WHITE):
-            return 1
+            return WHITE_WIN
         else:
-            return -1
+            return BLACK_WIN
 
     def reset(self) -> None:
         "Reset to the start state"
@@ -291,48 +294,48 @@ class FanoronaState:
         if self.board is None or self.visited is None:
             raise Exception("Called get_observation() without calling reset()")
 
-        obs = np.zeros(shape=(5, 9, 8), dtype=np.int32)
+        obs = np.zeros(shape=(5, 9, 7), dtype=np.int32)
         # TODO: how to handle different observations from different sides? Specifically, how would actions change?
 
         # channel 1
         obs[:, :, 0] = int(self.turn_to_play)
 
         # channel 2
-        half_moves_pos = Position(self.half_moves)
-        assert (
-            half_moves_pos.is_valid()
-        ), f"{half_moves_pos} is not a valid position. Half-moves = {self.half_moves}"
-        obs[half_moves_pos.row, half_moves_pos.col, 1] = 1
+        # half_moves_pos = Position(self.half_moves)
+        # assert (
+        #     half_moves_pos.is_valid()
+        # ), f"{half_moves_pos} is not a valid position. Half-moves = {self.half_moves}"
+        # obs[half_moves_pos.row, half_moves_pos.col, 1] = 1
 
-        # channel 3
-        obs[:, :, 2] = self.visited.copy()
+        # channel 2
+        obs[:, :, 1] = self.visited.copy()
 
         if self.last_capture is not None:
-            # channel 4
-            obs[self.last_capture[0].row, self.last_capture[0].col, 3] = 1
+            # channel 3
+            obs[self.last_capture[0].row, self.last_capture[0].col, 2] = 1
 
-            # channel 5
+            # channel 4
             last_dir_int = (
                 int(self.last_capture[1])
                 - 1
                 - (1 if int(self.last_capture[1].value) >= 4 else 0)
             )
-            obs[:, last_dir_int, 4] = 1
+            obs[:, last_dir_int, 3] = 1
+
+        # channel 5
+        obs[:, :, 4].fill(1)
 
         # channel 6
-        obs[:, :, 5].fill(1)
-
-        # channel 7
         white_pieces_mask = self.board != int(Piece.WHITE)
         obs[:, :, 6] = self.board.copy()
-        obs[white_pieces_mask, 6] = 1
-        obs[~white_pieces_mask, 6] = 0
+        obs[white_pieces_mask, 5] = 1
+        obs[~white_pieces_mask, 5] = 0
 
-        # channel 8
+        # channel 7
         black_pieces_mask = self.board != int(Piece.BLACK)
-        obs[:, :, 7] = self.board.copy()
-        obs[black_pieces_mask, 7] = 1
-        obs[~black_pieces_mask, 7] = 0
+        obs[:, :, 6] = self.board.copy()
+        obs[black_pieces_mask, 6] = 1
+        obs[~black_pieces_mask, 6] = 0
 
         return obs
 
@@ -440,7 +443,7 @@ class FanoronaState:
 
     @property
     def legal_moves(self) -> List[int]:
-        """Return a list of legal actions allowed from the current state. Actions are in their
+        """Return a list of legal actions allowed from the current state, for the current player. Actions are in their
         integer encoding
         """
         legal_captures: List[FanoronaMove] = []

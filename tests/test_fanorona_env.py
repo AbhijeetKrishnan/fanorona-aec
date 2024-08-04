@@ -2,8 +2,7 @@ import pettingzoo
 import pettingzoo.test
 import pytest
 from fanorona_aec import fanorona_v1
-from fanorona_aec.env.move import FanoronaMove, MoveType
-from fanorona_aec.env.utils import Position, Direction
+
 
 TEST_STATES = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - 0",  # start state
@@ -23,6 +22,12 @@ def env():
 def test_api(env):
     "Test the env using PettingZoo's API test function"
     pettingzoo.test.api_test(env, num_cycles=10, verbose_progress=False)
+
+
+def test_seed():
+    "Test the env using PettingZoo's seed_test function"
+    env_fn = fanorona_v1.env
+    pettingzoo.test.seed_test(env_fn)
 
 
 def test_reset(env):
