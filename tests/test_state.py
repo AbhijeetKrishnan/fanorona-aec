@@ -1,24 +1,25 @@
-from fanorona_aec.env.state import FanoronaState
-from fanorona_aec.env.move import FanoronaMove
-from fanorona_aec.env.utils import (
-    Position,
-    Piece,
-)
-import pytest
 import numpy as np
+import pytest
+
+from fanorona_aec.env.fanorona_move import FanoronaMove
+from fanorona_aec.env.fanorona_state import FanoronaState
+from fanorona_aec.env.utils import Piece, Position
 
 TEST_STATE_STRS = [
     "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",  # start state
-    "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - - 1",  # capturing seq after D2->E3 approach
+    # capturing seq after D2->E3 approach
+    "WWWWWWWWW/WWW1WWWWW/BWBWWBWBW/BBBBB1BBB/BBBBBB1BB B - - - 1",
     # "9/9/3W1B3/9/9 W - - - 44",  # random endgame state
     # "9/4W4/9/9/9 W - - - 30",  # terminal state
+    "3W1WW2/5W3/7WW/2W6/9 B - - - 17",  # pathologic endgame state
 ]
 
 
 @pytest.fixture(scope="function")
 def test_state_list():
     yield map(
-        lambda board_str: FanoronaState().set_from_board_str(board_str), TEST_STATE_STRS
+        lambda board_str: FanoronaState().set_from_board_str(board_str),
+        TEST_STATE_STRS,
     )
 
 
@@ -57,9 +58,18 @@ def test_get_piece(start_state, test_input, expected):
 @pytest.mark.parametrize(
     "state_str,piece",
     [
-        ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.WHITE),
-        ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.BLACK),
-        ("WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0", Piece.EMPTY),
+        (
+            "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",
+            Piece.WHITE,
+        ),
+        (
+            "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",
+            Piece.BLACK,
+        ),
+        (
+            "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0",
+            Piece.EMPTY,
+        ),
         ("9/4W4/9/9/9 W - - - 30", Piece.WHITE),
         pytest.param(
             "9/4W4/9/9/9 W - - - 30",
@@ -79,22 +89,16 @@ def test_push(test_state_list):
     the game
     """
     for state in test_state_list:
-        while not state.is_game_over():
+        while not state.done:
             action = np.random.default_rng(seed=0).choice(state.legal_moves)
-            move = FanoronaMove.action_to_move(action)
+            move = FanoronaMove.from_action(action)
             state.push(move)
 
 
-def test_is_game_over(test_state_list, expected_list=[False, False, True, True]):
-    "Test that is_game_over method is correctly identifying end of game states."
+def test_done(test_state_list, expected_list=[False, False, True, True, True]):
+    "Test that done property is correctly identifying end of game states."
     for test_state, expected in zip(test_state_list, expected_list):
-        assert test_state.is_game_over() == expected
-
-
-@pytest.mark.skip(reason="Not implemented")
-def test_get_result():
-    "Test that the correct result is returned for done games"
-    pass
+        assert test_state.done == expected
 
 
 def test_reset(test_state_list, start_state):
@@ -113,8 +117,8 @@ def test_set_from_board_str(test_state_list, test_board_str_list=TEST_STATE_STRS
 def test_get_observation(test_state_list):
     "Test that the correct observation is returned which represents the state"
     for state in test_state_list:
-        obs = state.get_observation(0)
-        obs = state.get_observation(1)
+        _ = state.get_observation(0)
+        _ = state.get_observation(1)
 
 
 @pytest.mark.skip(reason="Not implemented")

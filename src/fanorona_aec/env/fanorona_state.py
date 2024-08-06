@@ -1,9 +1,29 @@
-from typing import Tuple, Optional, List, cast
+from typing import List, Literal, NamedTuple, Tuple, TypeAlias, Union
 
 import numpy as np
 
-from .utils import MOVE_LIMIT, BOARD_COLS, BOARD_ROWS, Direction, Piece, Position
-from .move import FanoronaMove, MoveType, END_TURN
+from .fanorona_move import END_TURN, ActionType, FanoronaMove, MoveType
+from .utils import (
+    BOARD_COLS,
+    BOARD_ROWS,
+    MOVE_LIMIT,
+    Direction,
+    Piece,
+    Position,
+)
+
+AgentId: TypeAlias = str
+
+
+class LastCapture(NamedTuple):
+    position: Position
+    direction: Direction
+
+    def __repr__(self) -> str:
+        return f"<LastCapture: {str(self)}>"
+
+    def __str__(self) -> str:
+        return f"{self.position.to_human()} {str(self.direction)}"
 
 DRAW = 0
 WHITE_WIN = 1
@@ -11,65 +31,123 @@ BLACK_WIN = -1
 
 
 class FanoronaState:
-    def __init__(self):
-        self.board: Optional[np.ndarray] = None
+    def __init__(self) -> None:
+        """
+        Initializes the Fanorona state.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+
+        self.board: np.ndarray[
+            Tuple[Literal[5], Literal[9]], np.dtype[np.int8]
+        ] | None = None
         self.turn_to_play: Piece = Piece.EMPTY
-        self.last_capture: Optional[
-            Tuple[Position, Direction]
-        ] = None  # TODO: remove requirement to index using 0 and 1 (NamedTuple?)
-        self.visited: Optional[np.ndarray] = None
+        self.last_capture: LastCapture | None = None
+        self.visited: np.ndarray[
+            Tuple[Literal[5], Literal[9]], np.dtype[np.bool_]
+        ] | None = None
         self.half_moves: int = 0
 
-    def __repr__(self):
+    @property
+    def visited_pos(self) -> List[Position]:
+        if self.visited is not None:
+            visited_pos_list = [
+                Position(int(visited_pos))
+                for visited_pos in np.flatnonzero(self.visited)
+            ]
+        else:
+            visited_pos_list = []
+        return visited_pos_list
+
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the FanoronaState object.
+
+        Returns:
+            str: A string representation of the FanoronaState object.
+        """
         return f"<FanoronaState: {str(self)}>"
 
-    def __str__(self):
-        board_string = ""
-        count = 0
-        for row in self.board:
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the Fanorona game state in a FEN-like
+        notation
+
+        Returns:
+            str: A string representation of the Fanorona game state.
+        """
+        if self.board is None:
+            return ""
+
+        def row_str(row: np.ndarray[Literal[9], np.dtype[np.int8]]) -> str:
+            "String for each row"
+            row_ele: List[Union[int, Piece]] = []
             for col in row:
-                col_str = str(Piece(col))
-                if col == Piece.EMPTY:
-                    count += 1
+                if (
+                    len(row_ele) > 0
+                    and not isinstance(row_ele[-1], Piece)
+                    and col == Piece.EMPTY
+                ):
+                    row_ele[-1] += 1
                 else:
-                    if count > 0:
-                        board_string += str(count)
-                        count = 0
-                    board_string += col_str
-            if count > 0:
-                board_string += str(count)
-                count = 0
-            board_string += "/"
-        board_string = board_string.rstrip("/")
-        if count > 0:
-            board_string += str(count)
+                    if col == Piece.EMPTY:
+                        row_ele.append(1)
+                    else:
+                        row_ele.append(Piece(col))
+            row_str = "".join([str(ele) for ele in row_ele])
+            return row_str
+
+        board_pieces_str = "/".join([row_str(row) for row in self.board])
 
         turn_to_play_str = str(Piece(self.turn_to_play))
-        if self.last_capture:
-            last_capture_str = (
-                f"{self.last_capture[0].to_human()} {str(self.last_capture[1])}"
-            )
-        else:
-            last_capture_str = f"- -"
 
-        visited_pos_list = []
-        for row_idx, row in enumerate(self.visited):
-            for col_idx, col in enumerate(row):
-                if col:
-                    visited_pos_list.append(Position((row_idx, col_idx)).to_human())
-        visited_pos_str = ",".join(visited_pos_list)
-        if not visited_pos_list:
+        last_capture_str = str(self.last_capture) if self.last_capture else "- -"
+
+        assert self.visited is not None
+        visited_pos_list = [visited_pos.to_human() for visited_pos in self.visited_pos]
+        if len(visited_pos_list) == 0:
             visited_pos_str = "-"
+        else:
+            visited_pos_str = ",".join(visited_pos_list)
 
-        return " ".join(
-            [
-                board_string,
-                turn_to_play_str,
-                last_capture_str,
-                visited_pos_str,
-                str(self.half_moves),
-            ]
-        )
+        return f"{board_pieces_str} {turn_to_play_str} {last_capture_str} {visited_pos_str} {str(self.half_moves)}"
+
+    def as_rich_board(self) -> str:
+        """
+        Returns the current state of the Fanorona game board as a rich board.
+
+        Returns:
+            str: The rich board representation of the game board.
+
+        Raises:
+            Exception: If the board is None.
+        """
+        ELE_MAP = {Piece.WHITE: "○", Piece.BLACK: "●", Piece.EMPTY: "."}
+        if self.board is None:
+            raise Exception('render(mode="human") called without calling reset()')
+        rich_board = np.vectorize(ELE_MAP.get)(self.board)
+        template = f"""  A B C D E F G H I
+{5} {'─'.join(rich_board[4])}
+  │╲│╱│╲│╱│╲│╱│╲│╱│
+{4} {'─'.join(rich_board[3])}
+  │╱│╲│╱│╲│╱│╲│╱│╲│
+{3} {'─'.join(rich_board[2])}
+  │╲│╱│╲│╱│╲│╱│╲│╱│
+{2} {'─'.join(rich_board[1])}
+  │╱│╲│╱│╲│╱│╲│╱│╲│
+{1} {'─'.join(rich_board[0])}
+
+{self.turn_to_play} to play
+Last capture: {str(self.last_capture) if self.last_capture else "- -"}
+Visited: {', '.join([pos.to_human()
+                     for pos in self.visited_pos])}
+Half-moves: {self.half_moves}
+"""
+        return template
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, FanoronaState):
@@ -77,8 +155,24 @@ class FanoronaState:
         return str(self) == str(other)
 
     def to_svg(self, svg_w: int = 1000, svg_h: int = 600) -> str:
-        # TODO: adjust output svg size dynamically
-        # TODO: represent other aspects of state on the output svg (turn to play, last capture, visited etc.)
+        """
+        Converts the current state of the Fanorona game board to an SVG format.
+
+        Args:
+            svg_w (int): The width of the SVG output (default is 1000).
+            svg_h (int): The height of the SVG output (default is 600).
+
+        Returns:
+            str: The SVG representation of the game board.
+
+        Raises:
+            Exception: If the board or visited state is None.
+
+        TODO:
+            - Adjust output SVG size dynamically.
+            - Represent other aspects of state on the output SVG (turn to play, last capture, visited, etc.).
+        """
+
         def convert(coord: Tuple[int, int]) -> Tuple[int, int]:
             row, col = coord
             return 100 + col * 100, 100 + (4 - row) * 100
@@ -139,9 +233,20 @@ class FanoronaState:
                 return True
         return False
 
-    def push(self, move: FanoronaMove):
-        """Implement the rules of Fanorona and make the desired move on the board. Returns flags and
-        status codes depending on game over or draw
+    def push(self, move: FanoronaMove) -> None:
+        """
+        Implement the rules of Fanorona and make the desired move on the board. Returns flags and
+        status codes depending on game over or draw.
+
+        Args:
+            move (FanoronaMove): The move to be made on the board.
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If `reset()` method is not called before calling `push()`.
+
         """
         if self.board is None or self.visited is None:
             raise Exception("Called push() without calling reset()")
@@ -160,19 +265,29 @@ class FanoronaState:
         self.board[from_row][from_col] = Piece.EMPTY
         self.board[to_row][to_col] = from_piece
 
-        def end_turn():
+        def end_turn() -> None:
             self.turn_to_play = self.turn_to_play.other()
             self.last_capture = None
+            assert self.visited is not None
             self.visited.fill(0)  # reset visited ndarray
             self.half_moves += 1
 
-        if not move.end_turn and move.move_type != MoveType.PAIKA:
-            if move.move_type == MoveType.APPROACH:  # approach
-                capture_pos = to.displace(move.direction)
-                capture_dir = move.direction
-            else:  # withdraw
-                capture_pos = move.position.displace(move.direction.opposite())
-                capture_dir = move.direction.opposite()
+        if move.end_turn or move.move_type == MoveType.PAIKA:
+            end_turn()
+        else:
+            match move.move_type:
+                case MoveType.APPROACH:
+                    capture_pos = to.displace(move.direction)
+                    capture_dir = move.direction
+                case MoveType.WITHDRAWAL:
+                    capture_pos = move.position.displace(move.direction.opposite())
+                    capture_dir = move.direction.opposite()
+                case _:
+                    raise ValueError(
+                        f"Unexpected move type encountered: \
+                                     {move.move_type}"
+                    )
+
             capture_row, capture_col = capture_pos.to_coords()
             while (
                 capture_pos.is_valid()
@@ -182,25 +297,27 @@ class FanoronaState:
                 capture_pos = capture_pos.displace(capture_dir)
                 capture_row, capture_col = capture_pos.to_coords()
 
-            self.last_capture = (to, move.direction)
+            self.last_capture = LastCapture(position=to, direction=move.direction)
             self.visited[from_row][from_col] = 1
             self.visited[to_row][to_col] = 1
 
-            # if in capturing sequence, and no valid moves available (other than end turn), then
-            # force turn to end
+            # if in capturing sequence, and no valid moves available (other than
+            # end turn), then force turn to end
             # if len(self.legal_moves) == 1:
             #     end_turn()
 
-        else:  # end turn/paika move
-            end_turn()
-
-    def is_game_over(self) -> bool:
+    @property
+    def done(self) -> bool:
         """
         Check whether the game is over (i.e. the current state is a terminal state).
 
         The game is over when -
         a) The player to move has no pieces left (loss for the side which has no pieces to move)
         b) The number of half-moves exceeds the limit (draw)
+
+        Returns:
+            A tuple containing a boolean value indicating whether the game is over,
+            and the piece that has won the game or an empty piece if the game is not over yet.
         """
         if self.half_moves >= MOVE_LIMIT:
             return True
@@ -210,15 +327,14 @@ class FanoronaState:
             # valid moves
             return not own_piece_exists
 
-    def get_result(self) -> int:
-        """Return result of the current game state. Returns 1 for white win, -1 for black win, and 0
-        for draw. Assumes game is done.
-
-        The game is done when -
-        a) One side has no pieces left to move (loss for the side which has no pieces to move)
-        b) The number of half-moves exceeds the limit (draw)
+    @property
+    def winner(self) -> Piece | None:
         """
-        assert self.is_game_over()  # TODO: make done a state property instead?
+        Determines the winner of the game.
+
+        Returns:
+            Piece | None: The winning player's piece if there is a winner, None otherwise.
+        """
 
         if self.half_moves >= MOVE_LIMIT:
             return DRAW
@@ -228,42 +344,63 @@ class FanoronaState:
             return BLACK_WIN
 
     def reset(self) -> None:
-        "Reset to the start state"
+        """
+        Reset the state of the Fanorona game to the start state.
+
+        This method sets the state of the game board to the initial configuration.
+        """
         START_STATE_STR = "WWWWWWWWW/WWWWWWWWW/BWBW1BWBW/BBBBBBBBB/BBBBBBBBB W - - - 0"
         self.set_from_board_str(START_STATE_STR)
 
     def set_from_board_str(self, board_string: str) -> "FanoronaState":
-        """Set the state object to a new state represented by a board string."""
+        """
+        Set the state object to a new state represented by a board string.
 
-        def process_board_state_str(self, board_state_str: str):
+        Args:
+            board_string (str): The board string representing the new state.
+
+        Returns:
+            FanoronaState: The updated state object.
+        """
+
+        def process_board_state_str(
+            self: FanoronaState, board_state_str: str
+        ) -> np.ndarray[Tuple[Literal[5], Literal[9]], np.dtype[np.int8]]:
             row_strings = board_state_str.split("/")
             board_state_chars = [list(row) for row in row_strings]
-            if self.board is not None:
-                self.board.fill(0)
-            else:
-                self.board = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32)
+            self.board = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int8)
             for row, row_content in enumerate(board_state_chars):
                 col_board = 0
-                for cell in row_content:  # TODO: any way to speed this up?
-                    if cell == "W":
-                        self.board[row][col_board] = Piece.WHITE
-                    elif cell == "B":
-                        self.board[row][col_board] = Piece.BLACK
-                    else:
-                        for col_board in range(col_board, col_board + int(cell)):
-                            self.board[row][col_board] = Piece.EMPTY
-                    col_board += 1
+                for col_content in row_content:
+                    match col_content:
+                        case "W":
+                            self.board[row][col_board] = Piece.WHITE
+                            col_board += 1
+                        case "B":
+                            self.board[row][col_board] = Piece.BLACK
+                            col_board += 1
+                        case _:
+                            self.board[row][
+                                col_board : col_board + int(col_content)
+                            ] = Piece.EMPTY
+                            col_board += int(col_content)
+            return self.board
 
-        def process_visited_pos_str(self, visited_pos_str: str):
-            if self.visited is not None:
-                self.visited.fill(0)
-            else:
-                self.visited = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.int32)
+        def process_visited_pos_str(
+            self: FanoronaState, visited_pos_str: str
+        ) -> np.ndarray[Tuple[Literal[5], Literal[9]], np.dtype[np.bool_]]:
+            self.visited = np.zeros(shape=(BOARD_ROWS, BOARD_COLS), dtype=np.bool_)
             if visited_pos_str != "-":
                 visited_pos_list = visited_pos_str.split(",")
-                for human_pos in visited_pos_list:  # TODO: any way to speed this up?
-                    row, col = Position(human_pos).to_coords()
-                    self.visited[row][col] = True
+                human_pos_list = list(
+                    map(
+                        lambda human_pos: Position(human_pos).to_coords(),
+                        visited_pos_list,
+                    )
+                )
+                rows, cols = zip(*human_pos_list)
+                self.visited[rows, cols] = True
+            return self.visited
 
         (
             board_state_str,
@@ -275,19 +412,26 @@ class FanoronaState:
         ) = board_string.split()
 
         process_board_state_str(self, board_state_str)
+
         self.turn_to_play = Piece.WHITE if turn_to_play_str == "W" else Piece.BLACK
+
         if last_capture_pos != "-" and last_capture_dir != "-":
-            self.last_capture = (
-                Position(last_capture_pos),
-                Direction(last_capture_dir),
+            self.last_capture = LastCapture(
+                position=Position(last_capture_pos),
+                direction=Direction.from_str(last_capture_dir),
             )
         else:
             self.last_capture = None
+
         process_visited_pos_str(self, visited_pos_str)
+
         self.half_moves = int(half_moves_str)
+
         return self
 
-    def get_observation(self, agent):
+    def get_observation(
+        self, agent: AgentId
+    ) -> np.ndarray[Tuple[Literal[5], Literal[9], Literal[8]], np.dtype[np.int8]]:
         """Return NN-style observation based on the current board state and requesting agent. Board
         state is from the perspective of the agent, with their color at the bottom.
         """
@@ -414,9 +558,7 @@ class FanoronaState:
                     check_move_to_empty,
                 ]
             )
-        elif (
-            move.move_type != MoveType.PAIKA and self.last_capture is None
-        ):  # beginning of capturing sequence
+        elif self.last_capture is None:  # beginning of capturing sequence
             valid = all(
                 test()
                 for test in [
@@ -442,10 +584,8 @@ class FanoronaState:
         return valid
 
     @property
-    def legal_moves(self) -> List[int]:
-        """Return a list of legal actions allowed from the current state, for the current player. Actions are in their
-        integer encoding
-        """
+    def legal_moves(self) -> List[ActionType]:
+        """Return a list of legal actions allowed from the current state."""
         legal_captures: List[FanoronaMove] = []
         legal_paikas: List[FanoronaMove] = []
 
@@ -465,7 +605,10 @@ class FanoronaState:
         for pos in Position.pos_range():
             if self.get_piece(pos) == self.turn_to_play:
                 for direction in Direction:
-                    for capture_type in [MoveType.APPROACH, MoveType.WITHDRAWAL]:
+                    for capture_type in [
+                        MoveType.APPROACH,
+                        MoveType.WITHDRAWAL,
+                    ]:
                         capture = FanoronaMove(pos, direction, capture_type, False)
                         if self.is_valid(capture):
                             legal_captures.append(capture)
@@ -480,6 +623,7 @@ class FanoronaState:
                             legal_paikas.append(paika)
 
         if legal_captures:  # capture has to be made if available
-            return list(map(lambda move: move.to_action(), legal_captures))
+            legal_moves = legal_captures
         else:
-            return list(map(lambda move: move.to_action(), legal_paikas))
+            legal_moves = legal_paikas
+        return list(map(lambda move: move.to_action(), legal_moves))

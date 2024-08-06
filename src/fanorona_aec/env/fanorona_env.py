@@ -1,19 +1,36 @@
 import functools
+from typing import Any, Dict, List, Literal, Tuple, TypeAlias, TypedDict
 
-from gymnasium import spaces
 import gymnasium.spaces
 import numpy as np
+from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils import wrappers
 
-from .move import FanoronaMove
-from .state import FanoronaState
+from .fanorona_move import END_TURN_ACTION, ActionType, FanoronaMove
+from .fanorona_state import AgentId, FanoronaState
 from .utils import Piece, MOVE_LIMIT
 
+RenderMode: TypeAlias = str
 
-def env(render_mode=None):
-    internal_render_mode = render_mode if render_mode is not None else "human"
-    env = FanoronaEnv(internal_render_mode)
+
+class Metadata(TypedDict):
+    render_modes: List[RenderMode]
+    name: str
+    is_parallelizable: bool
+    render_fps: int
+
+
+class Observation(TypedDict):
+    observation: np.ndarray[
+        Tuple[Literal[5], Literal[9], Literal[8]], np.dtype[np.int8]
+    ]
+    action_mask: np.ndarray[Literal[1081], np.dtype[np.int8]]  # 5 * 9 * 8 * 3 + 1
+
+
+def env(render_mode: RenderMode | None = None) -> AECEnv:
+    internal_render_mode = render_mode if render_mode != "ansi" else "human"
+    env = FanoronaEnv(render_mode=internal_render_mode)
     if render_mode == "ansi":
         env = wrappers.CaptureStdoutWrapper(env)
     env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
@@ -22,11 +39,11 @@ def env(render_mode=None):
     return env
 
 
-class FanoronaEnv(AECEnv):
+class FanoronaEnv(AECEnv):  # type: ignore
     """
     Description:
         Implements the Fanorona board game following the 5x9 Fanoron Tsivy
-        variation. A draw is declared if 100 half-moves have been exceeded
+        variation. A draw is declared if 50 half-moves have been exceeded
         since the start of the game. Consecutive captures count as one move.
 
     References:
@@ -45,14 +62,21 @@ class FanoronaEnv(AECEnv):
         Game ends in a win, draw, loss or illegal move
     """
 
-    metadata = {"render_mode": ["human", "svg"], "name": "fanorona_v1"}
+    metadata: Metadata = {
+        "render_modes": ["human", "fen", "svg"],
+        "name": "fanorona_v3",
+        "is_parallelizable": False,
+        "render_fps": 2,
+    }
 
-    def __init__(self, render_mode="human"):
+    def __init__(self, render_mode: RenderMode | None = "human"):
+        super().__init__()
+
         self.possible_agents = ["black", "white"]
         self.board_state = FanoronaState()
         self.render_mode = render_mode
 
-    def step(self, action: int):
+    def step(self, action: ActionType) -> None:
         # push the move
         chosen_move = FanoronaMove.action_to_move(action)
         self.board_state.push(chosen_move)
@@ -84,7 +108,12 @@ class FanoronaEnv(AECEnv):
         else:
             self.agent_selection = "white"
 
-    def reset(self, seed=None, options=None):
+        if self.render_mode == "human":
+            self.render()
+
+    def reset(
+        self, seed: int | None = None, options: Dict[str, Any] | None = None
+    ) -> None:
         self.agents = self.possible_agents[:]
         self.timestep = 0
 
@@ -100,38 +129,42 @@ class FanoronaEnv(AECEnv):
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.infos = infos
 
-    def observe(self, agent: str):
-        observation = self.board_state.get_observation(
-            self.possible_agents.index(agent)
-        )
+        if self.render_mode == "human":
+            self.render()
+
+    def observe(self, agent: AgentId) -> Observation:
+        observation = self.board_state.get_observation(agent)
         legal_moves = (
             self.board_state.legal_moves if agent == self.agent_selection else []
         )
 
-        action_mask = np.zeros(45 * 8 * 3 + 1, np.int8)
+        action_mask = np.zeros(END_TURN_ACTION + 1, np.int8)
         action_mask[legal_moves] = 1
 
         return {"observation": observation, "action_mask": action_mask}
-    
-    def _get_infos(self):
+
+    def _get_infos(self) -> Dict[AgentId, Dict[str, Any]]:
         infos = {agent: {} for agent in self.agents}
         infos[self.agent_selection] = {"legal_moves": self.board_state.legal_moves}
         return infos
     
-    def render(self):
-        if self.render_mode == "human":
-            print(str(self.board_state))
-        elif self.render_mode == "svg":
-            print(self.board_state.to_svg())
+    def render(self) -> None:
+        match self.render_mode:
+            case "fen":
+                print(str(self.board_state))
+            case "svg":
+                print(self.board_state.to_svg())
+            case "human" | _:
+                print(self.board_state.as_rich_board())
 
-    def state(self):
+    def state(self) -> FanoronaState:
         return self.board_state
 
-    def close(self):
+    def close(self) -> None:
         pass
-
+    
     @functools.lru_cache(maxsize=None)
-    def observation_space(self, agent: str) -> gymnasium.spaces.Space:
+    def observation_space(self, agent: AgentId) -> gymnasium.spaces.Dict:
         """
         The main observation space is a 5x9 space representing the board. It has 7 channels
         representing -
@@ -158,7 +191,7 @@ class FanoronaEnv(AECEnv):
         })
 
     @functools.lru_cache(maxsize=None)
-    def action_space(self, agent: str) -> gymnasium.spaces.Space:
+    def action_space(self, agent: AgentId) -> gymnasium.spaces.Discrete:
         """
         The action space is a (5x9x8x3+1)-dimensional array. Each of the 5x9 positions identifies
         the square from which to "pick up" the piece. 8 planes encode the possible directions
@@ -166,5 +199,7 @@ class FanoronaEnv(AECEnv):
         capture type of the move (paika, approach, withdrawal). The last action denotes a manual
         end turn.
         """
-        return spaces.Discrete(45 * 8 * 3 + 1)
+        return spaces.Discrete(END_TURN_ACTION + 1)
+
     
+

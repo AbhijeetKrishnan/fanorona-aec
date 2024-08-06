@@ -1,1 +1,1 @@
-pettingzoo == 1.24.3
+pettingzoo

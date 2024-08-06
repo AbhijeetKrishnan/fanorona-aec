@@ -1,10 +1,28 @@
 # Fanorona AEC Environment
 
-[![PyPI v2.0.0](https://img.shields.io/pypi/v/fanorona-aec)](https://pypi.org/project/fanorona-aec/2.0.0/)
+[![PyPI v3.0.2](https://img.shields.io/pypi/v/fanorona-aec)](https://pypi.org/project/fanorona-aec/3.0.2/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 
-![Fanorona board](/assets/1920px-Fanorona-1.svg.png)
+
+```
+  A B C D E F G H I
+5 ●─●─●─●─●─●─●─●─●
+  │╲│╱│╲│╱│╲│╱│╲│╱│
+4 ●─●─●─●─●─●─●─●─●
+  │╱│╲│╱│╲│╱│╲│╱│╲│
+3 ●─○─●─.─○─.─○─●─○
+  │╲│╱│╲│╱│╲│╱│╲│╱│
+2 ○─○─○─○─○─○─○─○─○
+  │╱│╲│╱│╲│╱│╲│╱│╲│
+1 ○─○─○─○─○─○─○─○─○
+
+W to play
+Last capture: E3 E
+Visited: D3, E3
+Half-moves: 0
+```
 
 This is an implementation of the Fanorona board game as a [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) [AEC](https://arxiv.org/abs/2009.13051) game.
 The rules have been sourced from [here](https://www.mindsports.nl/index.php/the-pit/528-fanorona).
@@ -16,7 +34,7 @@ original rules do not have explicit draw conditions.
 ### Using pip (recommended)
 
 ```bash
-pip install fanorona-aec
+python -m pip install fanorona-aec
 ```
 
 ### Local
@@ -24,7 +42,7 @@ pip install fanorona-aec
 ```bash
 git clone https://github.com/AbhijeetKrishnan/fanorona-aec.git
 cd fanorona-aec
-pip install -e .
+python -m pip install .
 ```
 
 ## Usage
@@ -34,8 +52,8 @@ pip install -e .
 In a Python shell, run the following:
 
 ```python
-import fanorona_aec
-env = fanorona_v1.env()
+from fanorona_aec import fanorona_v3
+env = fanorona_v3.env()
 ```
 
 See [`demo.py`](./demo.py) for a script that implements a simple random policy to interact with the environment.
@@ -47,5 +65,6 @@ We use [pytest](http://doc.pytest.org/) for tests. You can run them via:
 ```bash
 git clone https://github.com/AbhijeetKrishnan/fanorona-aec.git
 cd fanorona-aec
+python -m pip install .[dev]
 pytest
 ```
