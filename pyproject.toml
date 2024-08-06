@@ -27,6 +27,11 @@ Repository = "https://github.com/AbhijeetKrishnan/fanorona-aec"
 "Bug Tracker" = "https://github.com/AbhijeetKrishnan/fanorona-aec/issues"
 
 [project.optional-dependencies]
+policy = [
+    "supersuit",
+    "torch",
+    "tensorboard",
+]
 dev = [
     "pre-commit",
     "pytest",
