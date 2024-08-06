@@ -79,7 +79,36 @@ class FanoronaEnv(AECEnv):  # type: ignore
         self.board_state = FanoronaState()
         self.render_mode = render_mode
 
+    def reset(
+        self, seed: int | None = None, options: Dict[str, Any] | None = None
+    ) -> None:
+        self.agents = self.possible_agents[:]
+        self.timestep = 0
+
+        self.board_state.reset()
+        self.agent_selection = "black"
+
+        infos = self._get_infos()
+
+        # needed for passing api_test and performance_benchmark
+        self.terminations: Dict[AgentId, bool] = {agent: False for agent in self.agents}
+        self.truncations: Dict[AgentId, bool] = {agent: False for agent in self.agents}
+        self.rewards: Dict[AgentId, float] = {agent: 0 for agent in self.agents}
+        self._cumulative_rewards: Dict[AgentId, float] = {
+            agent: 0 for agent in self.agents
+        }
+        self.infos = infos
+
+        if self.render_mode == "human":
+            self.render()
+
     def step(self, action: ActionType) -> None:
+        if (
+            self.terminations[self.agent_selection]
+            or self.truncations[self.agent_selection]
+        ):
+            self._was_dead_step(action)
+
         # push the move
         chosen_move = FanoronaMove.from_action(action)
         self.board_state.push(chosen_move)
@@ -97,45 +126,24 @@ class FanoronaEnv(AECEnv):  # type: ignore
                 result = -WIN_REWARD
             self.terminations = {agent: True for agent in self.agents}
             self.rewards = {"black": result, "white": -result}
-            self.agents: List[str] = []
 
         # check truncation conditions
         self.truncations = {agent: False for agent in self.agents}
         if self.timestep >= MOVE_LIMIT:
             self.truncations = {agent: True for agent in self.agents}
             self.rewards = {agent: 0 for agent in self.agents}
-            self.agents = []
         self.timestep += 1
 
         # get infos
         self.infos = self._get_infos()
+
+        self._accumulate_rewards()
 
         # update agent selection
         if self.board_state.turn_to_play == Piece.BLACK:
             self.agent_selection = "black"
         else:
             self.agent_selection = "white"
-
-        if self.render_mode == "human":
-            self.render()
-
-    def reset(
-        self, seed: int | None = None, options: Dict[str, Any] | None = None
-    ) -> None:
-        self.agents = self.possible_agents[:]
-        self.timestep = 0
-
-        self.board_state.reset()
-        self.agent_selection = "black"
-
-        infos = self._get_infos()
-
-        # needed for passing api_test and performance_benchmark
-        self.terminations = {agent: False for agent in self.agents}
-        self.truncations = {agent: False for agent in self.agents}
-        self.rewards = {agent: 0 for agent in self.agents}
-        self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        self.infos = infos
 
         if self.render_mode == "human":
             self.render()
@@ -192,7 +200,7 @@ class FanoronaEnv(AECEnv):  # type: ignore
         return spaces.Dict(
             {
                 "observation": spaces.Box(
-                    low=0, high=1, shape=(5, 9, 7), dtype=np.int32
+                    low=0, high=1, shape=(5, 9, 7), dtype=np.int8
                 ),  # ideally should be np.bool
                 "action_mask": spaces.Box(
                     low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int32
