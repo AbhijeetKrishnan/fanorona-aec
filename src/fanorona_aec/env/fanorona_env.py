@@ -108,6 +108,7 @@ class FanoronaEnv(AECEnv):  # type: ignore
             or self.truncations[self.agent_selection]
         ):
             self._was_dead_step(action)
+            return None
 
         # push the move
         chosen_move = FanoronaMove.from_action(action)
