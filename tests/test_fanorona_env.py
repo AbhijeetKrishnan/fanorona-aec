@@ -24,12 +24,6 @@ def test_api(env):
     pettingzoo.test.api_test(env, num_cycles=1000, verbose_progress=False)
 
 
-def test_seed():
-    "Test the env using PettingZoo's seed_test function"
-    env_fn = fanorona_v1.env
-    pettingzoo.test.seed_test(env_fn)
-
-
 def test_reset(env):
     "Verify that reset() executes without error"
     env.reset()

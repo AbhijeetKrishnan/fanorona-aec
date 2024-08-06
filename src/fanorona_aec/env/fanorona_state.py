@@ -25,6 +25,7 @@ class LastCapture(NamedTuple):
     def __str__(self) -> str:
         return f"{self.position.to_human()} {str(self.direction)}"
 
+
 DRAW = 0
 WHITE_WIN = 1
 BLACK_WIN = -1
@@ -337,11 +338,11 @@ Half-moves: {self.half_moves}
         """
 
         if self.half_moves >= MOVE_LIMIT:
-            return DRAW
+            return None
         elif self.piece_exists(Piece.WHITE):
-            return WHITE_WIN
+            return Piece.WHITE
         else:
-            return BLACK_WIN
+            return Piece.BLACK
 
     def reset(self) -> None:
         """
@@ -431,14 +432,14 @@ Half-moves: {self.half_moves}
 
     def get_observation(
         self, agent: AgentId
-    ) -> np.ndarray[Tuple[Literal[5], Literal[9], Literal[8]], np.dtype[np.int8]]:
+    ) -> np.ndarray[Tuple[Literal[5], Literal[9], Literal[7]], np.dtype[np.int8]]:
         """Return NN-style observation based on the current board state and requesting agent. Board
         state is from the perspective of the agent, with their color at the bottom.
         """
         if self.board is None or self.visited is None:
             raise Exception("Called get_observation() without calling reset()")
 
-        obs = np.zeros(shape=(5, 9, 7), dtype=np.int32)
+        obs = np.zeros(shape=(5, 9, 7), dtype=np.int8)
         # TODO: how to handle different observations from different sides? Specifically, how would actions change?
 
         # channel 1

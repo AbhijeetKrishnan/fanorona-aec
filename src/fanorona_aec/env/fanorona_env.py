@@ -13,6 +13,9 @@ from .utils import Piece, MOVE_LIMIT
 
 RenderMode: TypeAlias = str
 
+DRAW_REWARD = 0
+WIN_REWARD = 1
+
 
 class Metadata(TypedDict):
     render_modes: List[RenderMode]
@@ -23,7 +26,7 @@ class Metadata(TypedDict):
 
 class Observation(TypedDict):
     observation: np.ndarray[
-        Tuple[Literal[5], Literal[9], Literal[8]], np.dtype[np.int8]
+        Tuple[Literal[5], Literal[9], Literal[7]], np.dtype[np.int8]
     ]
     action_mask: np.ndarray[Literal[1081], np.dtype[np.int8]]  # 5 * 9 * 8 * 3 + 1
 
@@ -78,18 +81,23 @@ class FanoronaEnv(AECEnv):  # type: ignore
 
     def step(self, action: ActionType) -> None:
         # push the move
-        chosen_move = FanoronaMove.action_to_move(action)
+        chosen_move = FanoronaMove.from_action(action)
         self.board_state.push(chosen_move)
 
         # check termination conditions
         self.terminations = {agent: False for agent in self.agents}
         self.rewards = {agent: 0 for agent in self.agents}
 
-        if self.board_state.is_game_over():
-            result = self.board_state.get_result()
+        if self.board_state.done:
+            if self.board_state.winner is None:
+                result = DRAW_REWARD
+            elif self.board_state.winner == Piece.BLACK:
+                result = WIN_REWARD
+            else:
+                result = -WIN_REWARD
             self.terminations = {agent: True for agent in self.agents}
-            self.rewards = {"white": result, "black": -result}
-            self.agents = []
+            self.rewards = {"black": result, "white": -result}
+            self.agents: List[str] = []
 
         # check truncation conditions
         self.truncations = {agent: False for agent in self.agents}
@@ -119,7 +127,7 @@ class FanoronaEnv(AECEnv):  # type: ignore
 
         self.board_state.reset()
         self.agent_selection = "black"
-        
+
         infos = self._get_infos()
 
         # needed for passing api_test and performance_benchmark
@@ -144,10 +152,10 @@ class FanoronaEnv(AECEnv):  # type: ignore
         return {"observation": observation, "action_mask": action_mask}
 
     def _get_infos(self) -> Dict[AgentId, Dict[str, Any]]:
-        infos = {agent: {} for agent in self.agents}
+        infos: Dict[AgentId, Dict[str, Any]] = {agent: {} for agent in self.agents}
         infos[self.agent_selection] = {"legal_moves": self.board_state.legal_moves}
         return infos
-    
+
     def render(self) -> None:
         match self.render_mode:
             case "fen":
@@ -162,7 +170,7 @@ class FanoronaEnv(AECEnv):  # type: ignore
 
     def close(self) -> None:
         pass
-    
+
     @functools.lru_cache(maxsize=None)
     def observation_space(self, agent: AgentId) -> gymnasium.spaces.Dict:
         """
@@ -181,14 +189,16 @@ class FanoronaEnv(AECEnv):  # type: ignore
           Channel 6: white piece positions (1 if a piece exists in the corresponding index)
           Channel 7: black piece positions
         """
-        return spaces.Dict({
-            "observation": spaces.Box(
-                low=0, high=1, shape=(5, 9, 7), dtype=np.int32
-            ),  # ideally should be np.bool
-            "action_mask": spaces.Box(
-                low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int32
-            ),  # ideally should be np.int8
-        })
+        return spaces.Dict(
+            {
+                "observation": spaces.Box(
+                    low=0, high=1, shape=(5, 9, 7), dtype=np.int32
+                ),  # ideally should be np.bool
+                "action_mask": spaces.Box(
+                    low=0, high=1, shape=(45 * 8 * 3 + 1,), dtype=np.int32
+                ),  # ideally should be np.int8
+            }
+        )
 
     @functools.lru_cache(maxsize=None)
     def action_space(self, agent: AgentId) -> gymnasium.spaces.Discrete:
@@ -200,6 +210,3 @@ class FanoronaEnv(AECEnv):  # type: ignore
         end turn.
         """
         return spaces.Discrete(END_TURN_ACTION + 1)
-
-    
-
